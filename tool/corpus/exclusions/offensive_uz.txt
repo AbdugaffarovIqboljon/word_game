@@ -1,0 +1,57 @@
+# Offensive / unsafe word exclusion list — So'z Jangi (Uzbek Latin)
+#
+# Purpose: keep a family-friendly daily word game clean. Any answer or accepted
+# guess that matches an entry here is removed from BOTH answers.txt and
+# valid_guesses.txt. Curated manually; deliberately CONSERVATIVE — over-filtering
+# silently deletes good game words, so only genuine profanity, explicit sexual
+# terms, and strong slurs are listed. Neutral words that merely sound close to a
+# slur (e.g. tuxum=egg, harom=forbidden, jinni=crazy, kaptar=pigeon, dallol=
+# broker, kaltak=stick) are intentionally NOT here.
+#
+# Matching rule (see build_corpus.py):
+#   * exact match : candidate == term                 (always)
+#   * root match  : term is a substring of candidate   (only when len(term) >= 4)
+# so short terms only remove the exact word; longer roots also catch derivations.
+# One term per line, lowercase, apostrophes as U+02BB (ʻ). '#'/blank lines ignored.
+
+# --- profanity / vulgar insults (Uzbek) ---
+jalab
+qahba
+qanjiq
+kotak
+qotoq
+qutoq
+siktir
+sikish
+sikmoq
+dayus
+dayyus
+dayuz
+haromi
+haromzoda
+padarlaʼnat
+enag
+enagar
+pushti
+
+# --- explicit sexual / anatomical vulgarities ---
+tashaq
+qichishtirar
+
+# --- strong slurs ---
+laʼnati
+
+# --- Russian-loan profanity roots common in Uzbek text ---
+blyad
+blyat
+pizda
+pizdes
+mudak
+mraz
+suka
+xuy
+huy
+nahuy
+ebal
+ebash
+poshol

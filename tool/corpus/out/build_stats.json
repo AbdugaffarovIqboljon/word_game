@@ -1,0 +1,20 @@
+{
+  "hun_all": 69446,
+  "hun_5ll": 5143,
+  "wiki_types": 1024153,
+  "answers_total": 3000,
+  "answers_min_freq_used": 2,
+  "tier_1_easy": 1000,
+  "tier_2_mid": 1000,
+  "tier_3_hard": 1000,
+  "valid_guesses_total": 16096,
+  "answers_offensive_removed": 3,
+  "vg_sources": {
+    "answer": 3000,
+    "hunspell_stem": 2140,
+    "generated_inflection": 8611,
+    "wiki_inflection": 2345
+  },
+  "answers_with_compound": 716,
+  "answers_with_ng": 65
+}

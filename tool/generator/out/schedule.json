@@ -1,0 +1,558 @@
+{
+  "generated_at": "2026-07-10T09:27:31.398995+00:00",
+  "seed": 142,
+  "start_date": "2026-07-10",
+  "days": 90,
+  "no_repeat_days": 365,
+  "tier_by_weekday": {
+    "0": 1,
+    "1": 1,
+    "2": 2,
+    "3": 2,
+    "4": 2,
+    "5": 3,
+    "6": 3
+  },
+  "puzzles": [
+    {
+      "date": "2026-07-10",
+      "word": "koriz",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-11",
+      "word": "falon",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-12",
+      "word": "lahad",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-13",
+      "word": "hamda",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-14",
+      "word": "quloq",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-15",
+      "word": "masal",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-16",
+      "word": "madad",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-17",
+      "word": "segoh",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-18",
+      "word": "saban",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-19",
+      "word": "vasat",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-20",
+      "word": "yogʻoch",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-21",
+      "word": "mirzo",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-22",
+      "word": "aqida",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-23",
+      "word": "irqchi",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-24",
+      "word": "qadoq",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-25",
+      "word": "bardi",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-26",
+      "word": "sezon",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-27",
+      "word": "gidra",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-28",
+      "word": "manba",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-29",
+      "word": "xalfa",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-30",
+      "word": "nadim",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-07-31",
+      "word": "debet",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-01",
+      "word": "gusli",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-02",
+      "word": "nosoz",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-03",
+      "word": "gilam",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-04",
+      "word": "gʻolib",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-05",
+      "word": "novak",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-06",
+      "word": "zombi",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-07",
+      "word": "bariy",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-08",
+      "word": "gʻazot",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-09",
+      "word": "erman",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-10",
+      "word": "unsur",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-11",
+      "word": "unvon",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-12",
+      "word": "tiyin",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-13",
+      "word": "radiy",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-14",
+      "word": "aymoq",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-15",
+      "word": "yemish",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-16",
+      "word": "gumid",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-17",
+      "word": "ingliz",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-18",
+      "word": "boshqa",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-19",
+      "word": "zarin",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-20",
+      "word": "qoʻshchi",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-21",
+      "word": "suman",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-22",
+      "word": "tabas",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-23",
+      "word": "ablah",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-24",
+      "word": "kengash",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-25",
+      "word": "imkon",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-26",
+      "word": "togʻay",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-27",
+      "word": "magʻiz",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-28",
+      "word": "detal",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-29",
+      "word": "pravo",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-30",
+      "word": "salang",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-08-31",
+      "word": "doping",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-01",
+      "word": "yaxshi",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-02",
+      "word": "yubka",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-03",
+      "word": "xarob",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-04",
+      "word": "bezli",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-05",
+      "word": "marza",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-06",
+      "word": "xatar",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-07",
+      "word": "motor",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-08",
+      "word": "raund",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-09",
+      "word": "kigiz",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-10",
+      "word": "sobol",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-11",
+      "word": "qushchi",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-12",
+      "word": "atvor",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-13",
+      "word": "luqma",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-14",
+      "word": "surat",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-15",
+      "word": "aynan",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-16",
+      "word": "balon",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-17",
+      "word": "dreyf",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-18",
+      "word": "chilla",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-19",
+      "word": "lahim",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-20",
+      "word": "mador",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-21",
+      "word": "ishlov",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-22",
+      "word": "dafna",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-23",
+      "word": "pilta",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-24",
+      "word": "skaut",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-25",
+      "word": "tikka",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-26",
+      "word": "xiyol",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-27",
+      "word": "fatal",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-28",
+      "word": "tiniq",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-29",
+      "word": "langar",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-09-30",
+      "word": "varaq",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-01",
+      "word": "shosse",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-02",
+      "word": "burga",
+      "difficulty": 2,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-03",
+      "word": "beson",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-04",
+      "word": "birin",
+      "difficulty": 3,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-05",
+      "word": "yarim",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-06",
+      "word": "olmon",
+      "difficulty": 1,
+      "definition_uz": null
+    },
+    {
+      "date": "2026-10-07",
+      "word": "sanam",
+      "difficulty": 2,
+      "definition_uz": null
+    }
+  ]
+}
