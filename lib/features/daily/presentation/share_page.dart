@@ -12,7 +12,6 @@ import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_icon_button.dart';
-import '../../../core/widgets/dashed_border_box.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
 import '../domain/daily_share_data.dart';
@@ -103,16 +102,9 @@ class SharePage extends StatelessWidget {
                               onPressed: () => context.push(AppRoutes.practice),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          DashedBorderBox(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                LocaleKeys.shareCrossPromo.tr(),
-                                style: AppTextStyles.micro,
-                              ),
-                            ),
-                          ),
+                          // The design's CROSS-PROMO SLOT is an undefined
+                          // placeholder — hidden until real content exists so it
+                          // never ships visible to users/reviewers (audit SH-2).
                         ],
                       ),
                     ),

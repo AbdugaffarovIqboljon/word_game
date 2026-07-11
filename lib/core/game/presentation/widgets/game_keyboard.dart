@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_icons.dart';
 import '../../domain/letter_result.dart';
 import '../../domain/logical_letter.dart';
 import '../keyboard_layout.dart';
@@ -82,12 +83,15 @@ class _KeyboardRow extends StatelessWidget {
 
   Widget _key(KeyDef def) {
     if (def.isAction) {
+      final isEnter = def.action == KeyAction.enter;
       return KeyboardKeyButton(
         label: def.label,
+        // ENTER renders as the ↵ icon (mirrors ⌫); ⌫ stays a text glyph.
+        icon: isEnter ? AppIcons.enter : null,
         fontSize: def.fontSize,
         background: AppColors.muted,
         foreground: AppColors.onKeyDefault,
-        onTap: def.action == KeyAction.enter ? onEnter : onDelete,
+        onTap: isEnter ? onEnter : onDelete,
       );
     }
 

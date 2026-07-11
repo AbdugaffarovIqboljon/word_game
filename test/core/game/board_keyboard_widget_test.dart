@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:word_game/core/theme/app_icons.dart';
 import 'package:word_game/core/game/domain/guess.dart';
 import 'package:word_game/core/game/domain/letter_result.dart';
 import 'package:word_game/core/game/domain/logical_letter.dart';
@@ -39,13 +40,15 @@ void main() {
       expect(find.text('Q'), findsOneWidget);
       expect(find.text('Oʻ'), findsOneWidget);
       expect(find.text('Ng'), findsOneWidget);
-      expect(find.text('ENTER'), findsOneWidget);
+      // ENTER now renders as the ↵ icon (component_spec (a)); ⌫ stays a glyph.
+      expect(find.text('ENTER'), findsNothing);
+      expect(find.byIcon(AppIcons.enter), findsOneWidget);
       expect(find.text('⌫'), findsOneWidget);
 
       await tester.tap(find.text('Q'));
       expect(tapped, const LogicalLetter('q'));
 
-      await tester.tap(find.text('ENTER'));
+      await tester.tap(find.byIcon(AppIcons.enter));
       await tester.tap(find.text('⌫'));
       expect(enterCount, 1);
       expect(deleteCount, 1);
@@ -66,7 +69,9 @@ void main() {
       );
 
       controller.setInput(0, ll(['q', 'a']));
-      await tester.pump();
+      await tester.pump(); // start the type-pop
+      // The typed letter appears at the pop peak (~55ms) — advance past it.
+      await tester.pump(const Duration(milliseconds: 120));
       expect(find.text('Q'), findsOneWidget);
       expect(find.text('A'), findsOneWidget);
 

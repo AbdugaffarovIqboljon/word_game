@@ -21,6 +21,7 @@ class FailView extends StatelessWidget {
     required this.definition,
     required this.remaining,
     required this.onShare,
+    this.onElapsed,
     super.key,
   });
 
@@ -29,6 +30,7 @@ class FailView extends StatelessWidget {
   final String? definition;
   final Duration Function() remaining;
   final VoidCallback onShare;
+  final VoidCallback? onElapsed;
 
   String get _answerWord => answer.map((l) => l.glyph).join();
 
@@ -40,7 +42,8 @@ class FailView extends StatelessWidget {
         children: [
           StaticBoard(guesses: guesses, columns: 5, tileSize: 42),
           const SizedBox(height: 20),
-          AppCard(
+          _FadeIn(
+            child: AppCard(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,11 +71,18 @@ class FailView extends StatelessWidget {
                 ],
               ],
             ),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: NextWordBox(remaining: remaining, compact: true)),
+              Expanded(
+                child: NextWordBox(
+                  remaining: remaining,
+                  compact: true,
+                  onElapsed: onElapsed,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: PrimaryButton(
@@ -86,6 +96,49 @@ class FailView extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Gentle fade + rise so the "you lost" answer card settles in instead of
+/// snapping (audit DB-17).
+class _FadeIn extends StatefulWidget {
+  const _FadeIn({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_FadeIn> createState() => _FadeInState();
+}
+
+class _FadeInState extends State<_FadeIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 320),
+  )..forward();
+
+  late final Animation<double> _fade = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeOut,
+  );
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.06),
+          end: Offset.zero,
+        ).animate(_fade),
+        child: widget.child,
       ),
     );
   }

@@ -26,8 +26,11 @@ class GameBoard extends StatelessWidget {
       if (r > 0) rows.add(SizedBox(height: gap));
       rows.add(
         BoardRow(
+          rowIndex: r,
           tiles: controller.tiles[r],
           shake: controller.rowShake[r],
+          bounce: controller.rowBounce[r],
+          cursor: controller.cursor,
           tileSize: tileSize,
           gap: gap,
         ),

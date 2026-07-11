@@ -9,35 +9,54 @@ import 'static_tile.dart';
 /// A single board tile bound to its own [ValueListenable] so a change to one
 /// tile repaints only that tile.
 ///
-/// Flip (component_spec (b)): when the bound state changes to a *revealed*
-/// state, the tile runs a 150ms `rotateX 0→90→0`, swapping its face color at
-/// the 50% keyframe (edge-on, so the swap is imperceptible). Typing/empty
-/// changes update instantly with no flip. The 100ms per-tile stagger is applied
-/// by the [BoardController] (it delays each column's reveal), so each tile just
-/// animates its own flip.
+/// Three motions, all local to the tile:
+/// * **Flip** — when the bound state changes to a *revealed* state, a 150ms
+///   `rotateX 0→90→0` swaps the face color at the 50% keyframe (edge-on, so the
+///   swap is imperceptible). The 100ms per-tile stagger is applied by the
+///   [BoardController].
+/// * **Type pop** — an empty tile receiving a letter scales `1→1.08→1` over
+///   110ms, the letter appearing at the peak.
+/// * **Backspace fade** — a filled tile being cleared quickly fades + shrinks
+///   out before the empty face returns.
 ///
-/// Letter font is exactly half the tile size at every context (56→28, 52→26,
-/// 42→21, 30→15).
+/// [activeRow] brightens the empty border for the live row (active-position
+/// feedback). Letter font is exactly half the tile size at every context.
 class LetterTile extends StatefulWidget {
-  const LetterTile({required this.data, required this.size, super.key});
+  const LetterTile({
+    required this.data,
+    required this.size,
+    this.activeRow = false,
+    super.key,
+  });
 
   final ValueListenable<TileData> data;
   final double size;
+  final bool activeRow;
 
   @override
   State<LetterTile> createState() => _LetterTileState();
 }
 
+enum _Pop { none, add, remove }
+
 class _LetterTileState extends State<LetterTile>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _flip = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 150),
   )..addListener(_onFlipTick);
 
+  late final AnimationController _pop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 110),
+  )
+    ..addListener(_onPopTick)
+    ..addStatusListener(_onPopStatus);
+
   late TileData _shown = widget.data.value;
   TileData _pending = const TileData.empty();
   bool _swapped = true;
+  _Pop _popMode = _Pop.none;
 
   @override
   void initState() {
@@ -62,6 +81,18 @@ class _LetterTileState extends State<LetterTile>
       _pending = next;
       _swapped = false;
       _flip.forward(from: 0);
+    } else if (next.state == TileState.typing &&
+        _shown.state == TileState.empty) {
+      // Letter added → pop; the letter appears at the scale peak (50%).
+      _pending = next;
+      _swapped = false;
+      _popMode = _Pop.add;
+      _pop.forward(from: 0);
+    } else if (next.state == TileState.empty && _shown.letter != null) {
+      // Backspace / clear → quick fade-out, then the empty face returns.
+      _pending = next;
+      _popMode = _Pop.remove;
+      _pop.forward(from: 0);
     } else {
       setState(() => _shown = next);
     }
@@ -74,28 +105,64 @@ class _LetterTileState extends State<LetterTile>
     }
   }
 
+  void _onPopTick() {
+    // Reveal a filled letter at the pop peak (mirrors the flip's 50% swap).
+    if (_popMode == _Pop.add && !_swapped && _pop.value >= 0.5) {
+      _swapped = true;
+      setState(() => _shown = _pending);
+    }
+  }
+
+  void _onPopStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    if (_popMode == _Pop.remove) setState(() => _shown = _pending);
+    setState(() => _popMode = _Pop.none);
+  }
+
   @override
   void dispose() {
     widget.data.removeListener(_onData);
     _flip.dispose();
+    _pop.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _flip,
+      animation: Listenable.merge([_flip, _pop]),
       builder: (context, _) {
-        final v = _flip.value;
-        // 0→90° over the first half, 90°→0 over the second (never mirrored).
-        final angle = (v < 0.5 ? v : 1 - v) * math.pi;
-        return Transform(
+        final flipV = _flip.value;
+        final angle = (flipV < 0.5 ? flipV : 1 - flipV) * math.pi;
+
+        final t = _pop.value;
+        var scale = 1.0;
+        var opacity = 1.0;
+        if (_popMode == _Pop.add) {
+          scale = 1 + 0.08 * math.sin(math.pi * t);
+        } else if (_popMode == _Pop.remove) {
+          scale = 1 - 0.06 * t;
+          opacity = 1 - t;
+        }
+
+        Widget face = Transform(
           alignment: Alignment.center,
           transform: Matrix4.identity()
             ..setEntry(3, 2, 0.001)
             ..rotateX(angle),
-          child: StaticTile(data: _shown, size: widget.size),
+          child: StaticTile(
+            data: _shown,
+            size: widget.size,
+            activeRow: widget.activeRow,
+          ),
         );
+        if (scale != 1.0) {
+          face = Transform.scale(scale: scale, child: face);
+        }
+        if (opacity != 1.0) {
+          face = Opacity(opacity: opacity, child: face);
+        }
+        return face;
       },
     );
   }

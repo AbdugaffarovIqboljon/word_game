@@ -36,6 +36,8 @@ class MashqPill extends StatelessWidget {
                 LocaleKeys.dailyPracticePill.tr(),
                 style: AppTextStyles.bodyStrong.copyWith(fontSize: 14),
               ),
+              const SizedBox(width: 4),
+              const Icon(AppIcons.chevronRight, size: 16, color: AppColors.textSub),
             ],
           ),
         ),

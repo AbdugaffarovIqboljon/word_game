@@ -23,6 +23,10 @@ abstract final class AppColors {
   static const Color tileFilledBorder = Color(0xFF56688F);
   static const Color tileAbsentBg = Color(0xFF35435F);
   static const Color tileAbsentFg = Color(0xFFD5DDEC);
+  // Active-position feedback: the live row's empty tiles brighten to this, and
+  // the next-empty ("cursor") tile pulses between tileFilledBorder and this.
+  static const Color tileActiveBorder = Color(0xFF41557E);
+  static const Color tileCursorBorder = Color(0xFF7C90BC);
 
   // ── Shared present/correct (tile + key) ──────────────────────────────────
   static const Color present = Color(0xFFC2952B);

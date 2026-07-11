@@ -20,6 +20,10 @@ abstract final class AppIcons {
   static const IconData chevronRight = LucideIcons.chevronRight;
   static const IconData close = LucideIcons.x;
   static const IconData practice = LucideIcons.dumbbell;
+  static const IconData help = LucideIcons.helpCircle; // Qoidalar (rules) sheet
+
+  // Keyboard action keys
+  static const IconData enter = LucideIcons.cornerDownLeft; // ↵ submit key
 
   // Practice tiers
   static const IconData tierEasy = LucideIcons.star;

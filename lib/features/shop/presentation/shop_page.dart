@@ -377,11 +377,26 @@ class StarterPackBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          PrimaryButton(
-            label: '${_usd(wasPrice)}   ${_usd(price)}',
-            onPressed: onBuy,
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                _usd(wasPrice),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.text3,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: AppColors.text3,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _usd(price),
+                style: AppTextStyles.bodyStrong.copyWith(color: AppColors.coin),
+              ),
+            ],
           ),
+          const SizedBox(height: 10),
+          PrimaryButton(label: _usd(price), onPressed: onBuy),
         ],
       ),
     );

@@ -7,10 +7,8 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/game/domain/guess.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
-import '../../../core/game/presentation/tile_state.dart';
 import '../../../core/game/presentation/widgets/game_keyboard.dart';
 import '../../../core/game/presentation/widgets/static_board.dart';
-import '../../../core/game/presentation/widgets/static_tile.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
@@ -19,6 +17,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../streak/data/streak_reminder_scheduler.dart';
 import '../data/onboarding_repository.dart';
+import 'widgets/rules_legend.dart';
 
 /// One-time onboarding (screen_inventory §8): welcome, color rules, and an
 /// interactive "try it" step that advances on the first key tap (decisions §8).
@@ -42,7 +41,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
     if (mounted) context.go(AppRoutes.daily);
   }
 
-  void _next() => setState(() => _step++);
+  void _next() {
+    setState(() => _step++);
+    // Reaching step 1 means the color legend was shown — so a later skip won't
+    // re-trigger the daily board's auto-open rules sheet.
+    if (_step >= 1) sl<OnboardingRepository>().markRulesSeen();
+  }
 
   @override
   void dispose() {
@@ -140,33 +144,11 @@ class _RulesStep extends StatelessWidget {
         children: [
           Text(LocaleKeys.onboardingRulesTitle.tr(), style: AppTextStyles.title, textAlign: TextAlign.center),
           const SizedBox(height: 28),
-          _RuleRow(letter: 'a', state: TileState.correct, text: LocaleKeys.onboardingRuleCorrect.tr()),
-          const SizedBox(height: 16),
-          _RuleRow(letter: 'l', state: TileState.present, text: LocaleKeys.onboardingRulePresent.tr()),
-          const SizedBox(height: 16),
-          _RuleRow(letter: 'k', state: TileState.absent, text: LocaleKeys.onboardingRuleAbsent.tr()),
+          const RulesLegend(),
           const SizedBox(height: 32),
           PrimaryButton(label: LocaleKeys.commonContinue.tr(), onPressed: onContinue),
         ],
       ),
-    );
-  }
-}
-
-class _RuleRow extends StatelessWidget {
-  const _RuleRow({required this.letter, required this.state, required this.text});
-  final String letter;
-  final TileState state;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        StaticTile(data: TileData(letter: letter, state: state), size: 56),
-        const SizedBox(width: 16),
-        Expanded(child: Text(text, style: AppTextStyles.body.copyWith(color: AppColors.text))),
-      ],
     );
   }
 }

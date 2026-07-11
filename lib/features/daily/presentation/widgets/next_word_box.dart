@@ -10,10 +10,18 @@ import '../../../../core/widgets/countdown_text.dart';
 
 /// "Next word in HH:MM:SS" card shown on the solved & failed states.
 class NextWordBox extends StatelessWidget {
-  const NextWordBox({required this.remaining, this.compact = false, super.key});
+  const NextWordBox({
+    required this.remaining,
+    this.compact = false,
+    this.onElapsed,
+    super.key,
+  });
 
   final Duration Function() remaining;
   final bool compact;
+
+  /// Fired when the countdown reaches zero (daily rollover → refresh the board).
+  final VoidCallback? onElapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +39,7 @@ class NextWordBox extends StatelessWidget {
           const SizedBox(height: 6),
           CountdownText(
             remaining: remaining,
+            onElapsed: onElapsed,
             style: AppTextStyles.headline.copyWith(
               fontSize: compact ? 24 : 32,
             ),

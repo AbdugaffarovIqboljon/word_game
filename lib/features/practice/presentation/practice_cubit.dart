@@ -71,6 +71,9 @@ class PracticeCubit extends Cubit<PracticeState> {
   int get wordLength => _config.wordLength;
   String? get definition => _definition;
 
+  /// 1-based round number within today's session (context header).
+  int get sessionRound => _session.played + 1;
+
   /// Begins a new round for [tier].
   void start(PracticeTier tier) {
     _tier = tier;

@@ -9,6 +9,10 @@ import '../../../theme/app_text_styles.dart';
 /// shadow. Press feedback: scales to 0.95 over 90ms and springs back
 /// (component_spec (a) / decisions §6). Colors/label/border are resolved by the
 /// caller so this widget stays state-agnostic.
+///
+/// When [icon] is supplied the key renders that glyph instead of [label] — the
+/// ENTER key uses the ↵ corner-down-left icon, mirroring the ⌫ backspace glyph
+/// (component_spec (a)); [label] is still passed for the semantics tooltip.
 class KeyboardKeyButton extends StatefulWidget {
   const KeyboardKeyButton({
     required this.label,
@@ -16,11 +20,13 @@ class KeyboardKeyButton extends StatefulWidget {
     required this.background,
     required this.foreground,
     required this.onTap,
+    this.icon,
     this.border,
     super.key,
   });
 
   final String label;
+  final IconData? icon;
   final double fontSize;
   final Color background;
   final Color foreground;
@@ -62,13 +68,20 @@ class _KeyboardKeyButtonState extends State<KeyboardKeyButton> {
             borderRadius: AppRadii.keyR,
             boxShadow: AppShadows.keyBevel,
           ),
-          child: Text(
-            widget.label,
-            style: AppTextStyles.tile(
-              widget.fontSize,
-              color: widget.foreground,
-            ).copyWith(fontWeight: FontWeight.w600, height: null),
-          ),
+          child: widget.icon != null
+              ? Icon(
+                  widget.icon,
+                  size: widget.fontSize + 5,
+                  color: widget.foreground,
+                  semanticLabel: widget.label,
+                )
+              : Text(
+                  widget.label,
+                  style: AppTextStyles.tile(
+                    widget.fontSize,
+                    color: widget.foreground,
+                  ).copyWith(fontWeight: FontWeight.w600, height: null),
+                ),
         ),
       ),
     );

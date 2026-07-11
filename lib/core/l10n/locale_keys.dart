@@ -14,6 +14,7 @@ abstract final class LocaleKeys {
   static const commonStart = 'common.start';
   static const commonSkip = 'common.skip';
   static const commonDomain = 'common.domain';
+  static const commonRules = 'common.rules';
 
   static const onboardingWelcomeTagline = 'onboarding.welcome_tagline';
   static const onboardingRulesTitle = 'onboarding.rules_title';
@@ -24,6 +25,9 @@ abstract final class LocaleKeys {
   static const onboardingTryCoachmark = 'onboarding.try_coachmark';
 
   static const dailySubtitle = 'daily.subtitle';
+  static const dailyPuzzleNumber = 'daily.puzzle_number';
+  static const dailyGhostHint = 'daily.ghost_hint';
+  static const dailyTooShort = 'daily.too_short';
   static const dailyPracticePill = 'daily.practice_pill';
   static const dailyInvalidWord = 'daily.invalid_word';
   static const dailySolvedHeadline = 'daily.solved_headline';
@@ -58,6 +62,7 @@ abstract final class LocaleKeys {
   static const practiceSessionAccuracy = 'practice.session_accuracy';
   static const practiceSessionCoins = 'practice.session_coins';
   static const practiceAdNotice = 'practice.ad_notice';
+  static const practiceRoundLabel = 'practice.round_label';
   static const practiceAgain = 'practice.again';
   static const practiceNextTier = 'practice.next_tier';
   static const practiceSolvedOverlay = 'practice.solved_overlay';

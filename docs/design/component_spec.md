@@ -28,8 +28,15 @@ The 5 compound letters (**Oʻ, Gʻ, Sh, Ch, Ng**) are each a single key — not 
 long-press variant — with a two-character label.
 
 DEL is rendered as the Unicode backspace glyph **⌫** (`U+232B`), not the text "DEL", in
-the actual component (`label: label === 'DEL' ? '⌫' : label`). ENTER renders as the
-literal word "ENTER" — there is no localized Uzbek label for it in the source.
+the actual component (`label: label === 'DEL' ? '⌫' : label`).
+
+**ENTER — implementation update (2026-07):** the design's literal word "ENTER" wrapped to
+two lines at ≤360px, breaking the bottom row. It is now rendered as the Lucide
+**`corner-down-left` (↵)** icon (`AppIcons.enter`), mirroring the ⌫ backspace glyph at the
+same `flex: 1.7`. The `KeyboardKeyButton` takes an optional `icon:`; when set it draws an
+`Icon` at `fontSize + 5` and still passes the "ENTER" string as the icon's `semanticLabel`
+(so screen readers and widget-test finders keep the label). No localized Uzbek word is
+introduced.
 
 ### Sizing
 

@@ -21,6 +21,7 @@ class SolvedRecap extends StatelessWidget {
     required this.coinsEarned,
     required this.remaining,
     required this.onShare,
+    this.onElapsed,
     super.key,
   });
 
@@ -30,6 +31,7 @@ class SolvedRecap extends StatelessWidget {
   final int coinsEarned;
   final Duration Function() remaining;
   final VoidCallback onShare;
+  final VoidCallback? onElapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class SolvedRecap extends StatelessWidget {
           const SizedBox(height: 20),
           StaticBoard(guesses: guesses, columns: 5, tileSize: 30),
           const SizedBox(height: 20),
-          NextWordBox(remaining: remaining),
+          NextWordBox(remaining: remaining, onElapsed: onElapsed),
           const SizedBox(height: 16),
           PrimaryButton(
             label: LocaleKeys.dailyShareResult.tr(),
