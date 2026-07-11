@@ -42,7 +42,7 @@ void main() {
 
     // 2026-07-10 is the first scheduled day (see generated schedule).
     final scheduled = dict.answerForDate(DateTime.utc(2026, 7, 10));
-    expect(scheduled.map((l) => l.value).join(), 'koriz');
+    expect(scheduled.map((l) => l.value).join(), 'ustod');
 
     // A date far outside the 90-day window still returns a real pool word.
     final beyond = dict.answerForDate(DateTime.utc(2035, 1, 1));

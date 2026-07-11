@@ -1,0 +1,132 @@
+# Non-answer exclusion list — So'z Jangi (Uzbek Latin)
+#
+# Purpose: keep the DAILY ANSWER pool free of proper nouns, raw foreign
+# loanwords and slang. These are all real, well-formed 5-logical-letter Uzbek
+# tokens — they stay in valid_guesses.txt (a player may legitimately type them) —
+# but they are unfit to be the *answer of the day*: a daily word should be a
+# fair, everyday common noun/adjective/verb that any Uzbek speaker recognises,
+# not a person's name, a country, a deity, or an untranslated English/Russian word.
+#
+# Scope (see build_corpus.py `is_non_answer`): applied to answers.txt ONLY, never
+# to valid_guesses.txt. Matching is EXACT on the normalised token (lowercase,
+# apostrophes folded to U+02BB) — every answer is exactly 5 logical letters, so
+# exact match is both sufficient and safe (no accidental substring removals).
+#
+# Curation method: systematic sweep of the current tier-1 (highest-frequency)
+# answer band, where proper-noun/loanword contamination concentrates, plus the
+# seed terms. Borderline tokens with a strong everyday non-name meaning were kept
+# (e.g. botir=hero, sharaf=honour, zafar=victory, salom=greeting, malik=king,
+# hokim=governor, podsho=king, roman=novel, vatan=homeland, namoz/hadis/zakot).
+# One term per line, lowercase, U+02BB (ʻ) for oʻ/gʻ. '#'/blank lines ignored.
+
+# --- person names (Uzbek + foreign given names / surnames, name-dominant) ---
+ashraf
+mirzo
+mirza
+hamza
+salim
+gʻulom
+hamid
+komil
+kamol
+nosir
+genri
+anvar
+akbar
+karim
+murod
+yuliy
+yazid
+sobir
+habib
+oybek
+kabir
+fozil
+rahim
+rajab
+jamol
+zuhra
+sobit
+zohid
+akmal
+iqbol
+moʻmin
+nasib
+hajar
+feruz
+zohir
+oydin
+hilol
+sharif
+solih
+majid
+
+# --- place names (countries, cities, regions, mountains) ---
+xitoy
+tibet
+ummon
+lanka
+sibir
+oltoy
+bengal
+kreml
+makka
+zomin
+asaka
+hisor
+koʻlob
+turon
+
+# --- ethnonyms / nationalities / language names ---
+oʻzbek
+qozoq
+tojik
+nemis
+yapon
+ispan
+arman
+rumin
+venger
+tatar
+moʻgʻul
+uygʻur
+alban
+malay
+chechen
+kazak
+farer
+ingliz
+yunon
+lotin
+latin
+ruscha
+pushtu
+afgʻon
+sovet
+
+# --- religious proper nouns / deities / holidays ---
+alloh
+islom
+injil
+pasxa
+taolo
+budda
+masih
+tangri
+
+# --- foreign loanwords unfit for a daily word / brands / slang ---
+agent
+klark
+regbi
+alkash
+french
+start
+press
+union
+stark
+grunt
+brass
+reper
+soyuz
+vzvod
+tesla

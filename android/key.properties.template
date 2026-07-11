@@ -1,0 +1,11 @@
+# Release signing config for So'z Jangi — copy to `android/key.properties`
+# (gitignored) and fill in. Generate the keystore with:
+#
+#   keytool -genkey -v -keystore ~/sozjangi-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Then point storeFile at that .jks (absolute path or relative to android/app).
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=/absolute/path/to/sozjangi-upload.jks

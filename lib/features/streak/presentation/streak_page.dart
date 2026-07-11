@@ -83,7 +83,7 @@ class _StreakPageState extends State<StreakPage> {
   Future<void> _buyFreeze({required bool viaAd}) async {
     if (_streak.freezes >= _config.freezeSlots) return;
     final paid = viaAd
-        ? await _ads.showRewardedAd()
+        ? await _ads.showRewardedAd(RewardedPlacement.freezeFree)
         : await _wallet.debitCoins(
             _config.freezeBuyPriceCoins,
             reason: 'buy_freeze',
@@ -119,10 +119,16 @@ class _StreakPageState extends State<StreakPage> {
                   ),
                   const SizedBox(height: 16),
                   if (_streak.freezes < _config.freezeSlots)
-                    _BuyFreezeCard(
-                      coinPrice: _config.freezeBuyPriceCoins,
-                      onBuyCoins: () => _buyFreeze(viaAd: false),
-                      onBuyAd: () => _buyFreeze(viaAd: true),
+                    // The "watch ad" button hides when no rewarded ad is loaded.
+                    ValueListenableBuilder<bool>(
+                      valueListenable:
+                          _ads.isReady(RewardedPlacement.freezeFree),
+                      builder: (context, adReady, _) => _BuyFreezeCard(
+                        coinPrice: _config.freezeBuyPriceCoins,
+                        onBuyCoins: () => _buyFreeze(viaAd: false),
+                        onBuyAd:
+                            adReady ? () => _buyFreeze(viaAd: true) : null,
+                      ),
                     ),
                 ],
               ),
@@ -296,7 +302,7 @@ class _BuyFreezeCard extends StatelessWidget {
 
   final int coinPrice;
   final VoidCallback onBuyCoins;
-  final VoidCallback onBuyAd;
+  final VoidCallback? onBuyAd;
 
   @override
   Widget build(BuildContext context) {
@@ -315,14 +321,16 @@ class _BuyFreezeCard extends StatelessWidget {
                   onPressed: onBuyCoins,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SecondaryButton(
-                  label: LocaleKeys.hintWatchAd.tr(),
-                  icon: AppIcons.watchAd,
-                  onPressed: onBuyAd,
+              if (onBuyAd != null) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SecondaryButton(
+                    label: LocaleKeys.hintWatchAd.tr(),
+                    icon: AppIcons.watchAd,
+                    onPressed: onBuyAd,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ],

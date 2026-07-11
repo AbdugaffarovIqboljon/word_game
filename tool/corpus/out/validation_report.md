@@ -7,14 +7,15 @@ letters, where **oʻ gʻ sh ch ng** each count as ONE letter._
 
 - Hunspell lexicon stems (well-formed, ≥2 letters): **69446** (of which 5-letter: **5143**)
 - Wikipedia frequency types sampled: **1024153**
-- **answers.txt: 3000** (min wiki freq used: 2)
-  - Tier 1 (easy / most common): **1000**
-  - Tier 2 (mid): **1000**
-  - Tier 3 (hard / least common): **1000**
+- **answers.txt: 2898** (min wiki freq used: 2)
+  - Tier 1 (easy / most common): **966**
+  - Tier 2 (mid): **966**
+  - Tier 3 (hard / least common): **966**
 - **valid_guesses.txt: 16096** (superset of answers ✓)
   - provenance: {'answer': 3000, 'hunspell_stem': 2140, 'generated_inflection': 8611, 'wiki_inflection': 2345}
 - Offensive stems removed from answer pool: 3
-- Answers containing a compound letter: 716 (of which `ng`: 65)
+- Proper nouns / loanwords / slang removed from answer pool (kept in valid_guesses): 102
+- Answers containing a compound letter: 698 (of which `ng`: 61)
 
 ## 2. Letter distribution (answers, position-agnostic)
 
@@ -22,21 +23,21 @@ Sanity check: no logical letter should be absent or wildly dominant.
 
 | letter | count | % | | letter | count | % |
 |---|---:|---:|---|---|---:|---:|
-| `a` | 2167 | 14.4% | | `d` | 366 | 2.4% |
-| `i` | 1412 | 9.4% | | `z` | 312 | 2.1% |
-| `o` | 1288 | 8.6% | | `v` | 254 | 1.7% |
-| `r` | 919 | 6.1% | | `ch` | 237 | 1.6% |
-| `l` | 811 | 5.4% | | `sh` | 234 | 1.6% |
-| `n` | 736 | 4.9% | | `p` | 223 | 1.5% |
-| `t` | 727 | 4.8% | | `h` | 205 | 1.4% |
-| `u` | 635 | 4.2% | | `oʻ` | 180 | 1.2% |
-| `m` | 608 | 4.1% | | `f` | 178 | 1.2% |
-| `k` | 591 | 3.9% | | `g` | 157 | 1.0% |
-| `s` | 585 | 3.9% | | `j` | 145 | 1.0% |
-| `b` | 476 | 3.2% | | `x` | 139 | 0.9% |
-| `q` | 431 | 2.9% | | `gʻ` | 114 | 0.8% |
-| `y` | 416 | 2.8% | | `ng` | 65 | 0.4% |
-| `e` | 389 | 2.6% | | | | |
+| `a` | 2100 | 14.5% | | `d` | 357 | 2.5% |
+| `i` | 1365 | 9.4% | | `z` | 296 | 2.0% |
+| `o` | 1248 | 8.6% | | `v` | 249 | 1.7% |
+| `r` | 878 | 6.1% | | `ch` | 233 | 1.6% |
+| `l` | 780 | 5.4% | | `sh` | 230 | 1.6% |
+| `n` | 708 | 4.9% | | `p` | 217 | 1.5% |
+| `t` | 706 | 4.9% | | `h` | 192 | 1.3% |
+| `u` | 616 | 4.3% | | `oʻ` | 176 | 1.2% |
+| `m` | 580 | 4.0% | | `f` | 171 | 1.2% |
+| `k` | 570 | 3.9% | | `g` | 153 | 1.1% |
+| `s` | 561 | 3.9% | | `j` | 139 | 1.0% |
+| `b` | 457 | 3.2% | | `x` | 137 | 0.9% |
+| `q` | 428 | 3.0% | | `gʻ` | 110 | 0.8% |
+| `y` | 404 | 2.8% | | `ng` | 61 | 0.4% |
+| `e` | 368 | 2.5% | | | | |
 
 Letters never appearing in answers: none ✓
 
@@ -44,23 +45,23 @@ Letters never appearing in answers: none ✓
 
 | letter | count |  | letter | count |
 |---|---:|---|---|---:|
-| `s` | 248 | `b` | 234 |
-| `t` | 228 | `k` | 201 |
-| `a` | 184 | `m` | 179 |
-| `q` | 147 | `p` | 120 |
-| `y` | 108 | `n` | 105 |
-| `d` | 102 | `i` | 99 |
+| `s` | 239 | `b` | 231 |
+| `t` | 221 | `k` | 193 |
+| `a` | 173 | `m` | 170 |
+| `q` | 146 | `p` | 117 |
+| `y` | 104 | `d` | 102 |
+| `n` | 102 | `o` | 96 |
 
 ## 4. Random samples for human review (30 per tier)
 
-### Tier 1 — easy (most common)  (1000 words)
+### Tier 1 — easy (most common)  (966 words)
 
-`agent [1239]`, `akasi [3754]`, `ashraf [305]`, `chuchuk [714]`, `doimo [1443]`, `faqih [887]`, `faraz [290]`, `klark [363]`, `limon [502]`, `lotin [3170]`, `lozim [2185]`, `mayoq [226]`, `metro [1587]`, `oshpaz [285]`, `oʻtkir [3062]`, `oʻttiz [1202]`, `parma [299]`, `pushtu [190]`, `qadim [739]`, `qissa [557]`, `qovoq [406]`, `regbi [765]`, `shahar [61639]`, `shoira [446]`, `sochli [221]`, `toʻgʻon [3675]`, `vakil [1027]`, `voqea [2319]`, `xolis [233]`, `yigit [819]`
+`aholi [124696]`, `aktiv [340]`, `atigi [3915]`, `chunki [16473]`, `doimo [1443]`, `etnik [3660]`, `faqat [22168]`, `komik [367]`, `loyiq [833]`, `mahal [365]`, `malik [927]`, `metil [170]`, `minut [224]`, `oylik [2723]`, `panel [195]`, `parda [894]`, `piyoz [1048]`, `qalin [1804]`, `qaror [9538]`, `qorli [200]`, `qurol [2019]`, `sahih [242]`, `shubha [1119]`, `sobor [357]`, `soʻngra [5385]`, `unsur [184]`, `yakka [2041]`, `yechim [459]`, `yilgi [76613]`, `zarar [3590]`
 
-### Tier 2 — mid  (1000 words)
+### Tier 2 — mid  (966 words)
 
-`axbor [68]`, `blank [54]`, `boyar [41]`, `bukri [37]`, `chopar [40]`, `donna [181]`, `dungan [71]`, `girih [108]`, `hindi [88]`, `jihoz [55]`, `kulba [68]`, `lampa [108]`, `latish [86]`, `malak [35]`, `mayna [69]`, `najas [125]`, `olloh [92]`, `pulli [89]`, `qoyil [161]`, `radon [98]`, `rezba [62]`, `rishta [79]`, `sahar [82]`, `saxiy [86]`, `shohid [51]`, `soʻlak [172]`, `tanho [89]`, `tokcha [50]`, `xalta [75]`, `xasta [36]`
+`ayyor [149]`, `bochka [54]`, `boʻgʻma [70]`, `burda [38]`, `choʻbin [48]`, `doʻppi [87]`, `erkan [37]`, `gʻayri [47]`, `iftor [54]`, `kadar [38]`, `latta [66]`, `lobbi [73]`, `madad [93]`, `mazax [44]`, `movut [83]`, `noshir [146]`, `oʻzicha [57]`, `qoziq [119]`, `rezba [62]`, `sadaf [53]`, `sanam [116]`, `sarob [74]`, `seroz [93]`, `shrift [133]`, `somsa [67]`, `tanho [89]`, `tiraj [57]`, `turna [123]`, `yigʻin [119]`, `yonoq [64]`
 
-### Tier 3 — hard (least common)  (1000 words)
+### Tier 3 — hard (least common)  (966 words)
 
-`agora [22]`, `ahkom [19]`, `alkash [8]`, `avgit [10]`, `batut [12]`, `bebosh [8]`, `bulla [17]`, `daqiq [18]`, `hilla [19]`, `ishchan [15]`, `kakar [21]`, `kifoz [22]`, `koyot [33]`, `krupa [30]`, `loppi [13]`, `moziy [16]`, `mumli [15]`, `nifoq [26]`, `oʻzboʻy [27]`, `pixta [16]`, `polip [16]`, `poshsha [12]`, `ruchka [31]`, `sharcha [32]`, `sholcha [14]`, `sinchi [11]`, `suluv [33]`, `tanba [8]`, `turoq [17]`, `yombi [13]`
+`agora [22]`, `ahkom [19]`, `alkor [11]`, `avrat [11]`, `begʻam [14]`, `bemol [24]`, `butik [31]`, `dinas [14]`, `imbir [9]`, `jarang [12]`, `kavush [19]`, `kovar [8]`, `kushod [12]`, `legat [15]`, `manot [16]`, `navid [12]`, `nomer [14]`, `ofort [23]`, `piton [21]`, `qayish [8]`, `qipiq [24]`, `qiyiq [18]`, `saros [21]`, `shtanga [14]`, `skotch [11]`, `stoks [15]`, `suyuk [17]`, `tashna [26]`, `toʻnli [11]`, `vassa [31]`

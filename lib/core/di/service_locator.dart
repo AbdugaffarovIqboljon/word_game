@@ -1,11 +1,17 @@
 import 'package:get_it/get_it.dart';
 
+import '../analytics/analytics_service.dart';
+import '../services/notification_service.dart';
+import '../../features/streak/data/streak_reminder_scheduler.dart';
+import '../../features/wallet/data/analytics_wallet_bridge.dart';
 import '../../features/daily/data/daily_board_repository.dart';
 import '../../features/daily/data/daily_chest_repository.dart';
 import '../../features/daily/presentation/daily_cubit.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
 import '../../features/practice/data/practice_repository.dart';
 import '../../features/settings/data/settings_service.dart';
+import '../../features/shop/data/debug_purchase_gateway.dart';
+import '../../features/shop/data/purchase_fulfiller.dart';
 import '../../features/shop/data/purchases_repository.dart';
 import '../../features/shop/data/skin_service.dart';
 import '../../features/shop/domain/purchase_gateway.dart';
@@ -28,12 +34,16 @@ final GetIt sl = GetIt.instance;
 /// Registers every app-wide singleton. Called once at startup after the
 /// platform [PreferencesService] has been loaded. Feature registrations are
 /// grouped for readability.
-Future<void> configureDependencies() async {
+Future<void> configureDependencies({
+  AnalyticsService analytics = const NoopAnalyticsService(),
+  Map<String, Object> configOverrides = const {},
+}) async {
   // ── Core ──────────────────────────────────────────────────────────────────
   final prefs = await PreferencesService.create();
   sl
     ..registerSingleton<PreferencesService>(prefs)
-    ..registerSingleton<GameConfig>(const GameConfig())
+    ..registerSingleton<AnalyticsService>(analytics)
+    ..registerSingleton<GameConfig>(GameConfig(overrides: configOverrides))
     ..registerLazySingleton<GameClock>(() => GameClock(config: sl()));
 
   // ── Game engine ───────────────────────────────────────────────────────────
@@ -52,7 +62,9 @@ Future<void> configureDependencies() async {
 
   // ── Wallet (shared economy) ──────────────────────────────────────────────
   sl
-    ..registerLazySingleton<WalletAnalytics>(() => const NoopWalletAnalytics())
+    ..registerLazySingleton<WalletAnalytics>(
+      () => AnalyticsWalletBridge(sl<AnalyticsService>()),
+    )
     ..registerSingleton<WalletService>(
       WalletService(prefs: prefs, analytics: sl())..load(),
     );
@@ -60,10 +72,31 @@ Future<void> configureDependencies() async {
   // ── Ads & purchases (debug fakes until real SDKs land) ───────────────────
   sl
     ..registerLazySingleton<RewardGateway>(() => const DebugRewardGateway())
-    ..registerLazySingleton<PurchaseGateway>(() => const DebugPurchaseGateway());
+    ..registerLazySingleton<PurchaseFulfiller>(
+      () => PurchaseFulfiller(
+        wallet: sl(),
+        purchases: sl(),
+        config: sl(),
+        analytics: sl(),
+      ),
+    )
+    ..registerLazySingleton<PurchaseGateway>(
+      () => DebugPurchaseGateway(sl<PurchaseFulfiller>()),
+    );
 
   // ── Settings ──────────────────────────────────────────────────────────────
   sl.registerSingleton<SettingsService>(SettingsService(prefs)..load());
+
+  // ── Notifications (local daily streak reminder) ──────────────────────────
+  sl
+    ..registerLazySingleton<NotificationService>(() => NotificationService())
+    ..registerLazySingleton<StreakReminderScheduler>(
+      () => StreakReminderScheduler(
+        notifications: sl(),
+        settings: sl(),
+        streakRepo: sl(),
+      ),
+    );
 
   // ── Shop (skins + entitlements) ──────────────────────────────────────────
   sl

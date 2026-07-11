@@ -17,7 +17,6 @@ adras
 adres
 advor
 adyol
-afgʻon
 afifa
 afisha
 afkor
@@ -28,7 +27,6 @@ afsus
 afyun
 afzal
 agava
-agent
 agora
 agrar
 ahbob
@@ -45,8 +43,6 @@ ajrim
 ajriq
 akant
 akasi
-akbar
-akmal
 akram
 akril
 aksar
@@ -58,7 +54,6 @@ aktor
 akula
 alanga
 alayh
-alban
 albit
 albom
 aldol
@@ -66,10 +61,8 @@ aleut
 alfoz
 algol
 alibi
-alkash
 alkor
 allil
-alloh
 aloqa
 alqor
 alting
@@ -96,7 +89,6 @@ anker
 anons
 antik
 anura
-anvar
 anzur
 aorta
 apart
@@ -119,7 +111,6 @@ argon
 argʻin
 ariya
 ariza
-arman
 armon
 aroba
 arqon
@@ -132,9 +123,7 @@ arxar
 arxey
 arxiv
 arzon
-asaka
 asbob
-ashraf
 ashula
 ashuro
 asira
@@ -271,7 +260,6 @@ belgi
 belli
 bemol
 bemor
-bengal
 benom
 bepul
 beret
@@ -370,11 +358,9 @@ boʻyin
 boʻyli
 boʻyoq
 boʻyra
-brass
 britt
 bronx
 bubon
-budda
 budur
 bufer
 bufet
@@ -440,7 +426,6 @@ chayla
 chayon
 chechak
 chechan
-chechen
 chehra
 chekka
 chekli
@@ -656,7 +641,6 @@ faqir
 farah
 farang
 faraz
-farer
 fasad
 fasih
 fatal
@@ -666,7 +650,6 @@ fenil
 fenol
 ferma
 fermi
-feruz
 fetish
 figʻon
 fikus
@@ -701,9 +684,7 @@ fosiq
 fotih
 foton
 foyda
-fozil
 frank
-french
 freza
 front
 fulbe
@@ -733,7 +714,6 @@ gazli
 geliy
 gemma
 genom
-genri
 geoid
 getto
 geysha
@@ -757,7 +737,6 @@ grafa
 gramm
 grant
 gripp
-grunt
 guano
 gujum
 gulcha
@@ -805,19 +784,16 @@ gʻoyib
 gʻoziy
 gʻubor
 gʻudda
-gʻulom
 gʻumay
 gʻuncha
 gʻurra
 gʻurur
 habash
-habib
 hadeb
 hadis
 hadli
 hadya
 hafta
-hajar
 hakam
 hakim
 hakka
@@ -828,11 +804,9 @@ halol
 halqa
 hamal
 hamda
-hamid
 hamla
 hamma
 hamon
-hamza
 hanuz
 haqda
 haqli
@@ -863,10 +837,8 @@ hidli
 hijob
 hijra
 hilla
-hilol
 hindi
 hisob
-hisor
 hissa
 hiyla
 hofiz
@@ -934,15 +906,12 @@ imkon
 indiy
 indol
 inert
-ingliz
-injil
 injiq
 inkor
 insof
 inson
 intim
 iprit
-iqbol
 iqlim
 iqror
 irfon
@@ -969,11 +938,9 @@ ishrat
 ishsiz
 ishton
 isloh
-islom
 ismat
 ismli
 isnod
-ispan
 isrof
 issiq
 istak
@@ -1003,7 +970,6 @@ jajji
 jaket
 jaman
 jamoa
-jamol
 janda
 jangal
 jangchi
@@ -1061,7 +1027,6 @@ junun
 jussa
 juvon
 kabel
-kabir
 kabob
 kadan
 kadar
@@ -1085,7 +1050,6 @@ kalta
 kamar
 kamer
 kamin
-kamol
 kamon
 kanal
 kanat
@@ -1103,7 +1067,6 @@ karash
 karat
 karda
 kargo
-karim
 karki
 karma
 karra
@@ -1126,7 +1089,6 @@ katta
 kavak
 kavar
 kavush
-kazak
 kazus
 kechki
 kechuv
@@ -1161,7 +1123,6 @@ kisva
 kitob
 kiyik
 kiyim
-klark
 klass
 klishe
 klyuch
@@ -1181,7 +1142,6 @@ kolba
 kolit
 kolon
 komik
-komil
 konchi
 konik
 konka
@@ -1207,7 +1167,6 @@ koʻkat
 koʻkcha
 koʻkish
 koʻlam
-koʻlob
 koʻmak
 koʻmik
 koʻmir
@@ -1222,7 +1181,6 @@ koʻtal
 koʻxna
 koʻzgu
 koʻzli
-kreml
 krest
 krona
 kross
@@ -1272,7 +1230,6 @@ lalmi
 lampa
 langar
 langet
-lanka
 lapar
 lapsha
 laqab
@@ -1283,7 +1240,6 @@ largo
 lasso
 latcha
 latif
-latin
 latish
 latta
 latun
@@ -1325,7 +1281,6 @@ lokli
 lokus
 loppi
 losos
-lotin
 loyiq
 loyli
 loyqa
@@ -1348,18 +1303,15 @@ magma
 magʻiz
 mahal
 mahsi
-majid
 majmu
 major
 majoz
 majus
 maket
-makka
 makon
 makro
 malak
 malax
-malay
 malik
 malla
 malva
@@ -1392,7 +1344,6 @@ marta
 marti
 marza
 masal
-masih
 maska
 mason
 massa
@@ -1439,8 +1390,6 @@ minus
 minut
 miraj
 mirob
-mirza
-mirzo
 misli
 misol
 misra
@@ -1482,9 +1431,7 @@ moyli
 moziy
 mozor
 moʻgʻol
-moʻgʻul
 moʻjaz
-moʻmin
 moʻyna
 muboh
 muchal
@@ -1510,7 +1457,6 @@ munis
 muqim
 murda
 murid
-murod
 mushak
 mushuk
 muzey
@@ -1538,7 +1484,6 @@ naqib
 narda
 narsa
 nasab
-nasib
 nasim
 nasos
 navid
@@ -1552,7 +1497,6 @@ nazir
 nechta
 nechun
 negiz
-nemis
 neper
 netto
 nifoq
@@ -1591,7 +1535,6 @@ norin
 norka
 norma
 noshir
-nosir
 nosoz
 notiq
 novak
@@ -1654,7 +1597,6 @@ olmos
 olmosh
 olqish
 oltin
-oltoy
 ombor
 ombur
 omega
@@ -1706,8 +1648,6 @@ ovqat
 ovsar
 oxiri
 oxund
-oybek
-oydin
 oygul
 oyina
 oylar
@@ -1745,7 +1685,6 @@ oʻtzor
 oʻychan
 oʻynash
 oʻzaro
-oʻzbek
 oʻzboʻy
 oʻzicha
 oʻzlik
@@ -1780,7 +1719,6 @@ parte
 parvo
 pashsha
 pasta
-pasxa
 patak
 patir
 patli
@@ -1853,7 +1791,6 @@ poʻchoq
 poʻkak
 poʻlat
 pravo
-press
 prima
 proba
 proza
@@ -1864,7 +1801,6 @@ pulpa
 punkt
 purin
 pushta
-pushtu
 putur
 puxta
 pyesa
@@ -1965,7 +1901,6 @@ qovuq
 qoyil
 qoziq
 qozon
-qozoq
 qoʻbiz
 qoʻlli
 qoʻmiq
@@ -2024,9 +1959,7 @@ radio
 radiy
 radon
 rafiq
-rahim
 raisa
-rajab
 rajaz
 ralli
 ramal
@@ -2058,13 +1991,11 @@ raxna
 rayon
 razil
 rebus
-regbi
 rejim
 reket
 renin
 reniy
 renta
-reper
 reyka
 rezba
 rezus
@@ -2104,9 +2035,7 @@ ruhiy
 ruhli
 rulet
 rulon
-rumin
 runik
-ruscha
 rusta
 rusum
 rutil
@@ -2139,7 +2068,6 @@ salaf
 salang
 salat
 salib
-salim
 salla
 salma
 saloh
@@ -2228,7 +2156,6 @@ shankr
 shapka
 sharaf
 sharcha
-sharif
 sharik
 shariy
 sharob
@@ -2290,7 +2217,6 @@ shukur
 shulxa
 shuncha
 shuvoq
-sibir
 sidqi
 sidra
 sifat
@@ -2332,8 +2258,6 @@ smena
 smeta
 smola
 sobiq
-sobir
-sobit
 sobol
 sobor
 sochiq
@@ -2348,7 +2272,6 @@ sohib
 sohil
 sokin
 sokol
-solih
 solik
 solim
 soliq
@@ -2371,13 +2294,11 @@ soqol
 soqov
 sotix
 sovchi
-sovet
 sovgʻa
 sovun
 sovuq
 sovut
 soxta
-soyuz
 soʻfiy
 soʻgal
 soʻlak
@@ -2395,8 +2316,6 @@ spirt
 spora
 sport
 ssuda
-stark
-start
 stela
 stend
 stoik
@@ -2463,13 +2382,11 @@ tamgʻa
 tamom
 tanba
 tanda
-tangri
 tangut
 tanho
 tanish
 tanli
 tanob
-taolo
 tapir
 taqim
 taqiq
@@ -2487,7 +2404,6 @@ tashna
 tashqi
 tasir
 tasma
-tatar
 tavba
 tavil
 tavla
@@ -2515,13 +2431,11 @@ terim
 terli
 terma
 teshik
-tesla
 tetik
 tetis
 tezak
 tezda
 tezis
-tibet
 tigel
 tigʻiz
 tigʻli
@@ -2558,7 +2472,6 @@ tobut
 togʻay
 togʻli
 toifa
-tojik
 tojli
 tokar
 tokay
@@ -2647,7 +2560,6 @@ turma
 turna
 turne
 turob
-turon
 turoq
 tushki
 tushum
@@ -2679,14 +2591,12 @@ ulfat
 ulkan
 umaro
 ummat
-ummon
 unabi
 undan
 unday
 undosh
 undov
 uniki
-union
 unsiz
 unsur
 unvon
@@ -2704,7 +2614,6 @@ uyali
 uyezd
 uygʻoq
 uygʻun
-uygʻur
 uyshun
 uysiz
 uzangi
@@ -2737,7 +2646,6 @@ vatar
 vater
 vazir
 veber
-venger
 venoz
 vesta
 video
@@ -2766,7 +2674,6 @@ vosil
 vosit
 vujud
 vulva
-vzvod
 xabar
 xachir
 xafif
@@ -2803,7 +2710,6 @@ xiroj
 xirqa
 xitin
 xitob
-xitoy
 xiyla
 xiyol
 xobbi
@@ -2849,7 +2755,6 @@ yalla
 yalpi
 yamin
 yamoq
-yapon
 yaqin
 yarim
 yarogʻ
@@ -2867,7 +2772,6 @@ yaxob
 yaxshi
 yaxta
 yayov
-yazid
 yechim
 yelik
 yelim
@@ -2936,11 +2840,9 @@ yubka
 yugan
 yukka
 yukli
-yuliy
 yumor
 yumuq
 yungli
-yunon
 yupqa
 yurak
 yutuq
@@ -2981,19 +2883,15 @@ zirak
 ziyod
 ziyon
 zobit
-zohid
-zohir
 zokir
 zolim
 zombi
-zomin
 zonal
 zotan
 zotli
 zovur
 zoʻrgʻa
 zuhal
-zuhra
 zuhur
 zukko
 zuluk

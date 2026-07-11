@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_game/core/config/game_config.dart';
@@ -14,10 +15,14 @@ import 'package:word_game/features/wallet/data/wallet_service.dart';
 
 class _SpyGateway implements RewardGateway {
   int interstitials = 0;
+  final ValueNotifier<bool> _ready = ValueNotifier<bool>(true);
   @override
-  Future<bool> showRewardedAd() async => true;
+  Future<bool> showRewardedAd(RewardedPlacement placement) async => true;
   @override
-  Future<void> showInterstitial() async => interstitials++;
+  Future<void> showInterstitial(InterstitialPlacement placement) async =>
+      interstitials++;
+  @override
+  ValueListenable<bool> isReady(RewardedPlacement placement) => _ready;
 }
 
 void main() {

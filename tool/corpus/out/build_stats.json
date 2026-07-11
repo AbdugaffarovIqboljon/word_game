@@ -2,11 +2,11 @@
   "hun_all": 69446,
   "hun_5ll": 5143,
   "wiki_types": 1024153,
-  "answers_total": 3000,
+  "answers_total": 2898,
   "answers_min_freq_used": 2,
-  "tier_1_easy": 1000,
-  "tier_2_mid": 1000,
-  "tier_3_hard": 1000,
+  "tier_1_easy": 966,
+  "tier_2_mid": 966,
+  "tier_3_hard": 966,
   "valid_guesses_total": 16096,
   "answers_offensive_removed": 3,
   "vg_sources": {
@@ -15,6 +15,8 @@
     "generated_inflection": 8611,
     "wiki_inflection": 2345
   },
-  "answers_with_compound": 716,
-  "answers_with_ng": 65
+  "answers_with_compound": 698,
+  "answers_with_ng": 61,
+  "answers_non_answer_removed": 102,
+  "recurated": true
 }

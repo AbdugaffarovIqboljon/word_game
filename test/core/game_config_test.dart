@@ -22,10 +22,15 @@ void main() {
       expect(config.hintDictionaryPrice, 75);
     });
 
-    test('gem ladder has four SKUs with a best-value flag', () {
-      expect(config.gemSkus, hasLength(4));
+    test('gem ladder has three store SKUs with a best-value flag', () {
+      expect(config.gemSkus, hasLength(3));
       expect(config.gemSkus.where((s) => s.bestValue), hasLength(1));
-      expect(config.gemSkus[1].total, 600); // 550 + 50 bonus
+      expect(config.gemSkus.map((s) => s.sku), [
+        'gems_small_100',
+        'gems_med_350',
+        'gems_large_1100',
+      ]);
+      expect(config.gemSkus[1].total, 350); // med tier, no bonus
     });
   });
 

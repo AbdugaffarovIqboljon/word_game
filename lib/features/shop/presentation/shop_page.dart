@@ -20,6 +20,7 @@ import '../../wallet/data/wallet_service.dart';
 import '../data/purchases_repository.dart';
 import '../data/skin_service.dart';
 import '../domain/purchase_gateway.dart';
+import '../domain/sku_ids.dart';
 
 /// Shop — one scrollable route (decisions §8): remove-ads hero, gems ladder,
 /// hint bundle, time-limited starter pack, and the tile-skin gallery with a live
@@ -41,39 +42,22 @@ class _ShopPageState extends State<ShopPage> {
   void _toast(String message) => ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(message)));
 
+  // Purchases only INITIATE here — the gateway fulfills (credits wallet / sets
+  // remove-ads) centrally on the store's purchase stream, so a pending purchase
+  // that approves later still lands. Balances update reactively via the wallet
+  // notifiers; setState refreshes the entitlement-gated cards.
   Future<void> _buyRemoveAds() async {
-    if (await _iap.buy('remove_ads_bundle')) {
-      await _purchases.setRemoveAds(true);
-      await _purchases.markOwned('remove_ads_bundle');
-      if (mounted) setState(() {});
-    }
+    await _iap.buy(SkuIds.removeAds);
+    if (mounted) setState(() {});
   }
 
-  Future<void> _buyGems(GemSku sku) async {
-    if (await _iap.buy('gems_${sku.gems}')) {
-      await _wallet.creditGems(sku.total, reason: 'iap_gems');
-    }
-  }
+  Future<void> _buyGems(GemSku sku) => _iap.buy(sku.sku);
 
-  Future<void> _buyHintPack() async {
-    if (await _iap.buy('hint_pack')) {
-      // v1: no separate hint-token inventory — grant an equivalent coin bundle.
-      await _wallet.creditCoins(
-        _config.hintPackCount * _config.hintDictionaryPrice,
-        reason: 'iap_hint_pack',
-      );
-    }
-  }
+  Future<void> _buyHintPack() => _iap.buy(SkuIds.hintPack);
 
   Future<void> _buyStarter() async {
-    if (await _iap.buy('starter_pack')) {
-      await _wallet.creditGems(_config.starterPackGems, reason: 'iap_starter');
-      await _wallet.creditCoins(
-        _config.starterPackHints * _config.hintDictionaryPrice,
-        reason: 'iap_starter_hints',
-      );
-      await _purchases.markOwned('starter_pack');
-    }
+    await _iap.buy(SkuIds.starterPack);
+    if (mounted) setState(() {});
   }
 
   Future<void> _onSkin(SkinSku sku) async {
@@ -126,18 +110,20 @@ class _ShopPageState extends State<ShopPage> {
                     onBuy: _buyHintPack,
                   ),
                   const SizedBox(height: 20),
-                  StarterPackBanner(
-                    price: _config.starterPackUsd,
-                    wasPrice: _config.starterPackWasUsd,
-                    gems: _config.starterPackGems,
-                    hints: _config.starterPackHints,
-                    remaining: () => _purchases
-                        .starterDeadline(
-                          Duration(hours: _config.starterPackWindowHours),
-                        )
-                        .difference(DateTime.now()),
-                    onBuy: _buyStarter,
-                  ),
+                  // One-time offer: hidden once owned (gated locally).
+                  if (!_purchases.isOwned(SkuIds.starterPack))
+                    StarterPackBanner(
+                      price: _config.starterPackUsd,
+                      wasPrice: _config.starterPackWasUsd,
+                      gems: _config.starterPackGems,
+                      hints: _config.starterPackHints,
+                      remaining: () => _purchases
+                          .starterDeadline(
+                            Duration(hours: _config.starterPackWindowHours),
+                          )
+                          .difference(DateTime.now()),
+                      onBuy: _buyStarter,
+                    ),
                   const SizedBox(height: 24),
                   Text(LocaleKeys.shopSkinsTitle.tr(), style: AppTextStyles.sectionTitle),
                   const SizedBox(height: 12),

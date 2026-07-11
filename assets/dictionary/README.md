@@ -8,7 +8,9 @@ The **real** word content for the daily game, produced by `tool/corpus` +
 Files (gzipped):
 
 - `valid_guesses.txt.gz` — accepted-guess dictionary, 16,096 words (superset of answers)
-- `answers_tiered.tsv.gz` — 3,000 answers, `word \t tier(1..3) \t freq` (practice mode)
+- `answers_tiered.tsv.gz` — 2,900 answers, `word \t tier(1..3) \t freq` (practice mode)
+  (proper nouns / loanwords / slang curated out of the answer pool via
+  `tool/corpus/exclusions/non_answers.txt`; they remain valid guesses)
 - `schedule.json.gz` — 90-day daily schedule (offline fallback for the daily word)
 
 Every word is exactly 5 logical letters under the game's `WordTokenizer`

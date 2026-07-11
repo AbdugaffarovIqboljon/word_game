@@ -119,6 +119,8 @@ class _PracticePlayViewState extends State<PracticePlayView> {
       cleanPrice: config.hintCleanPrice,
       dictionaryPrice: config.hintDictionaryPrice,
       definition: _cubit.definition,
+      revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
+      cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
       onBuy: (type, {required viaAd}) async {
         final price = switch (type) {
           HintType.revealLetter => config.hintRevealPrice,
@@ -126,7 +128,11 @@ class _PracticePlayViewState extends State<PracticePlayView> {
           HintType.dictionary => config.hintDictionaryPrice,
         };
         final paid = viaAd
-            ? await reward.showRewardedAd()
+            ? await reward.showRewardedAd(switch (type) {
+                HintType.revealLetter => RewardedPlacement.hintLetter,
+                HintType.cleanKeyboard => RewardedPlacement.hintClean,
+                HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
+              })
             : await _wallet.debitCoins(price, reason: 'hint_${type.name}');
         if (!paid) return false;
         switch (type) {

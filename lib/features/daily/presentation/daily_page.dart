@@ -20,6 +20,7 @@ import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
 import '../../hints/presentation/hint_sheet.dart';
 import '../../shop/data/skin_service.dart';
+import '../../streak/data/streak_reminder_scheduler.dart';
 import '../../streak/data/streak_repository.dart';
 import '../../streak/domain/streak_calculator.dart';
 import '../../streak/presentation/widgets/streak_dialogs.dart';
@@ -67,6 +68,8 @@ class _DailyViewState extends State<DailyView> {
   final GameClock _clock = sl<GameClock>();
   final WalletService _wallet = sl<WalletService>();
   final SkinService _skins = sl<SkinService>();
+  bool _resultAdShown = false;
+  DailyPhase? _reminderPhase;
 
   int _rendered = 0;
   bool _restored = false;
@@ -115,6 +118,27 @@ class _DailyViewState extends State<DailyView> {
           context,
           message: LocaleKeys.dailyInvalidWord.tr(),
         );
+      }
+    }
+
+    // Result interstitial (sj_result_inter): fired once when the daily resolves.
+    // The gateway caps it to 1/day and honours the session warm-up, so reopening
+    // an already-solved daily right after launch never shows it.
+    if (!_resultAdShown &&
+        (s.phase == DailyPhase.solved || s.phase == DailyPhase.failed)) {
+      _resultAdShown = true;
+      sl<RewardGateway>().showInterstitial(InterstitialPlacement.result);
+    }
+
+    // Streak reminder: keep the 20:00 nudge in sync with today's solved-state.
+    // Only act on phase transitions so typing doesn't reschedule every keystroke.
+    if (_reminderPhase != s.phase && s.phase != DailyPhase.loading) {
+      _reminderPhase = s.phase;
+      final reminders = sl<StreakReminderScheduler>();
+      if (s.phase == DailyPhase.playing) {
+        reminders.reminderForPlayable(s.streak);
+      } else {
+        reminders.reminderResolved();
       }
     }
 
@@ -208,6 +232,8 @@ class _DailyViewState extends State<DailyView> {
       cleanPrice: config.hintCleanPrice,
       dictionaryPrice: config.hintDictionaryPrice,
       definition: _cubit.definition,
+      revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
+      cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
       onBuy: (type, {required viaAd}) async {
         final price = switch (type) {
           HintType.revealLetter => config.hintRevealPrice,
@@ -215,7 +241,11 @@ class _DailyViewState extends State<DailyView> {
           HintType.dictionary => config.hintDictionaryPrice,
         };
         final paid = viaAd
-            ? await reward.showRewardedAd()
+            ? await reward.showRewardedAd(switch (type) {
+                HintType.revealLetter => RewardedPlacement.hintLetter,
+                HintType.cleanKeyboard => RewardedPlacement.hintClean,
+                HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
+              })
             : await _wallet.debitCoins(price, reason: 'hint_${type.name}');
         if (!paid) return false;
         switch (type) {

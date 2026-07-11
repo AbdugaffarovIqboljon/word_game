@@ -17,6 +17,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../streak/data/streak_reminder_scheduler.dart';
 import '../data/onboarding_repository.dart';
 
 /// One-time onboarding (screen_inventory §8): welcome, color rules, and an
@@ -35,6 +36,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Future<void> _finish() async {
     await sl<OnboardingRepository>().markSeen();
+    // OS notification permission is requested here (onboarding completion), then
+    // the streak reminder is scheduled if the toggle is on.
+    await sl<StreakReminderScheduler>().onboardingCompleted();
     if (mounted) context.go(AppRoutes.daily);
   }
 

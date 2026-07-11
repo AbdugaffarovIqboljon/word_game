@@ -172,7 +172,7 @@ class PracticeCubit extends Cubit<PracticeState> {
     if (_removeAds) return;
     final every = _config.practiceInterstitialEvery;
     if (_session.solved > 0 && _session.solved % every == 0) {
-      await _rewardGateway.showInterstitial();
+      await _rewardGateway.showInterstitial(InterstitialPlacement.practice);
     }
   }
 

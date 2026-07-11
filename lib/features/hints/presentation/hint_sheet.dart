@@ -23,6 +23,8 @@ Future<void> showHintSheet(
   required int dictionaryPrice,
   required String? definition,
   required HintPurchase onBuy,
+  bool revealAdAvailable = true,
+  bool cleanAdAvailable = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -36,6 +38,8 @@ Future<void> showHintSheet(
       dictionaryPrice: dictionaryPrice,
       definition: definition,
       onBuy: onBuy,
+      revealAdAvailable: revealAdAvailable,
+      cleanAdAvailable: cleanAdAvailable,
     ),
   );
 }
@@ -51,6 +55,8 @@ class HintSheet extends StatefulWidget {
     required this.dictionaryPrice,
     required this.definition,
     required this.onBuy,
+    this.revealAdAvailable = true,
+    this.cleanAdAvailable = true,
     super.key,
   });
 
@@ -60,6 +66,9 @@ class HintSheet extends StatefulWidget {
   final int dictionaryPrice;
   final String? definition;
   final HintPurchase onBuy;
+  // Rewarded-ad readiness per placement; the "watch ad" button hides on no-fill.
+  final bool revealAdAvailable;
+  final bool cleanAdAvailable;
 
   @override
   State<HintSheet> createState() => _HintSheetState();
@@ -125,7 +134,9 @@ class _HintSheetState extends State<HintSheet> {
                     canAffordCoins: coins >= widget.revealPrice,
                     emphasizeAd: insufficient,
                     onCoin: () => _buy(HintType.revealLetter, viaAd: false),
-                    onAd: () => _buy(HintType.revealLetter, viaAd: true),
+                    onAd: widget.revealAdAvailable
+                        ? () => _buy(HintType.revealLetter, viaAd: true)
+                        : null,
                   ),
                   const SizedBox(height: 11),
                   HintActionCard(
@@ -137,7 +148,9 @@ class _HintSheetState extends State<HintSheet> {
                     canAffordCoins: coins >= widget.cleanPrice,
                     emphasizeAd: insufficient,
                     onCoin: () => _buy(HintType.cleanKeyboard, viaAd: false),
-                    onAd: () => _buy(HintType.cleanKeyboard, viaAd: true),
+                    onAd: widget.cleanAdAvailable
+                        ? () => _buy(HintType.cleanKeyboard, viaAd: true)
+                        : null,
                   ),
                   const SizedBox(height: 11),
                   HintActionCard(

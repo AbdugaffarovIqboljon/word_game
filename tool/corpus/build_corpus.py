@@ -153,7 +153,16 @@ def load_wiki(path):
     return freq
 
 
-def load_exclusions(path):
+def load_exclusions(path, root_match=True):
+    """Return a predicate `is_excluded(word)` from a term list.
+
+    root_match=True  (offensive list): exact OR substring for terms >=4 chars,
+                     so a root also removes its derivations.
+    root_match=False (non-answers list): EXACT match only — every answer is
+                     exactly 5 logical letters, so exact is sufficient and avoids
+                     accidentally deleting a good word that merely contains a
+                     proper-noun substring.
+    """
     exact, roots = set(), []
     with open(path, encoding="utf-8") as f:
         for line in f:
@@ -162,13 +171,26 @@ def load_exclusions(path):
                 continue
             term = U.normalize(line)
             exact.add(term)
-            if len(term) >= 4:
+            if root_match and len(term) >= 4:
                 roots.append(term)
-    def is_offensive(word):
+    def is_excluded(word):
         if word in exact:
             return True
         return any(r in word for r in roots)
-    return is_offensive
+    return is_excluded
+
+
+def assign_tiers(answers):
+    """Split a frequency-rank-ordered answer list into 3 balanced tiers.
+
+    `answers` must already be sorted most-frequent first. Tier 1 = easy (most
+    common) .. tier 3 = hard (least common). Returns {word: tier}. Shared by the
+    full build and the `recurate` re-tiering path so both stay identical.
+    """
+    n = len(answers)
+    cut1, cut2 = n // 3, (2 * n) // 3
+    return {w: (1 if i < cut1 else 2 if i < cut2 else 3)
+            for i, w in enumerate(answers)}
 
 
 def is_inflected_of_hunspell(token, hun_all):
@@ -200,10 +222,15 @@ def build(sources_dir, out_dir):
     dic = os.path.join(sources_dir, "uz_Latn_UZ.dic")
     wiki = os.path.join(sources_dir, "wiki_freq.tsv")
     excl = os.path.join(HERE, "exclusions", "offensive_uz.txt")
+    non_ans = os.path.join(HERE, "exclusions", "non_answers.txt")
 
     hun_all, hun_5ll, hun_pos = load_hunspell(dic)
     freq = load_wiki(wiki)
     is_offensive = load_exclusions(excl)
+    # Proper nouns / raw loanwords / slang: removed from ANSWERS only. They remain
+    # legitimate valid_guesses (a player may type them), so this filter is applied
+    # to the answer pool below and never to the guess list.
+    is_non_answer = load_exclusions(non_ans, root_match=False)
 
     def total(tok):
         return freq.get(tok, (0, 0))[0]
@@ -218,9 +245,12 @@ def build(sources_dir, out_dir):
 
     # --- ANSWERS: common, guessable, lexicon lemmas ------------------------
     off_removed = sum(1 for w in hun_5ll if is_offensive(w))
+    non_ans_removed = sum(
+        1 for w in hun_5ll if is_non_answer(w) and not is_offensive(w))
     min_freq = MIN_ANSWER_FREQ
     def answer_candidates(mf):
-        return [w for w in hun_5ll if not is_offensive(w) and total(w) >= mf]
+        return [w for w in hun_5ll
+                if not is_offensive(w) and not is_non_answer(w) and total(w) >= mf]
     cands = answer_candidates(min_freq)
     if len(cands) < MIN_ANSWERS:  # relax so we always reach the floor
         min_freq = 1
@@ -230,10 +260,7 @@ def build(sources_dir, out_dir):
 
     # tier by frequency rank: tier 1 = most frequent (easy) .. tier 3 = hard
     n = len(answers)
-    cut1, cut2 = n // 3, (2 * n) // 3
-    tier = {}
-    for i, w in enumerate(answers):
-        tier[w] = 1 if i < cut1 else (2 if i < cut2 else 3)
+    tier = assign_tiers(answers)
 
     # --- VALID GUESSES: broad accepted list, superset of answers -----------
     vg = set(answers)
@@ -291,6 +318,7 @@ def build(sources_dir, out_dir):
         "tier_1_easy": tier_counts[1], "tier_2_mid": tier_counts[2], "tier_3_hard": tier_counts[3],
         "valid_guesses_total": len(valid_guesses),
         "answers_offensive_removed": off_removed,
+        "answers_non_answer_removed": non_ans_removed,
         "vg_sources": dict(src),
         "answers_with_compound": sum(1 for w in answers if U.has_compound(w)),
         "answers_with_ng": sum(1 for w in answers if U.has_letter(w, "ng")),
@@ -338,6 +366,8 @@ def _write_report(out_dir, stats, answers, tier, total):
         f"(superset of answers ✓)")
     add(f"  - provenance: {stats['vg_sources']}")
     add(f"- Offensive stems removed from answer pool: {stats['answers_offensive_removed']}")
+    add(f"- Proper nouns / loanwords / slang removed from answer pool "
+        f"(kept in valid_guesses): {stats.get('answers_non_answer_removed', 0)}")
     add(f"- Answers containing a compound letter: {stats['answers_with_compound']} "
         f"(of which `ng`: {stats['answers_with_ng']})\n")
 

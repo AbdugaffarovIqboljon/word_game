@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/nav_header.dart';
 import '../../shop/domain/purchase_gateway.dart';
+import '../../streak/data/streak_reminder_scheduler.dart';
 import '../data/settings_service.dart';
 
 /// Settings (decisions §8): language rows (uz-Latn active, others disabled for
@@ -77,7 +79,11 @@ class SettingsPage extends StatelessWidget {
                           icon: AppIcons.notifications,
                           label: LocaleKeys.settingsNotifications.tr(),
                           value: settings.notifications,
-                          onChanged: settings.setNotifications,
+                          onChanged: (v) {
+                            settings.setNotifications(v);
+                            sl<StreakReminderScheduler>()
+                                .onNotificationsToggled(v);
+                          },
                         ),
                       ],
                     ),
@@ -97,6 +103,13 @@ class SettingsPage extends StatelessWidget {
                           icon: AppIcons.refresh,
                           label: LocaleKeys.settingsRestore.tr(),
                           onTap: () => _restore(context),
+                        ),
+                        const _RowDivider(),
+                        _ActionRow(
+                          icon: AppIcons.info,
+                          // uz-Latn only in v1; the attribution copy is fixed.
+                          label: 'Maʼlumotlar manbasi',
+                          onTap: () => _showAttribution(context),
                         ),
                       ],
                     ),
@@ -119,6 +132,38 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _restore(BuildContext context) async {
     await sl<PurchaseGateway>().restore();
+  }
+
+  // CC BY-SA attribution for the bundled word data (assets/dictionary/README.md).
+  void _showAttribution(BuildContext context) {
+    showAppDialog<void>(
+      context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Maʼlumotlar manbasi', style: AppTextStyles.title),
+          const SizedBox(height: 12),
+          Text(
+            'Soʻz maʼlumotlari Oʻzbek Vikipediyasidan (uz.wikipedia.org, '
+            'CC BY-SA 4.0) va MUNIS oʻzbek lotin hunspell lugʻatidan (CC0) '
+            'olingan. Batafsil: tool/corpus/SOURCES.md.',
+            style: AppTextStyles.body.copyWith(color: AppColors.text2),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Yopish',
+                style: AppTextStyles.bodyStrong.copyWith(color: AppColors.gem),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

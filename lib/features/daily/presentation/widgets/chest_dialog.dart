@@ -71,7 +71,8 @@ class _ChestDialogState extends State<_ChestDialog> {
   Future<void> _double() async {
     final watch = await showRewardedAdOffer(context, coins: _reward);
     if (watch != true || !mounted) return;
-    final earned = await widget.rewardGateway.showRewardedAd();
+    final earned =
+        await widget.rewardGateway.showRewardedAd(RewardedPlacement.chestDouble);
     if (!earned || !mounted) return;
     // Credit the extra reward to make it ×2.
     await widget.wallet.creditCoins(_reward, reason: 'daily_chest_double');
@@ -120,14 +121,28 @@ class _ChestDialogState extends State<_ChestDialog> {
         const SizedBox(height: 4),
         Text(LocaleKeys.dialogChestOpened.tr(), style: AppTextStyles.body),
         const SizedBox(height: 20),
+        // The ×2 offer hides itself when no rewarded ad is loaded (no fill).
         if (!_doubled)
-          PrimaryButton(
-            label: '${LocaleKeys.dialogChestDoubleCta.tr()}  ${LocaleKeys.dialogChestDoubleTitle.tr()}',
-            icon: AppIcons.watchAd,
-            height: 52,
-            onPressed: _double,
+          ValueListenableBuilder<bool>(
+            valueListenable:
+                widget.rewardGateway.isReady(RewardedPlacement.chestDouble),
+            builder: (context, ready, _) {
+              if (!ready) return const SizedBox.shrink();
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PrimaryButton(
+                    label:
+                        '${LocaleKeys.dialogChestDoubleCta.tr()}  ${LocaleKeys.dialogChestDoubleTitle.tr()}',
+                    icon: AppIcons.watchAd,
+                    height: 52,
+                    onPressed: _double,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              );
+            },
           ),
-        if (!_doubled) const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: SecondaryButton(
