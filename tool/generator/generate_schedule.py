@@ -50,6 +50,16 @@ def load_tiers(path):
     return tiers
 
 
+def load_definitions(path):
+    """{word: definition_uz} master (WS1). Keyed by word so definitions survive a
+    tier re-cut / schedule regeneration — they re-attach to whichever dates keep
+    the word. Missing file → no definitions (every puzzle gets null)."""
+    if not path or not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return {k: v for k, v in json.load(f).items() if v}
+
+
 def load_history(path):
     """{'YYYY-MM-DD': word} of already-assigned days (previous schedules)."""
     if not path or not os.path.exists(path):
@@ -127,13 +137,28 @@ def main():
     ap.add_argument("--days", type=int, default=90)
     ap.add_argument("--seed", type=int, default=142)
     ap.add_argument("--history", default=None, help="prior schedule/history JSON (optional)")
+    ap.add_argument("--definitions",
+                    default=os.path.join(os.path.dirname(__file__), "definitions_uz.json"),
+                    help="word->definition_uz master (WS1)")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "out", "schedule.json"))
     args = ap.parse_args()
 
     tiers = load_tiers(args.answers)
     history = load_history(args.history)
+    defs = load_definitions(args.definitions)
     start = dt.date.fromisoformat(args.start)
     puzzles = build_schedule(tiers, start, args.days, args.seed, history)
+
+    # Attach definitions by word (WS1). A definition must never contain its own
+    # answer word — the dialog shows it *without* revealing the word.
+    missing = []
+    for p in puzzles:
+        d = defs.get(p["word"])
+        if d and p["word"] in d.lower():
+            raise SystemExit(f"definition for '{p['word']}' reveals the word: {d!r}")
+        p["definition_uz"] = d
+        if not d:
+            missing.append(p["word"])
 
     # invariants
     words = [p["word"] for p in puzzles]
@@ -156,6 +181,8 @@ def main():
     print(f"wrote {len(puzzles)} puzzles {puzzles[0]['date']}..{puzzles[-1]['date']} "
           f"-> {args.out}")
     print(f"tier counts: {tier_counts}")
+    print(f"definitions attached: {len(puzzles) - len(missing)}/{len(puzzles)}"
+          + (f"  (missing: {missing})" if missing else ""))
     print("first 7:", ", ".join(f"{p['date']}={p['word']}(t{p['difficulty']})" for p in puzzles[:7]))
 
 

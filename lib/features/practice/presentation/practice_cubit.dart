@@ -66,6 +66,7 @@ class PracticeCubit extends Cubit<PracticeState> {
 
   late GameState _game;
   late List<LogicalLetter> _answer;
+  late List<LogicalLetter> _lockedPrefix = const [];
   String? _definition;
   late PracticeTier _tier;
   late PracticeSession _session;
@@ -74,6 +75,14 @@ class PracticeCubit extends Cubit<PracticeState> {
   int get maxAttempts => _config.maxAttempts;
   int get wordLength => _config.wordLength;
   String? get definition => _definition;
+
+  /// Revealed/locked leading letters for the board to pre-fill (WS4).
+  List<LogicalLetter> get lockedPrefix => _lockedPrefix;
+
+  /// Whether a Lugʻat definition exists for the current practice word. The hint
+  /// card is shown only when this is true (WS1 req b) — most practice words have
+  /// none, so it stays hidden in practice unless the word happens to have one.
+  bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
 
   /// 1-based round number within today's session (context header).
   int get sessionRound => _session.played + 1;
@@ -90,11 +99,17 @@ class PracticeCubit extends Cubit<PracticeState> {
         ? const []
         : pool[_random.nextInt(pool.length)];
     _definition = _dictionary.definitionFor(_answer);
+    // WS4: reveal + lock the answer's first letter (config-driven).
+    _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
+        ? [_answer.first]
+        : const [];
     _game = GameState.playing(
       answer: _answer,
       wordLength: _config.wordLength,
       maxAttempts: _config.maxAttempts,
+      lockedPrefix: _lockedPrefix,
     );
+    input.value = _game.input; // stage the locked prefix for the active row
 
     emit(
       state.copyWith(
@@ -209,6 +224,25 @@ class PracticeCubit extends Cubit<PracticeState> {
     if (!await pay()) return false;
     final applied = cleanKeyboard();
     if (applied.isEmpty) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Atomically buys the Lugʻat (definition) hint: gates on availability, charges
+  /// via [pay] only then, displays via [reveal], refunds via [refund] if display
+  /// fails (WS1 req c). [reveal] returns whether the definition was displayed.
+  Future<bool> purchaseDefinition({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+    required Future<bool> Function(String definition) reveal,
+  }) async {
+    final def = _definition;
+    if (def == null || def.isEmpty) return false;
+    if (!await pay()) return false;
+    final shown = await reveal(def);
+    if (!shown) {
       await refund();
       return false;
     }

@@ -21,7 +21,7 @@ Future<void> showHintSheet(
   required int revealPrice,
   required int cleanPrice,
   required int dictionaryPrice,
-  required String? definition,
+  required bool dictionaryAvailable,
   required HintPurchase onBuy,
   bool revealAdAvailable = true,
   bool cleanAdAvailable = true,
@@ -37,7 +37,7 @@ Future<void> showHintSheet(
       revealPrice: revealPrice,
       cleanPrice: cleanPrice,
       dictionaryPrice: dictionaryPrice,
-      definition: definition,
+      dictionaryAvailable: dictionaryAvailable,
       onBuy: onBuy,
       revealAdAvailable: revealAdAvailable,
       cleanAdAvailable: cleanAdAvailable,
@@ -55,7 +55,7 @@ class HintSheet extends StatefulWidget {
     required this.revealPrice,
     required this.cleanPrice,
     required this.dictionaryPrice,
-    required this.definition,
+    required this.dictionaryAvailable,
     required this.onBuy,
     this.revealAdAvailable = true,
     this.cleanAdAvailable = true,
@@ -67,7 +67,10 @@ class HintSheet extends StatefulWidget {
   final int revealPrice;
   final int cleanPrice;
   final int dictionaryPrice;
-  final String? definition;
+  // Whether the current word has a definition; the Lugʻat card renders only when
+  // true (WS1 req b). The definition itself is shown by the page in a themed
+  // dialog after the atomic charge, never inline in the sheet.
+  final bool dictionaryAvailable;
   final HintPurchase onBuy;
   // Rewarded-ad readiness per placement; the "watch ad" button hides on no-fill.
   final bool revealAdAvailable;
@@ -81,16 +84,12 @@ class HintSheet extends StatefulWidget {
 }
 
 class _HintSheetState extends State<HintSheet> {
-  bool _definitionRevealed = false;
-
   Future<void> _buy(HintType type, {required bool viaAd}) async {
     final ok = await widget.onBuy(type, viaAd: viaAd);
     if (!ok || !mounted) return;
-    if (type == HintType.dictionary) {
-      setState(() => _definitionRevealed = true);
-    } else {
-      Navigator.of(context).pop();
-    }
+    // Every hint (including the Lugʻat dialog, which the page has already shown
+    // and awaited by now) closes the sheet on success.
+    Navigator.of(context).pop();
   }
 
   @override
@@ -162,22 +161,22 @@ class _HintSheetState extends State<HintSheet> {
                         ? () => _buy(HintType.cleanKeyboard, viaAd: true)
                         : null,
                   ),
-                  const SizedBox(height: 11),
-                  HintActionCard(
-                    icon: AppIcons.dictionary,
-                    iconColor: AppColors.successBright,
-                    name: LocaleKeys.hintDictionaryName.tr(),
-                    description: _definitionRevealed && widget.definition != null
-                        ? widget.definition!
-                        : LocaleKeys.hintDictionaryDesc.tr(),
-                    price: widget.dictionaryPrice,
-                    canAffordCoins: coins >= widget.dictionaryPrice,
-                    // Dictionary has no ad fallback → whole card locks if unaffordable.
-                    locked: coins < widget.dictionaryPrice && !_definitionRevealed,
-                    onCoin: _definitionRevealed
-                        ? null
-                        : () => _buy(HintType.dictionary, viaAd: false),
-                  ),
+                  // Lugʻat card renders ONLY when the word has a definition
+                  // (WS1 req b) — no card, no charge when data is missing.
+                  if (widget.dictionaryAvailable) ...[
+                    const SizedBox(height: 11),
+                    HintActionCard(
+                      icon: AppIcons.dictionary,
+                      iconColor: AppColors.successBright,
+                      name: LocaleKeys.hintDictionaryName.tr(),
+                      description: LocaleKeys.hintDictionaryDesc.tr(),
+                      price: widget.dictionaryPrice,
+                      canAffordCoins: coins >= widget.dictionaryPrice,
+                      // No ad fallback → whole card locks if unaffordable.
+                      locked: coins < widget.dictionaryPrice,
+                      onCoin: () => _buy(HintType.dictionary, viaAd: false),
+                    ),
+                  ],
                 ],
               ),
             );

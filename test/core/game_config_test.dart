@@ -5,9 +5,10 @@ void main() {
   group('GameConfig defaults', () {
     const config = GameConfig();
 
-    test('board defaults are 5 letters / 6 attempts', () {
+    test('board defaults are 5 letters / 5 attempts, first letter revealed', () {
       expect(config.wordLength, 5);
-      expect(config.maxAttempts, 6);
+      expect(config.maxAttempts, 5); // WS4
+      expect(config.revealFirstLetter, isTrue); // WS4
     });
 
     test('practice rewards are tier-scaled 10/20/35', () {

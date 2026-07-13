@@ -33,7 +33,8 @@ void main() {
   });
 
   test('remains solvable in the attempts left after the guided first guess', () {
-    // Beat 1 spends one of six rows; the answer is reachable in the rest.
+    // Beat 1 spends one of five rows (WS4); the answer is reachable in the rest.
+    expect(TutorialScript.rows, 5);
     expect(TutorialScript.rows - 1, greaterThanOrEqualTo(1));
     expect(TutorialScript.answerWord, 'KITOB');
   });

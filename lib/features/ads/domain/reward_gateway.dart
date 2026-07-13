@@ -20,7 +20,7 @@ enum InterstitialPlacement {
   final String id;
 }
 
-/// Abstraction over the ad SDK. v1 debug ships [DebugRewardGateway]; release
+/// Abstraction over the ad SDK. v1 debug ships `DebugRewardGateway`; release
 /// ships `AdmobRewardGateway`. Hints, the streak ×2 chest, the freeze "watch ad"
 /// option and the practice/result interstitials all go through this.
 abstract interface class RewardGateway {
@@ -36,22 +36,4 @@ abstract interface class RewardGateway {
   /// Whether a rewarded ad for [placement] is loaded and showable right now.
   /// Ad-offer buttons listen to this and hide themselves on no-fill.
   ValueListenable<bool> isReady(RewardedPlacement placement);
-}
-
-/// Debug fake used when [Env.useFakeAds] is on (all debug builds, all tests):
-/// rewarded ads always succeed, interstitials are no-ops, and every placement
-/// reports ready so the UI shows all ad-offer buttons.
-class DebugRewardGateway implements RewardGateway {
-  const DebugRewardGateway();
-
-  static final ValueNotifier<bool> _alwaysReady = ValueNotifier<bool>(true);
-
-  @override
-  Future<bool> showRewardedAd(RewardedPlacement placement) async => true;
-
-  @override
-  Future<void> showInterstitial(InterstitialPlacement placement) async {}
-
-  @override
-  ValueListenable<bool> isReady(RewardedPlacement placement) => _alwaysReady;
 }

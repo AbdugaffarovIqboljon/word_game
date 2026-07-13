@@ -21,6 +21,7 @@ abstract final class LocaleKeys {
   static const onboardingRuleCorrect = 'onboarding.rule_correct';
   static const onboardingRulePresent = 'onboarding.rule_present';
   static const onboardingRuleAbsent = 'onboarding.rule_absent';
+  static const onboardingFirstLetterHint = 'onboarding.first_letter_hint';
   static const onboardingTryTitle = 'onboarding.try_title';
   static const onboardingTryCoachmark = 'onboarding.try_coachmark';
 
@@ -40,6 +41,7 @@ abstract final class LocaleKeys {
   static const dailyPuzzleNumber = 'daily.puzzle_number';
   static const dailyGhostHint = 'daily.ghost_hint';
   static const dailyGhostHintFirst = 'daily.ghost_hint_first';
+  static const dailyAttemptsCoach = 'daily.attempts_coach';
   static const dailyTooShort = 'daily.too_short';
   static const dailyPracticePill = 'daily.practice_pill';
   static const dailyInvalidWord = 'daily.invalid_word';
@@ -88,6 +90,7 @@ abstract final class LocaleKeys {
   static const hintCleanDesc = 'hint.clean_desc';
   static const hintDictionaryName = 'hint.dictionary_name';
   static const hintDictionaryDesc = 'hint.dictionary_desc';
+  static const hintDefinitionTitle = 'hint.definition_title';
   static const hintWatchAd = 'hint.watch_ad';
   static const hintInsufficient = 'hint.insufficient';
   static const hintLocked = 'hint.locked';
@@ -100,6 +103,16 @@ abstract final class LocaleKeys {
   static const statsBest = 'stats.best';
   static const statsDistribution = 'stats.distribution';
   static const statsSuccessNote = 'stats.success_note';
+  static const statsBonusTitle = 'stats.bonus_title';
+  static const statsBonusSolved = 'stats.bonus_solved';
+  static const statsBonusWinRate = 'stats.bonus_win_rate';
+
+  static const bonusTitle = 'bonus.title';
+  static const bonusAgain = 'bonus.again';
+  static const bonusSolved = 'bonus.solved';
+  static const bonusFailed = 'bonus.failed';
+  static const bonusEmpty = 'bonus.empty';
+  static const bonusProHint = 'bonus.pro_hint';
 
   static const shopNavTitle = 'shop.nav_title';
   static const shopBestOffer = 'shop.best_offer';
@@ -174,4 +187,6 @@ abstract final class LocaleKeys {
   static const dialogChestDoubleTitle = 'dialog.chest_double_title';
   static const dialogChestDoubleSubtitle = 'dialog.chest_double_subtitle';
   static const dialogChestDoubleCta = 'dialog.chest_double_cta';
+  static const dialogChestComeBack = 'dialog.chest_come_back';
+  static const dialogChestNextIn = 'dialog.chest_next_in';
 }

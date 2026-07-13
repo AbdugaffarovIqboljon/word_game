@@ -26,7 +26,10 @@ class _SpyGateway implements RewardGateway {
 }
 
 void main() {
-  const config = GameConfig();
+  // The first-letter lock (WS4) is orthogonal to reward/session/interstitial
+  // behavior, so it is disabled here to keep typing full arbitrary words; the
+  // lock is covered in first_letter_reveal_test.dart.
+  const config = GameConfig(overrides: {'reveal_first_letter': false});
   final dict = InMemoryDictionary(
     entries: const [
       DictionaryEntry('qalam', 'Yozuv quroli'),
@@ -85,9 +88,9 @@ void main() {
     await cubit.close();
   });
 
-  test('six wrong guesses fail the round', () async {
+  test('five wrong guesses fail the round', () async {
     final cubit = newCubit()..start(PracticeTier.easy);
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 5; i++) {
       await typeWord(cubit, wrong);
     }
     expect(cubit.state.phase, PracticePhase.failed);

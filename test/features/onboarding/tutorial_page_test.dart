@@ -17,9 +17,10 @@ void main() {
     );
     await tester.pump();
 
-    // Beat 1: the keyboard is present; type the guided word OLTIN.
+    // Beat 1: the keyboard is present; type the guided word KOBRA. The first
+    // letter K is pre-revealed and locked (WS4), so only OBRA is typed.
     expect(find.byIcon(AppIcons.enter), findsOneWidget);
-    for (final glyph in const ['O', 'L', 'T', 'I', 'N']) {
+    for (final glyph in const ['O', 'B', 'R', 'A']) {
       await tester.tap(find.widgetWithText(KeyboardKeyButton, glyph));
       await tester.pump();
     }

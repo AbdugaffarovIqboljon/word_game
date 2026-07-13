@@ -26,7 +26,7 @@ enum _Beat { typing, revealing, teaching, solving, won, lost }
 /// A single, fully-playable scripted puzzle that teaches the color mechanic to a
 /// first-time player who has never seen a word-guessing game.
 ///
-/// Beat 1 — type the guided word OLTIN (only the next needed key is enabled) and
+/// Beat 1 — type the guided word KOBRA (K is pre-revealed; only the next needed
 /// submit for a real flip. Beat 2 — sequential tap-to-advance callouts point at
 /// a green / amber / gray tile. Beat 3 — the keyboard unlocks and the player
 /// genuinely solves KITOB (or, on failure, the answer is gently revealed). Win
@@ -59,6 +59,7 @@ class _TutorialPageState extends State<TutorialPage> {
     answer: TutorialScript.answer,
     wordLength: TutorialScript.columns,
     maxAttempts: TutorialScript.rows,
+    lockedPrefix: TutorialScript.lockedPrefix, // WS4: reveal + lock first letter
   );
   _Beat _beat = _Beat.typing;
   int _teachStep = 0; // 0 → green, 1 → amber, 2 → gray
@@ -66,7 +67,10 @@ class _TutorialPageState extends State<TutorialPage> {
   @override
   void initState() {
     super.initState();
-    _board.setCursor(0, 0);
+    _board.setLockedPrefix(TutorialScript.lockedPrefix);
+    // Render the locked first letter on the active (first) row only, cursor tile 2.
+    _board.setInput(0, _game.input);
+    _board.setCursor(0, _game.input.length);
   }
 
   @override
@@ -79,7 +83,7 @@ class _TutorialPageState extends State<TutorialPage> {
 
   int get _row => _game.guesses.length;
 
-  /// Beat 1 enables only OLTIN's next-needed letter; the flip locks the whole
+  /// Beat 1 enables only KOBRA's next-needed letter; the flip locks the whole
   /// keyboard; Beat 3 unlocks everything.
   Set<LogicalLetter>? get _enabledLetters {
     switch (_beat) {
@@ -144,7 +148,8 @@ class _TutorialPageState extends State<TutorialPage> {
     } else {
       setState(() {
         _beat = _Beat.solving;
-        _board.setCursor(_row, 0);
+        _board.setInput(_row, _game.input);
+        _board.setCursor(_row, _game.input.length);
       });
     }
   }
@@ -156,7 +161,8 @@ class _TutorialPageState extends State<TutorialPage> {
     }
     setState(() {
       _beat = _Beat.solving;
-      _board.setCursor(_row, 0);
+      _board.setInput(_row, _game.input);
+      _board.setCursor(_row, _game.input.length);
     });
   }
 
@@ -364,7 +370,7 @@ class _CoachBubble extends StatelessWidget {
   }
 }
 
-/// Faint OLTIN letters shown in the still-empty tiles of the first row.
+/// Faint KOBRA letters shown in the still-empty tiles of the first row.
 class _GhostWord extends StatelessWidget {
   const _GhostWord({
     required this.letters,

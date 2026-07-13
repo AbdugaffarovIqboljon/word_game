@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../../features/notifications/data/notification_prompt_repository.dart';
 import '../../features/streak/data/streak_reminder_scheduler.dart';
 import '../../features/wallet/data/analytics_wallet_bridge.dart';
+import '../../features/bonus/data/bonus_played_repository.dart';
 import '../../features/daily/data/daily_board_repository.dart';
 import '../../features/daily/data/daily_chest_repository.dart';
 import '../../features/daily/presentation/daily_cubit.dart';
@@ -22,6 +23,7 @@ import '../../features/streak/data/streak_repository.dart';
 import '../../features/wallet/data/wallet_service.dart';
 import '../../features/wallet/domain/wallet_analytics.dart';
 import '../../data/dictionary_datasource.dart';
+import '../../features/ads/data/debug_reward_gateway.dart';
 import '../../features/ads/domain/reward_gateway.dart';
 import '../config/env.dart';
 import '../config/game_config.dart';
@@ -124,6 +126,9 @@ Future<void> configureDependencies({
       () => StreakHistoryRepository(sl()),
     )
     ..registerLazySingleton<StatsRepository>(() => StatsRepository(sl()))
+    ..registerLazySingleton<BonusPlayedRepository>(
+      () => BonusPlayedRepository(sl()),
+    )
     ..registerFactory<DailyCubit>(
       () => DailyCubit(
         dictionary: sl(),

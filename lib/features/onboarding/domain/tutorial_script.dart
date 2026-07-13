@@ -7,21 +7,28 @@ import '../../../core/game/domain/word_tokenizer.dart';
 /// The fixed script for the guided onboarding tutorial (WS1).
 ///
 /// Independent of the daily dictionary schedule: the hidden answer is KITOB
-/// ("book") and the guided first guess is OLTIN ("gold"). The pair is chosen so
-/// the first reveal shows ALL THREE colors — green (T, correct place), amber
-/// (O and I, present) and gray (L and N, absent) — which is exactly what the
-/// sequential teach callouts point at.
+/// ("book") and the guided first guess is KOBRA. The pair is chosen so the first
+/// reveal shows ALL THREE colors — green (K, correct place), amber (O and B,
+/// present) and gray (R and A, absent) — which the sequential teach callouts
+/// point at.
+///
+/// WS4: 5 attempts, and the answer's first letter (K) is revealed and locked from
+/// the start; the guided guess therefore also begins with K, and the tutorial
+/// teaches on a board that already shows the green first letter.
 abstract final class TutorialScript {
   const TutorialScript._();
 
   static const int columns = 5;
-  static const int rows = 6;
+  static const int rows = 5;
 
   /// Hidden answer of the tutorial puzzle.
   static final List<LogicalLetter> answer = WordTokenizer.tokenize('kitob');
 
-  /// The word the user is guided to type first.
-  static final List<LogicalLetter> firstGuess = WordTokenizer.tokenize('oltin');
+  /// The word the user is guided to type first (shares KITOB's locked first K).
+  static final List<LogicalLetter> firstGuess = WordTokenizer.tokenize('kobra');
+
+  /// Revealed + locked leading letters — the answer's first letter (WS4).
+  static List<LogicalLetter> get lockedPrefix => [answer.first];
 
   /// [firstGuess] evaluated against [answer] — the row that flips in Beat 1.
   static final Guess firstReveal = Guess(

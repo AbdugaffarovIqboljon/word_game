@@ -55,17 +55,17 @@ void main() {
       expect(state.guesses.single.isWinning, isTrue);
     });
 
-    test('six wrong guesses -> lost', () {
-      var state = GameState.playing(answer: answer);
+    test('five wrong guesses -> lost', () {
+      var state = GameState.playing(answer: answer); // maxAttempts defaults to 5
       final wrong = ll(['z', 'x', 'v', 'b', 'n']);
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 5; i++) {
         for (final letter in wrong) {
           state = state.addLetter(letter);
         }
         state = state.submit();
       }
       expect(state.status, GameStatus.lost);
-      expect(state.guesses, hasLength(6));
+      expect(state.guesses, hasLength(5));
       expect(state.remainingAttempts, 0);
     });
 

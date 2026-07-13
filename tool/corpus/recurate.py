@@ -30,6 +30,12 @@ sys.path.insert(0, HERE)
 import build_corpus as B  # noqa: E402  (path set above)
 import uz_letters as U     # noqa: E402
 
+# WS7: minimum Wikipedia frequency for a token to remain a daily ANSWER. Words
+# below this floor are the "extreme rare tail" — too obscure to be a fair answer —
+# and are dropped from answers.txt (they stay legal valid_guesses). This lifts the
+# re-cut tier 3 to "genuinely Uzbek, less common" instead of the rare tail.
+TAIL_MIN_FREQ = 15
+
 
 def load_answers_tiered(path):
     """Return [(word, freq)] from an existing answers_tiered.tsv (word\ttier\tfreq)."""
@@ -66,7 +72,10 @@ def recurate(out_dir):
 
     off_removed = sum(1 for w, _ in rows if is_offensive(w))
 
-    survivors = [w for w, _ in rows if not is_offensive(w) and not is_non_answer(w)]
+    kept = [w for w, _ in rows if not is_offensive(w) and not is_non_answer(w)]
+    # WS7 (b): drop the extreme rare tail from ANSWERS (kept in valid_guesses).
+    tail_dropped = [w for w in kept if total(w) < TAIL_MIN_FREQ]
+    survivors = [w for w in kept if total(w) >= TAIL_MIN_FREQ]
     survivors.sort(key=lambda w: (-total(w), w))  # frequency-rank order
     tier = B.assign_tiers(survivors)
     n = len(survivors)
@@ -74,8 +83,10 @@ def recurate(out_dir):
     # Total removed by the non-answer curation, measured against the original
     # answer count (vg_sources["answer"]) so the stat stays correct even when
     # recurate is run repeatedly on already-curated output (idempotent input).
-    orig_answers = int((prev.get("vg_sources") or {}).get("answer", n))
-    non_ans_removed = max(orig_answers - n, 0)
+    # Measured against `kept` (post-non_answers, pre-tail) so the rare-tail drop
+    # is reported separately and never double-counted here.
+    orig_answers = int((prev.get("vg_sources") or {}).get("answer", len(kept)))
+    non_ans_removed = max(orig_answers - len(kept), 0)
 
     answers_sorted = sorted(survivors)
 
@@ -98,6 +109,8 @@ def recurate(out_dir):
         "tier_3_hard": tier_counts[3],
         "answers_offensive_removed": prev.get("answers_offensive_removed", off_removed),
         "answers_non_answer_removed": non_ans_removed,
+        "answers_rare_tail_dropped": len(tail_dropped),
+        "answers_rare_tail_min_freq": TAIL_MIN_FREQ,
         "answers_with_compound": sum(1 for w in answers_sorted if U.has_compound(w)),
         "answers_with_ng": sum(1 for w in answers_sorted if U.has_letter(w, "ng")),
         "recurated": True,
@@ -117,7 +130,9 @@ def main():
     ap.add_argument("--out", default=os.path.join(HERE, "out"))
     args = ap.parse_args()
     stats, removed = recurate(args.out)
-    print(f"re-curated answers: removed {removed} non-answer tokens -> "
+    print(f"re-curated answers: removed {removed} non-answer tokens, "
+          f"dropped {stats['answers_rare_tail_dropped']} rare-tail "
+          f"(freq<{stats['answers_rare_tail_min_freq']}) -> "
           f"{stats['answers_total']} answers "
           f"(t1={stats['tier_1_easy']} t2={stats['tier_2_mid']} t3={stats['tier_3_hard']})")
 

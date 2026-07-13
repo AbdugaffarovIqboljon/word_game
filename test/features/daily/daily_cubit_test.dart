@@ -16,7 +16,10 @@ import 'package:word_game/features/streak/data/streak_repository.dart';
 import 'package:word_game/features/wallet/data/wallet_service.dart';
 
 void main() {
-  const config = GameConfig();
+  // Reward/streak/restore are orthogonal to the first-letter lock (WS4), so the
+  // reveal is turned off here to keep typing full arbitrary words; the lock has
+  // its own coverage in first_letter_reveal_test.dart.
+  const config = GameConfig(overrides: {'reveal_first_letter': false});
   // Two-word dictionary so the answer and a valid "wrong" guess are both known.
   final dict = InMemoryDictionary(
     entries: const [
@@ -104,9 +107,9 @@ void main() {
     expect(cubit.state.phase, DailyPhase.solved);
     expect(cubit.state.streak, 1);
     final reward = cubit.state.reward!;
-    // solved in 1/6, streak→1: 40 base + 50 speed + 5 streak = 95
-    expect(reward.total, 95);
-    expect(wallet.coinBalance, 95);
+    // solved in 1/5, streak→1: 40 base + 40 speed ((5-1)×10) + 5 streak = 85
+    expect(reward.total, 85);
+    expect(wallet.coinBalance, 85);
     expect(StreakRepository(prefs).load().current, 1);
     expect(StatsRepository(prefs).load().wins, 1);
     await cubit.close();
@@ -118,13 +121,13 @@ void main() {
     await typeWord(first, answerToday());
     await first.submit();
     await first.close();
-    expect(wallet.coinBalance, 95);
+    expect(wallet.coinBalance, 85);
 
     // New cubit, same storage/wallet → restore.
     final second = newCubit();
     await second.load();
     expect(second.state.phase, DailyPhase.solved);
-    expect(wallet.coinBalance, 95); // not doubled
+    expect(wallet.coinBalance, 85); // not doubled
     expect(second.state.guesses, hasLength(1));
     await second.close();
   });

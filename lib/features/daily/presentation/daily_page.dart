@@ -16,14 +16,18 @@ import '../../../core/l10n/locale_keys.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/app_haptics.dart';
 import '../../../core/time/game_clock.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/confetti_overlay.dart';
 import '../../ads/domain/reward_gateway.dart';
+import '../../bonus/presentation/widgets/bonus_button.dart';
 import '../../hints/domain/hint_type.dart';
+import '../../hints/presentation/definition_hint_dialog.dart';
 import '../../hints/presentation/hint_sheet.dart';
 import '../../notifications/data/notification_prompt_repository.dart';
 import '../../notifications/domain/notification_prompt_policy.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 import '../../onboarding/presentation/widgets/rules_legend.dart';
+import '../../shop/data/purchases_repository.dart';
 import '../../shop/data/skin_service.dart';
 import '../../streak/data/streak_reminder_scheduler.dart';
 import '../../streak/data/streak_repository.dart';
@@ -34,7 +38,7 @@ import '../data/daily_chest_repository.dart';
 import '../domain/daily_share_data.dart';
 import 'daily_cubit.dart';
 import 'daily_state.dart';
-import 'widgets/board_ghost_hint.dart';
+import 'widgets/board_coach_mark.dart';
 import 'widgets/chest_dialog.dart';
 import 'widgets/daily_context_header.dart';
 import 'widgets/daily_header.dart';
@@ -139,13 +143,16 @@ class _DailyViewState extends State<DailyView> {
       _maybeAutoOpenRules(s);
     }
     if (!_restored) {
+      _board.setLockedPrefix(_cubit.lockedPrefix); // WS4
       for (var r = 0; r < s.guesses.length; r++) {
         _board.restoreRow(r, s.guesses[r]);
       }
       _rendered = s.guesses.length;
       _restored = true;
       if (s.phase == DailyPhase.playing) {
-        _board.setCursor(_cubit.currentRow, 0);
+        // Render the locked first letter on the ACTIVE row only, cursor at tile 2.
+        _board.setInput(_cubit.currentRow, _cubit.input.value);
+        _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
       }
     } else if (s.guesses.length > _rendered) {
       for (var r = _rendered; r < s.guesses.length; r++) {
@@ -245,6 +252,14 @@ class _DailyViewState extends State<DailyView> {
         )
       : null;
 
+  /// "Yana yechish" bonus action (WS3): pro users start a bonus word; free users
+  /// see it locked and tapping opens the shop's remove-ads hero (natural upsell).
+  Widget _bonusButton() => BonusButton(
+        isPro: sl<PurchasesRepository>().removeAds.value,
+        onPlay: () => context.pushNamed(AppRoutes.bonusName),
+        onUpsell: () => context.push(AppRoutes.shop),
+      );
+
   /// Daily rollover: rebuild for the new puzzle date without an app restart.
   void _reloadForNewDay() {
     setState(() {
@@ -338,6 +353,7 @@ class _DailyViewState extends State<DailyView> {
       rewardGateway: sl<RewardGateway>(),
       chestRepo: sl<DailyChestRepository>(),
       today: _cubit.today,
+      remaining: _remaining,
     );
     _cubit.refreshChestFlag();
   }
@@ -351,7 +367,7 @@ class _DailyViewState extends State<DailyView> {
       revealPrice: config.hintRevealPrice,
       cleanPrice: config.hintCleanPrice,
       dictionaryPrice: config.hintDictionaryPrice,
-      definition: _cubit.definition,
+      dictionaryAvailable: _cubit.hasDefinition,
       revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
       cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
       cleanAvailable: _cubit.canCleanKeyboard,
@@ -387,9 +403,27 @@ class _DailyViewState extends State<DailyView> {
       );
     }
 
+    // Lugʻat: charge only after the themed definition dialog actually displays,
+    // refunding on any failure (WS1 req c/d). No ad path for this hint.
+    if (type == HintType.dictionary) {
+      return _cubit.purchaseDefinition(
+        pay: pay,
+        refund: () => _wallet.creditCoins(price, reason: 'hint_dictionary_refund'),
+        reveal: _showDefinitionDialog,
+      );
+    }
+
     if (!await pay()) return false;
     if (type == HintType.revealLetter) _cubit.revealLetter();
-    // Dictionary: the sheet reveals the definition itself.
+    return true;
+  }
+
+  Future<bool> _showDefinitionDialog(String definition) async {
+    if (!mounted) return false;
+    await showAppDialog<void>(
+      context,
+      child: DefinitionHintDialog(definition: definition),
+    );
     return true;
   }
 
@@ -409,6 +443,7 @@ class _DailyViewState extends State<DailyView> {
           onShare: () => _openShare(state),
           onElapsed: _reloadForNewDay,
           banner: _notifBanner(),
+          bonusAction: _bonusButton(),
         );
       case DailyPhase.failed:
         return FailView(
@@ -419,6 +454,7 @@ class _DailyViewState extends State<DailyView> {
           onShare: () => _openShare(state),
           onElapsed: _reloadForNewDay,
           banner: _notifBanner(),
+          bonusAction: _bonusButton(),
         );
       case DailyPhase.playing:
         return _playingBoard(state, interactive: true);
@@ -437,22 +473,17 @@ class _DailyViewState extends State<DailyView> {
               ? _openHint
               : null,
         ),
+        // Coach mark on the first attempt: renders immediately with the board
+        // (state-driven, not cursor-driven), tells the player they have N tries.
+        if (state.guesses.isEmpty)
+          BoardCoachMark(attempts: _cubit.maxAttempts),
         Expanded(
           child: Center(
             child: ValueListenableBuilder<String>(
               valueListenable: _skins.activeSkinId,
               builder: (context, id, _) => TileSkinScope(
                 skin: TileSkin.byId(id),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    GameBoard(controller: _board),
-                    BoardGhostHint(
-                      cursor: _board.cursor,
-                      firstGame: _firstDailyHint,
-                    ),
-                  ],
-                ),
+                child: GameBoard(controller: _board),
               ),
             ),
           ),

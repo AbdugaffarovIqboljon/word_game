@@ -40,9 +40,9 @@ void main() {
   test('answerForDate serves the bundled schedule, then cycles the pool', () async {
     final dict = await build();
 
-    // 2026-07-10 is the first scheduled day (see generated schedule).
+    // 2026-07-10 is the first scheduled day (see generated schedule, WS7 re-cut).
     final scheduled = dict.answerForDate(DateTime.utc(2026, 7, 10));
-    expect(scheduled.map((l) => l.value).join(), 'ustod');
+    expect(scheduled.map((l) => l.value).join(), 'notiq');
 
     // A date far outside the 90-day window still returns a real pool word.
     final beyond = dict.answerForDate(DateTime.utc(2035, 1, 1));

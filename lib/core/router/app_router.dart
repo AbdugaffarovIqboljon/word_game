@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/bonus/presentation/bonus_play_page.dart';
 import '../../features/daily/domain/daily_share_data.dart';
 import '../../features/daily/presentation/daily_page.dart';
 import '../../features/daily/presentation/share_page.dart';
@@ -9,10 +10,12 @@ import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/tutorial_page.dart';
 import '../../features/practice/presentation/practice_hub_page.dart';
 import '../../features/practice/presentation/practice_play_page.dart';
+import '../../features/settings/presentation/attribution_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/shop/presentation/shop_page.dart';
 import '../../features/stats/presentation/stats_page.dart';
 import '../../features/streak/presentation/streak_page.dart';
+import '../app_navigator.dart';
 import '../config/game_config.dart';
 import 'app_routes.dart';
 
@@ -21,6 +24,7 @@ import 'app_routes.dart';
 /// and `/practice/play` are stacked sub-routes so they render over their parent.
 GoRouter createRouter(OnboardingRepository onboarding) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.daily,
     redirect: (context, state) {
       final seenOnboarding = onboarding.hasSeenOnboarding;
@@ -56,6 +60,11 @@ GoRouter createRouter(OnboardingRepository onboarding) {
               fullscreenDialog: true,
               child: SharePage(data: state.extra as DailyShareData?),
             ),
+          ),
+          GoRoute(
+            path: AppRoutes.bonus,
+            name: AppRoutes.bonusName,
+            builder: (context, state) => const BonusPlayPage(),
           ),
         ],
       ),
@@ -93,6 +102,11 @@ GoRouter createRouter(OnboardingRepository onboarding) {
         path: AppRoutes.settings,
         name: AppRoutes.settingsName,
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.attribution,
+        name: AppRoutes.attributionName,
+        builder: (context, state) => const AttributionPage(),
       ),
     ],
   );

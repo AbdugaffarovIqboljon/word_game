@@ -47,6 +47,19 @@ class StatsPage extends StatelessWidget {
                       Expanded(child: StatTile(value: '${streak.best}', label: LocaleKeys.statsBest.tr())),
                     ],
                   ),
+                  // WS3: bonus-word row, shown once the player has done a bonus.
+                  if (stats.bonusPlayed > 0) ...[
+                    const SizedBox(height: 20),
+                    Text(LocaleKeys.statsBonusTitle.tr(), style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: StatTile(value: '${stats.bonusSolved}', label: LocaleKeys.statsBonusSolved.tr())),
+                        const SizedBox(width: 12),
+                        Expanded(child: StatTile(value: '${stats.bonusWinRatePercent}', label: LocaleKeys.statsBonusWinRate.tr())),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Text(LocaleKeys.statsDistribution.tr(), style: AppTextStyles.sectionTitle),
                   const SizedBox(height: 14),

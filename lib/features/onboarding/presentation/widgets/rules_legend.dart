@@ -126,6 +126,11 @@ class _RulesSheet extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const RulesLegend(tileSize: 48, gap: 14),
+              const SizedBox(height: 14),
+              Text(
+                LocaleKeys.onboardingFirstLetterHint.tr(),
+                style: AppTextStyles.caption.copyWith(color: AppColors.textSub),
+              ),
             ],
           ),
         ),

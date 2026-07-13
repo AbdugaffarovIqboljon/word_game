@@ -69,6 +69,7 @@ class DailyCubit extends Cubit<DailyState> {
   late GameState _game;
   late DateTime _today;
   late List<LogicalLetter> _answer;
+  late List<LogicalLetter> _lockedPrefix = const [];
   late int _puzzleNumber;
   String? _definition;
   late DailyBoardSnapshot _snapshot;
@@ -85,6 +86,13 @@ class DailyCubit extends Cubit<DailyState> {
   int get wordLength => _config.wordLength;
   String? get definition => _definition;
   DateTime get today => _today;
+
+  /// Revealed/locked leading letters for the board to pre-fill (WS4).
+  List<LogicalLetter> get lockedPrefix => _lockedPrefix;
+
+  /// Whether a Lugʻat (dictionary) definition exists for today's word. The hint
+  /// card is shown only when this is true (WS1 req b).
+  bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
 
   Future<void> load() async {
     final today = _clock.puzzleDate();
@@ -113,19 +121,25 @@ class DailyCubit extends Cubit<DailyState> {
       }
     }
 
-    // Replay any persisted board for today through the engine.
+    // WS4: reveal + lock the answer's first letter (config-driven).
+    _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
+        ? [_answer.first]
+        : const [];
+
+    // Replay any persisted board for today through the engine. Each stored word
+    // is re-evaluated as a whole (robust to legacy boards saved before the
+    // first-letter lock existed).
     var game = GameState.playing(
       answer: _answer,
       wordLength: _config.wordLength,
       maxAttempts: _config.maxAttempts,
+      lockedPrefix: _lockedPrefix,
     );
     var snapshot = _boardRepo.loadFor(today);
     if (snapshot != null) {
       for (final word in snapshot.guesses) {
-        for (final letter in word) {
-          game = game.addLetter(letter);
-        }
-        game = game.submit();
+        if (game.status != GameStatus.playing) break;
+        game = game.copyWith(input: word).submit();
       }
     } else {
       snapshot = DailyBoardSnapshot(
@@ -135,6 +149,7 @@ class DailyCubit extends Cubit<DailyState> {
       );
     }
     _game = game;
+    input.value = _game.input; // stage the locked prefix for the active row
 
     DailyReward? reward;
     if (game.isTerminal && !snapshot.outcomeRecorded) {
@@ -245,6 +260,27 @@ class DailyCubit extends Cubit<DailyState> {
     if (!await pay()) return false;
     final applied = cleanKeyboard();
     if (applied.isEmpty) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Atomically buys the Lugʻat (definition) hint: gates on a definition being
+  /// available, charges via [pay] only then, displays it via [reveal], and
+  /// refunds via [refund] if the display fails — so a charge never lands without
+  /// the definition actually being shown (WS1 req c). [reveal] returns whether
+  /// the definition was displayed.
+  Future<bool> purchaseDefinition({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+    required Future<bool> Function(String definition) reveal,
+  }) async {
+    final def = _definition;
+    if (def == null || def.isEmpty) return false;
+    if (!await pay()) return false;
+    final shown = await reveal(def);
+    if (!shown) {
       await refund();
       return false;
     }

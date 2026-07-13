@@ -23,6 +23,7 @@ class SolvedRecap extends StatelessWidget {
     required this.onShare,
     this.onElapsed,
     this.banner,
+    this.bonusAction,
     super.key,
   });
 
@@ -37,6 +38,9 @@ class SolvedRecap extends StatelessWidget {
   /// Optional card rendered above the recap (the notification pre-permission
   /// prompt, WS2).
   final Widget? banner;
+
+  /// Optional "Yana yechish" bonus action (WS3), rendered below the coins line.
+  final Widget? bonusAction;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +90,10 @@ class SolvedRecap extends StatelessWidget {
               ),
             ],
           ),
+          if (bonusAction != null) ...[
+            const SizedBox(height: 20),
+            bonusAction!,
+          ],
         ],
       ),
     );

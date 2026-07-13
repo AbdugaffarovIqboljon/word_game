@@ -114,7 +114,7 @@ class SettingsPage extends StatelessWidget {
                           icon: AppIcons.info,
                           // uz-Latn only in v1; the attribution copy is fixed.
                           label: 'Maʼlumotlar manbasi',
-                          onTap: () => _showAttribution(context),
+                          onTap: () => context.push(AppRoutes.attribution),
                         ),
                       ],
                     ),
@@ -185,37 +185,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  // CC BY-SA attribution for the bundled word data (assets/dictionary/README.md).
-  void _showAttribution(BuildContext context) {
-    showAppDialog<void>(
-      context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Maʼlumotlar manbasi', style: AppTextStyles.title),
-          const SizedBox(height: 12),
-          Text(
-            'Soʻz maʼlumotlari Oʻzbek Vikipediyasidan (uz.wikipedia.org, '
-            'CC BY-SA 4.0) va MUNIS oʻzbek lotin hunspell lugʻatidan (CC0) '
-            'olingan. Batafsil: tool/corpus/SOURCES.md.',
-            style: AppTextStyles.body.copyWith(color: AppColors.text2),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Yopish',
-                style: AppTextStyles.bodyStrong.copyWith(color: AppColors.gem),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SectionLabel extends StatelessWidget {

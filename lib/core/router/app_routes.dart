@@ -19,6 +19,10 @@ abstract final class AppRoutes {
   static const shareName = 'share';
   static const sharePath = '/daily/share';
 
+  static const bonus = 'bonus'; // child of /daily → /daily/bonus (WS3)
+  static const bonusName = 'bonus';
+  static const bonusPath = '/daily/bonus';
+
   static const practice = '/practice';
   static const practiceName = 'practice';
 
@@ -37,4 +41,7 @@ abstract final class AppRoutes {
 
   static const settings = '/settings';
   static const settingsName = 'settings';
+
+  static const attribution = '/attribution';
+  static const attributionName = 'attribution';
 }

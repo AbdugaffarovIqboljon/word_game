@@ -13,16 +13,17 @@
     "rules": "Qoidalar"
   },
   "onboarding": {
-    "welcome_tagline": "Har kuni yangi oʻzbekcha soʻz. 5 harf, 6 urinish.",
+    "welcome_tagline": "Har kuni yangi oʻzbekcha soʻz. 5 harf, 5 urinish.",
     "rules_title": "Ranglar nimani bildiradi?",
     "rule_correct": "Harf toʻgʻri joyda",
     "rule_present": "Soʻzda bor, ammo boshqa joyda",
     "rule_absent": "Bu harf soʻzda yoʻq",
+    "first_letter_hint": "Birinchi harf yashil rangda ochib beriladi.",
     "try_title": "Endi oʻzingiz urinib koʻring",
     "try_coachmark": "Harfni tanlang"
   },
   "tutorial": {
-    "beat1_coach": "Yashirin 5 harfli soʻz bor. Uni 6 urinishda toping. Boshlash uchun ISTALGAN soʻzni tering — masalan: OLTIN",
+    "beat1_coach": "Yashirin 5 harfli soʻzning birinchi harfi ochib berilgan. Uni 5 urinishda toping. Qolgan harflarni tering — masalan: KOBRA",
     "teach_correct": "Toʻgʻri harf, toʻgʻri joyda",
     "teach_present": "Soʻzda bor, joyi boshqa",
     "teach_absent": "Soʻzda yoʻq",
@@ -39,6 +40,7 @@
     "puzzle_number": "Soʻz Jangi #{n}",
     "ghost_hint": "5 harfli soʻzni tering…",
     "ghost_hint_first": "Istalgan soʻzdan boshlang — ranglar yoʻl koʻrsatadi",
+    "attempts_coach": "Sizda {count} ta urinish bor · birinchi harf ochib berilgan",
     "too_short": "Barcha harflarni kiriting",
     "practice_pill": "Mashq",
     "invalid_word": "Soʻz lugʻatda yoʻq",
@@ -90,6 +92,7 @@
     "clean_desc": "Bir nechta notoʻgʻri harfni oʻchiradi",
     "dictionary_name": "Lugʻat",
     "dictionary_desc": "Soʻz maʼnosini koʻrsatadi",
+    "definition_title": "Soʻz maʼnosi",
     "watch_ad": "Reklama koʻring",
     "insufficient": "Tanga yetarli emas",
     "locked": "Qulflangan",
@@ -102,7 +105,10 @@
     "streak": "Streak",
     "best": "Rekord",
     "distribution": "Topish taqsimoti",
-    "success_note": "Bugun {attempt}-urinishda topdingiz — eng koʻp uchraydigan natija!"
+    "success_note": "Bugun {attempt}-urinishda topdingiz — eng koʻp uchraydigan natija!",
+    "bonus_title": "Bonus soʻzlar",
+    "bonus_solved": "Bonus yechilgan",
+    "bonus_win_rate": "Bonus %"
   },
   "shop": {
     "nav_title": "Doʻkon",
@@ -181,6 +187,16 @@
     "chest_claimed": "Oldim",
     "chest_double_title": "Ikki barobar",
     "chest_double_subtitle": "{count} tanga oling",
-    "chest_double_cta": "×2"
+    "chest_double_cta": "×2",
+    "chest_come_back": "Ertaga qaytadan!",
+    "chest_next_in": "Keyingi sandiq:"
+  },
+  "bonus": {
+    "title": "Bonus soʻz",
+    "again": "Yana yechish",
+    "solved": "Ajoyib!",
+    "failed": "Topilmadi",
+    "empty": "Barcha bonus soʻzlar hozircha tugadi",
+    "pro_hint": "Cheksiz oʻyin — Pro"
   }
 }

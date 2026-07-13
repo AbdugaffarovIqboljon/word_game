@@ -20,7 +20,15 @@ class GameConfig {
 
   // ── Board ─────────────────────────────────────────────────────────────────
   int get wordLength => _int('word_length', 5);
-  int get maxAttempts => _int('max_attempts', 6);
+  // WS4: difficulty reduction — 5 attempts, with the answer's first letter
+  // revealed and locked on row 1. Both RC-overridable.
+  int get maxAttempts => _int('max_attempts', 5);
+  bool get revealFirstLetter {
+    final v = _overrides['reveal_first_letter'];
+    if (v is bool) return v;
+    if (v is num) return v != 0; // RemoteConfig may deliver it as 0/1
+    return true;
+  }
 
   // ── Timezone (word rollover at Tashkent midnight, UTC+5) ─────────────────
   int get rolloverUtcOffsetHours => _int('rollover_utc_offset_hours', 5);
@@ -51,6 +59,9 @@ class GameConfig {
   // ── Daily chest ───────────────────────────────────────────────────────────
   int get dailyChestReward => _int('daily_chest_reward', 80);
   int get dailyChestDoubleMultiplier => _int('daily_chest_double_multiplier', 2);
+
+  // ── Bonus words (WS3: pro "Yana yechish" after the daily is finished) ───────
+  int get bonusWordReward => _int('bonus_word_reward', 40);
 
   // ── Practice ──────────────────────────────────────────────────────────────
   int practiceReward(PracticeTier tier) => switch (tier) {
@@ -104,6 +115,7 @@ class GameConfig {
   Map<String, num> get tunables => {
     'word_length': wordLength,
     'max_attempts': maxAttempts,
+    'reveal_first_letter': revealFirstLetter ? 1 : 0,
     'rollover_utc_offset_hours': rolloverUtcOffsetHours,
     'daily_base_reward': dailyBaseReward,
     'daily_speed_bonus_per_attempt': dailySpeedBonusPerAttempt,
@@ -116,6 +128,7 @@ class GameConfig {
     'rewarded_ad_coins': rewardedAdCoins,
     'daily_chest_reward': dailyChestReward,
     'daily_chest_double_multiplier': dailyChestDoubleMultiplier,
+    'bonus_word_reward': bonusWordReward,
     'practice_reward_easy': practiceReward(PracticeTier.easy),
     'practice_reward_medium': practiceReward(PracticeTier.medium),
     'practice_reward_hard': practiceReward(PracticeTier.hard),

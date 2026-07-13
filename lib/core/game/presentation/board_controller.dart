@@ -71,7 +71,23 @@ class BoardController {
   final List<Timer> _timers = [];
   bool _disposed = false;
 
+  /// WS4: revealed/locked leading letters, pre-filled green on every not-yet-
+  /// submitted row and treated as fixed (typing never overwrites them).
+  List<LogicalLetter> _lockedPrefix = const [];
+
   static const _staggerMs = 100;
+
+  /// Registers the locked leading letters. The prefix is rendered green ONLY on
+  /// the active row (via [setInput]) and on submitted rows (as part of their
+  /// revealed guess) — never on future, not-yet-reached rows. Store-only.
+  void setLockedPrefix(List<LogicalLetter> prefix) {
+    if (!_disposed) _lockedPrefix = prefix;
+  }
+
+  TileData _lockedTile(int c) =>
+      TileData(letter: _lockedPrefix[c].glyph, state: TileState.correct);
+
+  int get _prefixLen => _lockedPrefix.length;
 
   /// Moves the typing cursor. Pass [row] `-1` to hide the active-row feedback.
   void setCursor(int row, int col) {
@@ -80,12 +96,17 @@ class BoardController {
 
   /// Reflects the current, unsubmitted input row (typing tiles). No-ops when the
   /// row is past the board — after the final guess `currentRow` equals [rows].
+  /// Locked-prefix columns always render as their green letter (WS4).
   void setInput(int row, List<LogicalLetter> letters) {
     if (row < 0 || row >= rows) return;
     for (var c = 0; c < columns; c++) {
-      tiles[row][c].value = c < letters.length
-          ? TileData(letter: letters[c].glyph, state: TileState.typing)
-          : const TileData.empty();
+      if (c < _prefixLen) {
+        tiles[row][c].value = _lockedTile(c);
+      } else {
+        tiles[row][c].value = c < letters.length
+            ? TileData(letter: letters[c].glyph, state: TileState.typing)
+            : const TileData.empty();
+      }
     }
   }
 

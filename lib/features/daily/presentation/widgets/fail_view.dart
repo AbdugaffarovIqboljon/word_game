@@ -12,8 +12,9 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/primary_button.dart';
 import 'next_word_box.dart';
 
-/// Daily failed state (screen_inventory 1e): compact 42px 6-row board, the
-/// answer + definition card, next-word countdown and a share button.
+/// Daily failed state (screen_inventory 1e): compact 42px board (5 rows after the
+/// WS4 attempts reduction), the answer + definition card, next-word countdown and
+/// a share button.
 class FailView extends StatelessWidget {
   const FailView({
     required this.guesses,
@@ -23,6 +24,7 @@ class FailView extends StatelessWidget {
     required this.onShare,
     this.onElapsed,
     this.banner,
+    this.bonusAction,
     super.key,
   });
 
@@ -35,6 +37,9 @@ class FailView extends StatelessWidget {
 
   /// Optional card rendered above the fail layout (notification prompt, WS2).
   final Widget? banner;
+
+  /// Optional "Yana yechish" bonus action (WS3), rendered below the share row.
+  final Widget? bonusAction;
 
   String get _answerWord => answer.map((l) => l.glyph).join();
 
@@ -103,6 +108,10 @@ class FailView extends StatelessWidget {
               ),
             ],
           ),
+          if (bonusAction != null) ...[
+            const SizedBox(height: 16),
+            bonusAction!,
+          ],
         ],
       ),
     );

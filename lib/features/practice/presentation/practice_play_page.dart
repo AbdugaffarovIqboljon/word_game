@@ -20,12 +20,14 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/time/game_clock.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/confetti_overlay.dart';
 import '../../../core/widgets/counter_chip.dart';
 import '../../../data/dictionary_datasource.dart';
 import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
+import '../../hints/presentation/definition_hint_dialog.dart';
 import '../../hints/presentation/hint_sheet.dart';
 import '../../shop/data/purchases_repository.dart';
 import '../../shop/data/skin_service.dart';
@@ -98,9 +100,12 @@ class _PracticePlayViewState extends State<PracticePlayView> {
     if (s.roundNonce != _lastRound) {
       _lastRound = s.roundNonce;
       _board.clear();
+      _board.setLockedPrefix(_cubit.lockedPrefix); // WS4
       _rendered = 0;
       _prevPhase = null;
-      _board.setCursor(0, 0);
+      // Render the locked first letter on the active (first) row only.
+      _board.setInput(0, _cubit.input.value);
+      _board.setCursor(0, _cubit.input.value.length);
     }
     if (s.guesses.length > _rendered) {
       for (var r = _rendered; r < s.guesses.length; r++) {
@@ -144,7 +149,7 @@ class _PracticePlayViewState extends State<PracticePlayView> {
       revealPrice: config.hintRevealPrice,
       cleanPrice: config.hintCleanPrice,
       dictionaryPrice: config.hintDictionaryPrice,
-      definition: _cubit.definition,
+      dictionaryAvailable: _cubit.hasDefinition,
       revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
       cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
       cleanAvailable: _cubit.canCleanKeyboard,
@@ -177,8 +182,28 @@ class _PracticePlayViewState extends State<PracticePlayView> {
       );
     }
 
+    // Lugʻat: charge only after the themed definition dialog displays; refund on
+    // failure (WS1 req c/d). Most practice words have no definition, so the card
+    // is hidden and this path is unreachable for them.
+    if (type == HintType.dictionary) {
+      return _cubit.purchaseDefinition(
+        pay: pay,
+        refund: () => _wallet.creditCoins(price, reason: 'hint_dictionary_refund'),
+        reveal: _showDefinitionDialog,
+      );
+    }
+
     if (!await pay()) return false;
     if (type == HintType.revealLetter) _cubit.revealLetter();
+    return true;
+  }
+
+  Future<bool> _showDefinitionDialog(String definition) async {
+    if (!mounted) return false;
+    await showAppDialog<void>(
+      context,
+      child: DefinitionHintDialog(definition: definition),
+    );
     return true;
   }
 

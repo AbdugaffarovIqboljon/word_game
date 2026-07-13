@@ -20,14 +20,37 @@ import 'tier_presentation.dart';
 
 /// Practice Hub (screen_inventory §3): tier picker + today's session stats +
 /// interstitial-ad notice.
-class PracticeHubPage extends StatelessWidget {
+///
+/// WS5: the "Bugungi sessiya" row is bound to [PracticeRepository.current], so it
+/// updates live on each game end and — via the [loadFor] on entry / route return
+/// — resets at Tashkent midnight, all without an app restart.
+class PracticeHubPage extends StatefulWidget {
   const PracticeHubPage({super.key});
+
+  @override
+  State<PracticeHubPage> createState() => _PracticeHubPageState();
+}
+
+class _PracticeHubPageState extends State<PracticeHubPage> {
+  PracticeRepository get _repo => sl<PracticeRepository>();
+  GameClock get _clock => sl<GameClock>();
+
+  @override
+  void initState() {
+    super.initState();
+    _repo.loadFor(_clock.puzzleDate()); // sync today's session into the notifier
+  }
+
+  Future<void> _play(PracticeTier tier) async {
+    await context.pushNamed(AppRoutes.practicePlayName, extra: tier);
+    // Refresh on return so a midnight rollover resets the session numbers.
+    if (mounted) _repo.loadFor(_clock.puzzleDate());
+  }
 
   @override
   Widget build(BuildContext context) {
     final config = sl<GameConfig>();
     final wallet = sl<WalletService>();
-    final session = sl<PracticeRepository>().loadFor(sl<GameClock>().puzzleDate());
 
     return Scaffold(
       body: SafeArea(
@@ -48,15 +71,15 @@ class PracticeHubPage extends StatelessWidget {
                     TierCard(
                       tier: tier,
                       reward: config.practiceReward(tier),
-                      onTap: () => context.pushNamed(
-                        AppRoutes.practicePlayName,
-                        extra: tier,
-                      ),
+                      onTap: () => _play(tier),
                     ),
                     const SizedBox(height: 12),
                   ],
                   const SizedBox(height: 8),
-                  SessionRow(session: session),
+                  ValueListenableBuilder<PracticeSession>(
+                    valueListenable: _repo.current,
+                    builder: (context, session, _) => SessionRow(session: session),
+                  ),
                   const SizedBox(height: 16),
                   const AdNotice(),
                 ],

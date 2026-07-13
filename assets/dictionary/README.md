@@ -8,10 +8,14 @@ The **real** word content for the daily game, produced by `tool/corpus` +
 Files (gzipped):
 
 - `valid_guesses.txt.gz` — accepted-guess dictionary, 16,096 words (superset of answers)
-- `answers_tiered.tsv.gz` — 2,900 answers, `word \t tier(1..3) \t freq` (practice mode)
-  (proper nouns / loanwords / slang curated out of the answer pool via
-  `tool/corpus/exclusions/non_answers.txt`; they remain valid guesses)
-- `schedule.json.gz` — 90-day daily schedule (offline fallback for the daily word)
+- `answers_tiered.tsv.gz` — 2,346 answers, `word \t tier(1..3) \t freq` (practice mode).
+  Proper nouns / Russian-European loanwords / slang are curated out of the answer
+  pool via `tool/corpus/exclusions/non_answers.txt` (WS7 loanword sweep — initial
+  consonant clusters + curated raw loans), and the extreme rare-frequency tail
+  (freq < 15) is dropped so tier 3 stays genuinely Uzbek. All of these remain
+  valid guesses.
+- `schedule.json.gz` — 90-day daily schedule with one-line Uzbek `definition_uz`
+  per word (offline fallback for the daily word + the Lugʻat hint).
 
 Every word is exactly 5 logical letters under the game's `WordTokenizer`
 (`oʻ gʻ sh ch ng` each count as one). To regenerate, see `tool/corpus/SOURCES.md`.
