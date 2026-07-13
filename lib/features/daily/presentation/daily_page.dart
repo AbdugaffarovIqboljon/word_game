@@ -20,6 +20,8 @@ import '../../../core/widgets/confetti_overlay.dart';
 import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
 import '../../hints/presentation/hint_sheet.dart';
+import '../../notifications/data/notification_prompt_repository.dart';
+import '../../notifications/domain/notification_prompt_policy.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 import '../../onboarding/presentation/widgets/rules_legend.dart';
 import '../../shop/data/skin_service.dart';
@@ -38,6 +40,7 @@ import 'widgets/daily_context_header.dart';
 import 'widgets/daily_header.dart';
 import 'widgets/fail_view.dart';
 import 'widgets/mashq_pill.dart';
+import 'widgets/notification_prompt_card.dart';
 import 'widgets/solved_recap.dart';
 
 class DailyPage extends StatelessWidget {
@@ -74,7 +77,14 @@ class _DailyViewState extends State<DailyView> {
   final GameClock _clock = sl<GameClock>();
   final WalletService _wallet = sl<WalletService>();
   final SkinService _skins = sl<SkinService>();
+  final NotificationPromptRepository _notifPrompts =
+      sl<NotificationPromptRepository>();
+  final OnboardingRepository _onboarding = sl<OnboardingRepository>();
+  // Captured once: whether this is the user's first-ever real daily board (drives
+  // the warmer ghost affordance, WS1).
+  late final bool _firstDailyHint = !_onboarding.hasSeenFirstDailyHint;
   bool _resultAdShown = false;
+  bool _showNotifPrompt = false;
   DailyPhase? _reminderPhase;
   DailyPhase? _prevPhase;
   bool _celebrating = false;
@@ -89,6 +99,9 @@ class _DailyViewState extends State<DailyView> {
   void initState() {
     super.initState();
     _cubit.input.addListener(_onInput);
+    // Show the first-ever affordance only once: persist immediately, keep it for
+    // this session via the captured flag.
+    if (_firstDailyHint) _onboarding.markFirstDailyHintSeen();
   }
 
   Future<void> _maybeFreezeConsumedDialog() async {
@@ -163,12 +176,15 @@ class _DailyViewState extends State<DailyView> {
 
     // Win/loss choreography: only on a fresh transition from playing (never on a
     // restored, already-resolved board).
+    final freshResolution = _prevPhase == DailyPhase.playing &&
+        (s.phase == DailyPhase.solved || s.phase == DailyPhase.failed);
     if (_prevPhase == DailyPhase.playing && s.phase == DailyPhase.solved) {
       _runWinChoreography(s);
     } else if (_prevPhase == DailyPhase.playing &&
         s.phase == DailyPhase.failed) {
       AppHaptics.doubleTick();
     }
+    if (freshResolution) _handleFirstResult();
     _prevPhase = s.phase;
 
     // Streak reminder: keep the 20:00 nudge in sync with today's solved-state.
@@ -198,6 +214,37 @@ class _DailyViewState extends State<DailyView> {
     });
   }
 
+  /// First-ever daily resolution (win or loss): count the solve and, per the
+  /// pre-permission policy, surface the notification prompt card (WS2).
+  Future<void> _handleFirstResult() async {
+    await _notifPrompts.incrementSolveCount();
+    if (!mounted) return;
+    if (_notifPrompts.shouldPrompt) {
+      setState(() => _showNotifPrompt = true);
+    }
+  }
+
+  /// "Ha, eslat" — the ONLY path that triggers the OS permission prompt.
+  Future<void> _acceptNotifPrompt() async {
+    setState(() => _showNotifPrompt = false);
+    await _notifPrompts.setStage(NotificationPromptStage.done);
+    await sl<StreakReminderScheduler>().requestAndSchedule();
+  }
+
+  /// "Keyinroq" — postpone (re-ask after the 3rd solve), then never auto-ask.
+  Future<void> _laterNotifPrompt() async {
+    final next = NotificationPromptPolicy.afterPostpone(_notifPrompts.stage);
+    setState(() => _showNotifPrompt = false);
+    await _notifPrompts.setStage(next);
+  }
+
+  Widget? _notifBanner() => _showNotifPrompt
+      ? NotificationPromptCard(
+          onAccept: _acceptNotifPrompt,
+          onLater: _laterNotifPrompt,
+        )
+      : null;
+
   /// Daily rollover: rebuild for the new puzzle date without an app restart.
   void _reloadForNewDay() {
     setState(() {
@@ -205,6 +252,7 @@ class _DailyViewState extends State<DailyView> {
       _rendered = 0;
       _restored = false;
       _resultAdShown = false;
+      _showNotifPrompt = false;
       _reminderPhase = null;
       _prevPhase = null;
       _celebrating = false;
@@ -306,31 +354,43 @@ class _DailyViewState extends State<DailyView> {
       definition: _cubit.definition,
       revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
       cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
-      onBuy: (type, {required viaAd}) async {
-        final price = switch (type) {
-          HintType.revealLetter => config.hintRevealPrice,
-          HintType.cleanKeyboard => config.hintCleanPrice,
-          HintType.dictionary => config.hintDictionaryPrice,
-        };
-        final paid = viaAd
-            ? await reward.showRewardedAd(switch (type) {
-                HintType.revealLetter => RewardedPlacement.hintLetter,
-                HintType.cleanKeyboard => RewardedPlacement.hintClean,
-                HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
-              })
-            : await _wallet.debitCoins(price, reason: 'hint_${type.name}');
-        if (!paid) return false;
-        switch (type) {
-          case HintType.revealLetter:
-            _cubit.revealLetter();
-          case HintType.cleanKeyboard:
-            _cubit.cleanKeyboard();
-          case HintType.dictionary:
-            break; // the sheet reveals the definition itself
-        }
-        return true;
-      },
+      cleanAvailable: _cubit.canCleanKeyboard,
+      onBuy: (type, {required viaAd}) => _buyHint(type, viaAd: viaAd),
     );
+  }
+
+  Future<bool> _buyHint(HintType type, {required bool viaAd}) async {
+    final config = sl<GameConfig>();
+    final reward = sl<RewardGateway>();
+    final price = switch (type) {
+      HintType.revealLetter => config.hintRevealPrice,
+      HintType.cleanKeyboard => config.hintCleanPrice,
+      HintType.dictionary => config.hintDictionaryPrice,
+    };
+    Future<bool> pay() => viaAd
+        ? reward.showRewardedAd(switch (type) {
+            HintType.revealLetter => RewardedPlacement.hintLetter,
+            HintType.cleanKeyboard => RewardedPlacement.hintClean,
+            HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
+          })
+        : _wallet.debitCoins(price, reason: 'hint_${type.name}');
+
+    // Clean-keyboard: the cubit charges (via pay) only when a letter is actually
+    // grayed, and refunds coins on any failure so a charge never lands without a
+    // visible effect (WS3 req b/c).
+    if (type == HintType.cleanKeyboard) {
+      return _cubit.purchaseCleanKeyboard(
+        pay: pay,
+        refund: viaAd
+            ? () async {}
+            : () => _wallet.creditCoins(price, reason: 'hint_clean_refund'),
+      );
+    }
+
+    if (!await pay()) return false;
+    if (type == HintType.revealLetter) _cubit.revealLetter();
+    // Dictionary: the sheet reveals the definition itself.
+    return true;
   }
 
   Widget _body(DailyState state) {
@@ -348,6 +408,7 @@ class _DailyViewState extends State<DailyView> {
           remaining: _remaining,
           onShare: () => _openShare(state),
           onElapsed: _reloadForNewDay,
+          banner: _notifBanner(),
         );
       case DailyPhase.failed:
         return FailView(
@@ -357,6 +418,7 @@ class _DailyViewState extends State<DailyView> {
           remaining: _remaining,
           onShare: () => _openShare(state),
           onElapsed: _reloadForNewDay,
+          banner: _notifBanner(),
         );
       case DailyPhase.playing:
         return _playingBoard(state, interactive: true);
@@ -385,7 +447,10 @@ class _DailyViewState extends State<DailyView> {
                   alignment: Alignment.center,
                   children: [
                     GameBoard(controller: _board),
-                    BoardGhostHint(cursor: _board.cursor),
+                    BoardGhostHint(
+                      cursor: _board.cursor,
+                      firstGame: _firstDailyHint,
+                    ),
                   ],
                 ),
               ),
@@ -396,6 +461,7 @@ class _DailyViewState extends State<DailyView> {
         const SizedBox(height: 12),
         GameKeyboard(
           keyStates: _keyStates,
+          cleanPulse: _cubit.cleanPulse,
           onLetter: _cubit.addLetter,
           onEnter: _cubit.submit,
           onDelete: _cubit.removeLetter,

@@ -55,7 +55,7 @@ introduced.
 | Key shadow | `0 2px 0 rgba(0,0,0,.35)` on every key (a flat "bevel" bottom edge, not a soft blur) |
 | Total footer height | ≈178px including all gaps — validated by the design to fit both the 844pt and 640pt target viewports |
 
-### 4 key states + compound-key accent
+### 4 key states
 
 | State | Background | Foreground | Applies to |
 |---|---|---|---|
@@ -67,12 +67,13 @@ introduced.
 **Action keys (ENTER, DEL) are exempt from the 4-state system** — they are always
 `background:#4A5B80, color:#F4F7FC, border:none` regardless of game state.
 
-**Compound-key accent border:** any compound key (Oʻ/Gʻ/Sh/Ch/Ng) that is still in its
-`default` state (or has no state entry at all) additionally gets `border: 1.5px solid
-#C2952B` — a visual hint that these are the "extra" Uzbek letters. Once a compound key
-receives an `absent`/`present`/`correct` state, the accent border is dropped and only the
-state color applies (per the component logic: `if (isCompound && (!st[label] ||
-st[label] === 'default')) border = '1.5px solid #C2952B'`).
+**Compound-key accent border — removed (2026-07, decisions §10).** The source design gave
+compound keys (Oʻ/Gʻ/Sh/Ch/Ng) a `1.5px solid #C2952B` border while in `default` state. That
+is gone: amber (`#C2952B`) is reserved **exclusively** for the `present` game state, and a
+key wearing it outside that state reads as a false game signal. Compound keys now render
+identically to regular letter keys in every state (`default` = `#3A4A6B` fill, no border);
+they are distinguished by their two-character labels alone. `KeyboardKeyButton` has no
+`border` parameter.
 
 ### State-priority note
 

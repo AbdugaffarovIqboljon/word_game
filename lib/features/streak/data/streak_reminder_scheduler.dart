@@ -34,7 +34,7 @@ class StreakReminderScheduler {
   /// Today's daily is resolved (solved or failed) — nothing to remind about.
   Future<void> reminderResolved() => _notifications.cancelStreakReminder();
 
-  /// Settings toggle flipped by the user.
+  /// Settings toggle flipped OFF by the user, or the manual re-schedule path.
   Future<void> onNotificationsToggled(bool enabled) {
     if (!enabled) return _notifications.cancelStreakReminder();
     return _notifications.scheduleStreakReminder(
@@ -42,14 +42,20 @@ class StreakReminderScheduler {
     );
   }
 
-  /// Onboarding finished: ask for the OS permission now (not at app start), then
-  /// schedule if the toggle is on.
-  Future<void> onboardingCompleted() async {
-    await _notifications.requestPermission();
-    if (_settings.notifications.value) {
+  /// The post-solve "Ha, eslat" path: request the OS permission (the first and
+  /// only time it is asked automatically), and schedule the reminder if granted.
+  /// Returns whether permission is now granted.
+  Future<bool> requestAndSchedule() async {
+    final granted = await _notifications.requestPermission();
+    if (granted && _settings.notifications.value) {
       await _notifications.scheduleStreakReminder(
         streak: _streakRepo.load().current,
       );
     }
+    return granted;
   }
+
+  /// Whether the OS currently grants notification permission (Settings toggle
+  /// uses this to detect an OS denial).
+  Future<bool> hasOsPermission() => _notifications.hasPermission();
 }

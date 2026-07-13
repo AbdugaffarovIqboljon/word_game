@@ -25,6 +25,7 @@ Future<void> showHintSheet(
   required HintPurchase onBuy,
   bool revealAdAvailable = true,
   bool cleanAdAvailable = true,
+  bool cleanAvailable = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -40,6 +41,7 @@ Future<void> showHintSheet(
       onBuy: onBuy,
       revealAdAvailable: revealAdAvailable,
       cleanAdAvailable: cleanAdAvailable,
+      cleanAvailable: cleanAvailable,
     ),
   );
 }
@@ -57,6 +59,7 @@ class HintSheet extends StatefulWidget {
     required this.onBuy,
     this.revealAdAvailable = true,
     this.cleanAdAvailable = true,
+    this.cleanAvailable = true,
     super.key,
   });
 
@@ -69,6 +72,9 @@ class HintSheet extends StatefulWidget {
   // Rewarded-ad readiness per placement; the "watch ad" button hides on no-fill.
   final bool revealAdAvailable;
   final bool cleanAdAvailable;
+  // Whether any letter still qualifies for the clean hint; when false the card
+  // is locked with reason text and cannot charge (WS3 req b).
+  final bool cleanAvailable;
 
   @override
   State<HintSheet> createState() => _HintSheetState();
@@ -143,10 +149,14 @@ class _HintSheetState extends State<HintSheet> {
                     icon: AppIcons.clean,
                     iconColor: AppColors.gem,
                     name: LocaleKeys.hintCleanName.tr(),
-                    description: LocaleKeys.hintCleanDesc.tr(),
+                    description: widget.cleanAvailable
+                        ? LocaleKeys.hintCleanDesc.tr()
+                        : LocaleKeys.hintCleanUnavailable.tr(),
                     price: widget.cleanPrice,
                     canAffordCoins: coins >= widget.cleanPrice,
                     emphasizeAd: insufficient,
+                    // No qualifying letters → locked card, cannot charge (req b).
+                    locked: !widget.cleanAvailable,
                     onCoin: () => _buy(HintType.cleanKeyboard, viaAd: false),
                     onAd: widget.cleanAdAvailable
                         ? () => _buy(HintType.cleanKeyboard, viaAd: true)

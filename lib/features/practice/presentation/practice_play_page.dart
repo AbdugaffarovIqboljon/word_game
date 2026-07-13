@@ -147,31 +147,39 @@ class _PracticePlayViewState extends State<PracticePlayView> {
       definition: _cubit.definition,
       revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
       cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
-      onBuy: (type, {required viaAd}) async {
-        final price = switch (type) {
-          HintType.revealLetter => config.hintRevealPrice,
-          HintType.cleanKeyboard => config.hintCleanPrice,
-          HintType.dictionary => config.hintDictionaryPrice,
-        };
-        final paid = viaAd
-            ? await reward.showRewardedAd(switch (type) {
-                HintType.revealLetter => RewardedPlacement.hintLetter,
-                HintType.cleanKeyboard => RewardedPlacement.hintClean,
-                HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
-              })
-            : await _wallet.debitCoins(price, reason: 'hint_${type.name}');
-        if (!paid) return false;
-        switch (type) {
-          case HintType.revealLetter:
-            _cubit.revealLetter();
-          case HintType.cleanKeyboard:
-            _cubit.cleanKeyboard();
-          case HintType.dictionary:
-            break;
-        }
-        return true;
-      },
+      cleanAvailable: _cubit.canCleanKeyboard,
+      onBuy: (type, {required viaAd}) => _buyHint(type, viaAd: viaAd),
     );
+  }
+
+  Future<bool> _buyHint(HintType type, {required bool viaAd}) async {
+    final config = sl<GameConfig>();
+    final reward = sl<RewardGateway>();
+    final price = switch (type) {
+      HintType.revealLetter => config.hintRevealPrice,
+      HintType.cleanKeyboard => config.hintCleanPrice,
+      HintType.dictionary => config.hintDictionaryPrice,
+    };
+    Future<bool> pay() => viaAd
+        ? reward.showRewardedAd(switch (type) {
+            HintType.revealLetter => RewardedPlacement.hintLetter,
+            HintType.cleanKeyboard => RewardedPlacement.hintClean,
+            HintType.dictionary => RewardedPlacement.hintLetter, // no ad path
+          })
+        : _wallet.debitCoins(price, reason: 'hint_${type.name}');
+
+    if (type == HintType.cleanKeyboard) {
+      return _cubit.purchaseCleanKeyboard(
+        pay: pay,
+        refund: viaAd
+            ? () async {}
+            : () => _wallet.creditCoins(price, reason: 'hint_clean_refund'),
+      );
+    }
+
+    if (!await pay()) return false;
+    if (type == HintType.revealLetter) _cubit.revealLetter();
+    return true;
   }
 
   @override
@@ -227,6 +235,7 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                       const SizedBox(height: 12),
                       GameKeyboard(
                         keyStates: _keyStates,
+                        cleanPulse: _cubit.cleanPulse,
                         onLetter: _cubit.addLetter,
                         onEnter: _cubit.submit,
                         onDelete: _cubit.removeLetter,

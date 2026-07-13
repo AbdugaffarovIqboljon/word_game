@@ -6,13 +6,17 @@ import '../../../../core/game/presentation/board_controller.dart';
 import '../../../../core/l10n/locale_keys.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
-/// First-run ghost prompt centered over the empty board ("5 harfli soʻzni
-/// tering…" at 30% opacity). Shown only while the very first tile is empty and
-/// untouched — it disappears on the first keypress (cursor advances past 0,0).
+/// First-run ghost prompt centered over the empty board (30% opacity). Shown
+/// only while the very first tile is empty and untouched — it disappears on the
+/// first keypress (cursor advances past 0,0).
+///
+/// On the user's first-ever real daily board [firstGame] swaps the copy for the
+/// warmer "Istalgan soʻzdan boshlang — ranglar yoʻl koʻrsatadi" affordance (WS1).
 class BoardGhostHint extends StatelessWidget {
-  const BoardGhostHint({required this.cursor, super.key});
+  const BoardGhostHint({required this.cursor, this.firstGame = false, super.key});
 
   final ValueListenable<BoardCursor> cursor;
+  final bool firstGame;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +29,10 @@ class BoardGhostHint extends StatelessWidget {
             opacity: show ? 0.3 : 0,
             duration: const Duration(milliseconds: 180),
             child: Text(
-              LocaleKeys.dailyGhostHint.tr(),
+              (firstGame
+                      ? LocaleKeys.dailyGhostHintFirst
+                      : LocaleKeys.dailyGhostHint)
+                  .tr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyStrong,
             ),

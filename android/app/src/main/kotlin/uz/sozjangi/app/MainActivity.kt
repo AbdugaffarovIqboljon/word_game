@@ -1,4 +1,4 @@
-package com.example.word_game
+package uz.sozjangi.app
 
 import io.flutter.embedding.android.FlutterActivity
 

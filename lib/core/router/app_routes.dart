@@ -9,6 +9,9 @@ abstract final class AppRoutes {
   static const onboarding = '/onboarding';
   static const onboardingName = 'onboarding';
 
+  static const tutorial = '/tutorial';
+  static const tutorialName = 'tutorial';
+
   static const daily = '/daily';
   static const dailyName = 'daily';
 

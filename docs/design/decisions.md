@@ -113,3 +113,13 @@ tokens, navigation, and disputed values.
 - `RewardGateway` (rewarded ads) and `PurchaseGateway` (IAP) are abstract
   interfaces; v1 ships debug fakes that always succeed. Dictionary is an
   interface with an in-memory fake seeded with a small word list.
+
+## 10. Compound-key accent border removed (supersedes component_spec §a)
+
+- The amber accent border on `default`-state compound keys (Oʻ/Gʻ/Sh/Ch/Ng) is
+  **removed**. Amber (`#C2952B`) is reserved **exclusively** for the `present`
+  game state; using it as decoration made untouched keys read as "letter is in
+  the word".
+- Compound keys render identically to regular letter keys in every state
+  (`default` = `#3A4A6B` fill, no border). They are distinguished by their
+  two-character labels alone.

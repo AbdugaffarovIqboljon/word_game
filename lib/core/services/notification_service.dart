@@ -42,8 +42,8 @@ class NotificationService {
     }
   }
 
-  /// Requests the OS notification permission (Android 13+ / iOS). Called at
-  /// onboarding completion, not at app start.
+  /// Requests the OS notification permission (Android 13+ / iOS). Called from
+  /// the post-solve pre-permission card ("Ha, eslat"), not at app start.
   Future<bool> requestPermission() async {
     if (!_ready) return false;
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -56,6 +56,25 @@ class NotificationService {
     if (ios != null) {
       return await ios.requestPermissions(alert: true, badge: true, sound: true) ??
           false;
+    }
+    return false;
+  }
+
+  /// Current OS permission state without prompting — used by the Settings toggle
+  /// to detect an OS denial (so it can guide the user to system settings).
+  Future<bool> hasPermission() async {
+    if (!_ready) return false;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? false;
+    }
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      final granted =
+          await ios.checkPermissions().then((p) => p?.isEnabled ?? false);
+      return granted;
     }
     return false;
   }

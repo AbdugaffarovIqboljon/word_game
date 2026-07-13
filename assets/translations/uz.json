@@ -21,10 +21,24 @@
     "try_title": "Endi oʻzingiz urinib koʻring",
     "try_coachmark": "Harfni tanlang"
   },
+  "tutorial": {
+    "beat1_coach": "Yashirin 5 harfli soʻz bor. Uni 6 urinishda toping. Boshlash uchun ISTALGAN soʻzni tering — masalan: OLTIN",
+    "teach_correct": "Toʻgʻri harf, toʻgʻri joyda",
+    "teach_present": "Soʻzda bor, joyi boshqa",
+    "teach_absent": "Soʻzda yoʻq",
+    "tap_to_continue": "Davom etish uchun bosing",
+    "beat3_coach": "Endi maslahatlardan foydalanib soʻzni toping!",
+    "win_title": "Tayyor!",
+    "win_body": "Endi har kuni yangi soʻz sizni kutadi",
+    "lose_title": "Zarari yoʻq!",
+    "lose_body": "Mana javob — endi haqiqiy oʻyinni boshlaymiz",
+    "finish_cta": "Boshladik!"
+  },
   "daily": {
     "subtitle": "Kunlik soʻzni toping",
     "puzzle_number": "Soʻz Jangi #{n}",
     "ghost_hint": "5 harfli soʻzni tering…",
+    "ghost_hint_first": "Istalgan soʻzdan boshlang — ranglar yoʻl koʻrsatadi",
     "too_short": "Barcha harflarni kiriting",
     "practice_pill": "Mashq",
     "invalid_word": "Soʻz lugʻatda yoʻq",
@@ -78,7 +92,8 @@
     "dictionary_desc": "Soʻz maʼnosini koʻrsatadi",
     "watch_ad": "Reklama koʻring",
     "insufficient": "Tanga yetarli emas",
-    "locked": "Qulflangan"
+    "locked": "Qulflangan",
+    "clean_unavailable": "Tozalash uchun harf qolmadi"
   },
   "stats": {
     "nav_title": "Statistika",
@@ -138,7 +153,17 @@
     "notifications": "Bildirishnomalar",
     "remove_ads": "Reklamani oʻchirish",
     "restore": "Xaridlarni tiklash",
-    "version": "Versiya {version}"
+    "version": "Versiya {version}",
+    "replay_tutorial": "Darsni qayta oʻynash",
+    "notif_denied_title": "Bildirishnomalar oʻchirilgan",
+    "notif_denied_body": "Bildirishnomalarni koʻrish uchun ularni telefon sozlamalarida yoqing.",
+    "notif_denied_cta": "Tushunarli"
+  },
+  "notif": {
+    "prompt_title": "🔥 Streak boshladingiz!",
+    "prompt_body": "Ertaga yangi soʻzni eslataymi?",
+    "prompt_yes": "Ha, eslat",
+    "prompt_later": "Keyinroq"
   },
   "dialog": {
     "rewarded_title": "Bepul {count} tanga",

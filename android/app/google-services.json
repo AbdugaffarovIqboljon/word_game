@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "190658220808",
+    "project_id": "soz-jangi",
+    "storage_bucket": "soz-jangi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190658220808:android:6792f82bb432aa2e8c12bd",
+        "android_client_info": {
+          "package_name": "uz.sozjangi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjJM_Cp4RjL-lFb6as1Psl-cvx61ZBGks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

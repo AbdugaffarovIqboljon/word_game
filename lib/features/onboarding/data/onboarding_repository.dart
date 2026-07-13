@@ -10,6 +10,8 @@ class OnboardingRepository {
   static const _seenKey = 'onboarding_seen';
   static const _rulesSeenKey = 'onboarding_rules_seen';
   static const _rulesAutoShownKey = 'daily_rules_autoshown';
+  static const _tutorialCompletedKey = 'tutorial_completed';
+  static const _firstDailyHintKey = 'first_daily_hint_seen';
 
   final PreferencesService _prefs;
 
@@ -26,4 +28,19 @@ class OnboardingRepository {
   bool get hasAutoShownRules => _prefs.getBool(_rulesAutoShownKey);
 
   Future<void> markRulesAutoShown() => _prefs.setBool(_rulesAutoShownKey, true);
+
+  /// True once the user has finished the guided tutorial (win or gentle reveal).
+  /// Persisted separately from [hasSeenOnboarding] so a skip does not count as
+  /// completion (WS1).
+  bool get hasCompletedTutorial => _prefs.getBool(_tutorialCompletedKey);
+
+  Future<void> markTutorialCompleted() =>
+      _prefs.setBool(_tutorialCompletedKey, true);
+
+  /// Whether the special first-ever daily board ghost affordance is still due
+  /// ("Istalgan soʻzdan boshlang — ranglar yoʻl koʻrsatadi").
+  bool get hasSeenFirstDailyHint => _prefs.getBool(_firstDailyHintKey);
+
+  Future<void> markFirstDailyHintSeen() =>
+      _prefs.setBool(_firstDailyHintKey, true);
 }

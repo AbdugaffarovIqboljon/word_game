@@ -18,18 +18,31 @@ abstract final class HintEngine {
     return game.answer[pos];
   }
 
-  /// Picks up to [count] letters that are genuinely absent (not in the answer)
-  /// and not already marked, to gray out on the keyboard.
+  /// Every letter that still qualifies for the clean-keyboard hint: genuinely
+  /// absent (not in the [answer]) AND not already known — i.e. not yet revealed
+  /// as absent on the keyboard and not used in any submitted guess (both live in
+  /// [alreadyMarked]). Order follows the keyboard layout so the caller can apply
+  /// a deterministic stagger.
+  static List<LogicalLetter> absentCandidates(
+    List<LogicalLetter> answer,
+    Set<LogicalLetter> alreadyMarked,
+  ) {
+    final answerSet = answer.toSet();
+    return UzbekAlphabet.letters
+        .where((l) => !answerSet.contains(l) && !alreadyMarked.contains(l))
+        .toList();
+  }
+
+  /// Picks up to [count] qualifying [absentCandidates] to gray out. Returns
+  /// however many exist when fewer than [count] qualify, and an empty list when
+  /// none do (the caller must then treat the hint as unavailable / not charge).
   static List<LogicalLetter> pickAbsentLetters(
     List<LogicalLetter> answer,
     Set<LogicalLetter> alreadyMarked, {
     required int count,
     Random? random,
   }) {
-    final answerSet = answer.toSet();
-    final candidates = UzbekAlphabet.letters
-        .where((l) => !answerSet.contains(l) && !alreadyMarked.contains(l))
-        .toList();
+    final candidates = absentCandidates(answer, alreadyMarked);
     if (random != null) candidates.shuffle(random);
     return candidates.take(count).toList();
   }

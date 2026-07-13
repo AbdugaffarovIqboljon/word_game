@@ -8,6 +8,7 @@ import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
+import '../../../core/game/presentation/clean_hint_pulse.dart';
 import '../../../core/time/game_clock.dart';
 import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_engine.dart';
@@ -59,6 +60,9 @@ class PracticeCubit extends Cubit<PracticeState> {
 
   final ValueNotifier<List<LogicalLetter>> input = ValueNotifier(const []);
   final Map<LogicalLetter, LetterResult> _hintOverrides = {};
+
+  /// Fires when the clean-keyboard hint grays a batch (staggered fade signal).
+  final ValueNotifier<CleanHintPulse?> cleanPulse = ValueNotifier(null);
 
   late GameState _game;
   late List<LogicalLetter> _answer;
@@ -185,22 +189,51 @@ class PracticeCubit extends Cubit<PracticeState> {
     addLetter(letter);
   }
 
-  void cleanKeyboard() {
-    final known = <LogicalLetter>{
-      ..._game.keyboardStates.keys,
-      ..._hintOverrides.keys,
-    };
+  Set<LogicalLetter> get _knownLetters => {
+    ..._game.keyboardStates.keys,
+    ..._hintOverrides.keys,
+  };
+
+  /// Whether the clean-keyboard hint can gray at least one new letter (req b).
+  bool get canCleanKeyboard =>
+      _game.status == GameStatus.playing &&
+      HintEngine.absentCandidates(_answer, _knownLetters).isNotEmpty;
+
+  /// Atomically buys the clean-keyboard hint: gates on availability, charges via
+  /// [pay] only when an effect occurs, refunds via [refund] on failure (req b/c).
+  Future<bool> purchaseCleanKeyboard({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+  }) async {
+    if (!canCleanKeyboard) return false;
+    if (!await pay()) return false;
+    final applied = cleanKeyboard();
+    if (applied.isEmpty) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Grays up to [GameConfig.hintCleanCount] genuinely-absent letters (however
+  /// many qualify, min 1). Returns the letters grayed — empty when none qualify.
+  List<LogicalLetter> cleanKeyboard() {
     final picked = HintEngine.pickAbsentLetters(
       _answer,
-      known,
+      _knownLetters,
       count: _config.hintCleanCount,
       random: _random,
     );
-    if (picked.isEmpty) return;
+    if (picked.isEmpty) return const [];
     for (final letter in picked) {
       _hintOverrides[letter] = LetterResult.absent;
     }
     emit(_build(phase: state.phase));
+    cleanPulse.value = CleanHintPulse(
+      letters: picked,
+      nonce: (cleanPulse.value?.nonce ?? 0) + 1,
+    );
+    return picked;
   }
 
   void _bumpShake({required bool invalid}) {
@@ -231,6 +264,7 @@ class PracticeCubit extends Cubit<PracticeState> {
   @override
   Future<void> close() {
     input.dispose();
+    cleanPulse.dispose();
     return super.close();
   }
 }

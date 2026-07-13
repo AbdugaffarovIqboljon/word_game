@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../analytics/analytics_service.dart';
 import '../services/notification_service.dart';
+import '../../features/notifications/data/notification_prompt_repository.dart';
 import '../../features/streak/data/streak_reminder_scheduler.dart';
 import '../../features/wallet/data/analytics_wallet_bridge.dart';
 import '../../features/daily/data/daily_board_repository.dart';
@@ -90,6 +91,9 @@ Future<void> configureDependencies({
   // ── Notifications (local daily streak reminder) ──────────────────────────
   sl
     ..registerLazySingleton<NotificationService>(() => NotificationService())
+    ..registerLazySingleton<NotificationPromptRepository>(
+      () => NotificationPromptRepository(sl()),
+    )
     ..registerLazySingleton<StreakReminderScheduler>(
       () => StreakReminderScheduler(
         notifications: sl(),

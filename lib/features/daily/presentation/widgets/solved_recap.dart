@@ -22,6 +22,7 @@ class SolvedRecap extends StatelessWidget {
     required this.remaining,
     required this.onShare,
     this.onElapsed,
+    this.banner,
     super.key,
   });
 
@@ -33,12 +34,20 @@ class SolvedRecap extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback? onElapsed;
 
+  /// Optional card rendered above the recap (the notification pre-permission
+  /// prompt, WS2).
+  final Widget? banner;
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         children: [
+          if (banner != null) ...[
+            banner!,
+            const SizedBox(height: 20),
+          ],
           const Icon(AppIcons.sparkles, size: 40, color: AppColors.coin),
           const SizedBox(height: 12),
           Text(LocaleKeys.dailySolvedHeadline.tr(), style: AppTextStyles.title),

@@ -22,6 +22,7 @@ class FailView extends StatelessWidget {
     required this.remaining,
     required this.onShare,
     this.onElapsed,
+    this.banner,
     super.key,
   });
 
@@ -32,6 +33,9 @@ class FailView extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback? onElapsed;
 
+  /// Optional card rendered above the fail layout (notification prompt, WS2).
+  final Widget? banner;
+
   String get _answerWord => answer.map((l) => l.glyph).join();
 
   @override
@@ -40,6 +44,10 @@ class FailView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         children: [
+          if (banner != null) ...[
+            banner!,
+            const SizedBox(height: 20),
+          ],
           StaticBoard(guesses: guesses, columns: 5, tileSize: 42),
           const SizedBox(height: 20),
           _FadeIn(

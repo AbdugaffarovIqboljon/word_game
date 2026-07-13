@@ -6,6 +6,7 @@ import '../../features/daily/presentation/daily_page.dart';
 import '../../features/daily/presentation/share_page.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
+import '../../features/onboarding/presentation/tutorial_page.dart';
 import '../../features/practice/presentation/practice_hub_page.dart';
 import '../../features/practice/presentation/practice_play_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
@@ -23,9 +24,12 @@ GoRouter createRouter(OnboardingRepository onboarding) {
     initialLocation: AppRoutes.daily,
     redirect: (context, state) {
       final seenOnboarding = onboarding.hasSeenOnboarding;
-      final goingToOnboarding = state.matchedLocation == AppRoutes.onboarding;
-      if (!seenOnboarding && !goingToOnboarding) return AppRoutes.onboarding;
-      if (seenOnboarding && goingToOnboarding) return AppRoutes.daily;
+      final loc = state.matchedLocation;
+      // The welcome screen and the tutorial together make up the onboarding flow.
+      final inOnboardingFlow =
+          loc == AppRoutes.onboarding || loc == AppRoutes.tutorial;
+      if (!seenOnboarding && !inOnboardingFlow) return AppRoutes.onboarding;
+      if (seenOnboarding && loc == AppRoutes.onboarding) return AppRoutes.daily;
       return null;
     },
     routes: [
@@ -33,6 +37,12 @@ GoRouter createRouter(OnboardingRepository onboarding) {
         path: AppRoutes.onboarding,
         name: AppRoutes.onboardingName,
         builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.tutorial,
+        name: AppRoutes.tutorialName,
+        builder: (context, state) =>
+            TutorialPage(fromOnboarding: state.extra as bool? ?? true),
       ),
       GoRoute(
         path: AppRoutes.daily,

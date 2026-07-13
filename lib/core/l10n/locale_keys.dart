@@ -24,9 +24,22 @@ abstract final class LocaleKeys {
   static const onboardingTryTitle = 'onboarding.try_title';
   static const onboardingTryCoachmark = 'onboarding.try_coachmark';
 
+  static const tutorialBeat1Coach = 'tutorial.beat1_coach';
+  static const tutorialTeachCorrect = 'tutorial.teach_correct';
+  static const tutorialTeachPresent = 'tutorial.teach_present';
+  static const tutorialTeachAbsent = 'tutorial.teach_absent';
+  static const tutorialTapToContinue = 'tutorial.tap_to_continue';
+  static const tutorialBeat3Coach = 'tutorial.beat3_coach';
+  static const tutorialWinTitle = 'tutorial.win_title';
+  static const tutorialWinBody = 'tutorial.win_body';
+  static const tutorialLoseTitle = 'tutorial.lose_title';
+  static const tutorialLoseBody = 'tutorial.lose_body';
+  static const tutorialFinishCta = 'tutorial.finish_cta';
+
   static const dailySubtitle = 'daily.subtitle';
   static const dailyPuzzleNumber = 'daily.puzzle_number';
   static const dailyGhostHint = 'daily.ghost_hint';
+  static const dailyGhostHintFirst = 'daily.ghost_hint_first';
   static const dailyTooShort = 'daily.too_short';
   static const dailyPracticePill = 'daily.practice_pill';
   static const dailyInvalidWord = 'daily.invalid_word';
@@ -78,6 +91,7 @@ abstract final class LocaleKeys {
   static const hintWatchAd = 'hint.watch_ad';
   static const hintInsufficient = 'hint.insufficient';
   static const hintLocked = 'hint.locked';
+  static const hintCleanUnavailable = 'hint.clean_unavailable';
 
   static const statsNavTitle = 'stats.nav_title';
   static const statsPlayed = 'stats.played';
@@ -134,6 +148,15 @@ abstract final class LocaleKeys {
   static const settingsRemoveAds = 'settings.remove_ads';
   static const settingsRestore = 'settings.restore';
   static const settingsVersion = 'settings.version';
+  static const settingsReplayTutorial = 'settings.replay_tutorial';
+  static const settingsNotifDeniedTitle = 'settings.notif_denied_title';
+  static const settingsNotifDeniedBody = 'settings.notif_denied_body';
+  static const settingsNotifDeniedCta = 'settings.notif_denied_cta';
+
+  static const notifPromptTitle = 'notif.prompt_title';
+  static const notifPromptBody = 'notif.prompt_body';
+  static const notifPromptYes = 'notif.prompt_yes';
+  static const notifPromptLater = 'notif.prompt_later';
 
   static const dialogRewardedTitle = 'dialog.rewarded_title';
   static const dialogRewardedBody = 'dialog.rewarded_body';

@@ -6,6 +6,7 @@ import 'package:word_game/core/game/domain/guess.dart';
 import 'package:word_game/core/game/domain/letter_result.dart';
 import 'package:word_game/core/game/domain/logical_letter.dart';
 import 'package:word_game/core/game/presentation/board_controller.dart';
+import 'package:word_game/core/game/presentation/clean_hint_pulse.dart';
 import 'package:word_game/core/game/presentation/widgets/game_board.dart';
 import 'package:word_game/core/game/presentation/widgets/game_keyboard.dart';
 import 'package:word_game/core/game/presentation/widgets/invalid_word_toast.dart';
@@ -54,6 +55,64 @@ void main() {
       expect(deleteCount, 1);
 
       states.dispose();
+    });
+
+    testWidgets('enabledLetters restricts which letter keys are tappable', (
+      tester,
+    ) async {
+      final states = ValueNotifier<Map<LogicalLetter, LetterResult>>({});
+      addTearDown(states.dispose);
+      final tapped = <LogicalLetter>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: GameKeyboard(
+              keyStates: states,
+              enabledLetters: {const LogicalLetter('q')},
+              onLetter: tapped.add,
+              onEnter: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('A')); // disabled → ignored
+      await tester.tap(find.text('Q')); // enabled → fires
+      expect(tapped, const [LogicalLetter('q')]);
+    });
+
+    testWidgets('clean-hint pulse fades keys to absent without error', (
+      tester,
+    ) async {
+      final states = ValueNotifier<Map<LogicalLetter, LetterResult>>({});
+      final pulse = ValueNotifier<CleanHintPulse?>(null);
+      addTearDown(states.dispose);
+      addTearDown(pulse.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: GameKeyboard(
+              keyStates: states,
+              cleanPulse: pulse,
+              onLetter: (_) {},
+              onEnter: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      );
+
+      final cleaned = ll(['x', 'v', 'b']);
+      pulse.value = CleanHintPulse(letters: cleaned, nonce: 1);
+      states.value = {for (final l in cleaned) l: LetterResult.absent};
+      // Advance past the staggered fade (3 × 60ms + 200ms fade).
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 80));
+      }
+      expect(tester.takeException(), isNull);
     });
   });
 

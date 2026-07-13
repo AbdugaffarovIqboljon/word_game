@@ -1,57 +1,28 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../core/game/domain/guess.dart';
-import '../../../core/game/domain/letter_result.dart';
-import '../../../core/game/domain/logical_letter.dart';
-import '../../../core/game/presentation/widgets/game_keyboard.dart';
-import '../../../core/game/presentation/widgets/static_board.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../streak/data/streak_reminder_scheduler.dart';
 import '../data/onboarding_repository.dart';
-import 'widgets/rules_legend.dart';
 
-/// One-time onboarding (screen_inventory §8): welcome, color rules, and an
-/// interactive "try it" step that advances on the first key tap (decisions §8).
-class OnboardingPage extends StatefulWidget {
+/// The welcome screen (screen_inventory §8). Its "Boshlash" CTA launches the
+/// guided, playable tutorial (WS1); the color rules that used to be a static
+/// step are now taught interactively inside that tutorial (and remain available
+/// from the daily board's "Qoidalar" sheet).
+class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
-  @override
-  State<OnboardingPage> createState() => _OnboardingPageState();
-}
+  void _start(BuildContext context) =>
+      context.go(AppRoutes.tutorial, extra: true);
 
-class _OnboardingPageState extends State<OnboardingPage> {
-  int _step = 0;
-  final ValueNotifier<Map<LogicalLetter, LetterResult>> _demoKeys =
-      ValueNotifier(const {});
-
-  Future<void> _finish() async {
+  Future<void> _skip(BuildContext context) async {
     await sl<OnboardingRepository>().markSeen();
-    // OS notification permission is requested here (onboarding completion), then
-    // the streak reminder is scheduled if the toggle is on.
-    await sl<StreakReminderScheduler>().onboardingCompleted();
-    if (mounted) context.go(AppRoutes.daily);
-  }
-
-  void _next() {
-    setState(() => _step++);
-    // Reaching step 1 means the color legend was shown — so a later skip won't
-    // re-trigger the daily board's auto-open rules sheet.
-    if (_step >= 1) sl<OnboardingRepository>().markRulesSeen();
-  }
-
-  @override
-  void dispose() {
-    _demoKeys.dispose();
-    super.dispose();
+    if (context.mounted) context.go(AppRoutes.daily);
   }
 
   @override
@@ -60,32 +31,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(
-              height: 44,
-              child: _step < 2
-                  ? Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: TextButton(
-                          onPressed: _finish,
-                          child: Text(
-                            LocaleKeys.commonSkip.tr(),
-                            style: AppTextStyles.body.copyWith(color: AppColors.text3),
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                height: 44,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: TextButton(
+                    onPressed: () => _skip(context),
+                    child: Text(
+                      LocaleKeys.commonSkip.tr(),
+                      style:
+                          AppTextStyles.body.copyWith(color: AppColors.text3),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            Expanded(
-              child: switch (_step) {
-                0 => _WelcomeStep(onStart: _next),
-                1 => _RulesStep(onContinue: _next),
-                _ => _TryStep(demoKeys: _demoKeys, onFirstTap: _finish),
-              },
-            ),
-            _DotIndicator(step: _step),
+            Expanded(child: _WelcomeStep(onStart: () => _start(context))),
             const SizedBox(height: 24),
           ],
         ),
@@ -113,7 +76,10 @@ class _WelcomeStep extends StatelessWidget {
               color: AppColors.correct,
               borderRadius: BorderRadius.circular(24),
             ),
-            child: Text('S', style: AppTextStyles.display.copyWith(color: AppColors.white)),
+            child: Text(
+              'S',
+              style: AppTextStyles.display.copyWith(color: AppColors.white),
+            ),
           ),
           const SizedBox(height: 24),
           Text(LocaleKeys.appTitle.tr(), style: AppTextStyles.headline),
@@ -127,119 +93,6 @@ class _WelcomeStep extends StatelessWidget {
           PrimaryButton(label: LocaleKeys.commonStart.tr(), onPressed: onStart),
         ],
       ),
-    );
-  }
-}
-
-class _RulesStep extends StatelessWidget {
-  const _RulesStep({required this.onContinue});
-  final VoidCallback onContinue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(LocaleKeys.onboardingRulesTitle.tr(), style: AppTextStyles.title, textAlign: TextAlign.center),
-          const SizedBox(height: 28),
-          const RulesLegend(),
-          const SizedBox(height: 32),
-          PrimaryButton(label: LocaleKeys.commonContinue.tr(), onPressed: onContinue),
-        ],
-      ),
-    );
-  }
-}
-
-class _TryStep extends StatelessWidget {
-  const _TryStep({required this.demoKeys, required this.onFirstTap});
-
-  final ValueListenable<Map<LogicalLetter, LetterResult>> demoKeys;
-  final VoidCallback onFirstTap;
-
-  static final _demoGuess = Guess(
-    letters: [
-      const LogicalLetter('s'),
-      const LogicalLetter('a'),
-      const LogicalLetter('l'),
-      const LogicalLetter('o'),
-      const LogicalLetter('m'),
-    ],
-    results: const [
-      LetterResult.absent,
-      LetterResult.correct,
-      LetterResult.present,
-      LetterResult.absent,
-      LetterResult.correct,
-    ],
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 8),
-        Text(LocaleKeys.onboardingTryTitle.tr(), style: AppTextStyles.title, textAlign: TextAlign.center),
-        Expanded(
-          child: Center(
-            child: StaticBoard(
-              guesses: [_demoGuess],
-              columns: 5,
-              rows: 3,
-              tileSize: 52,
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.correct,
-            borderRadius: AppRadii.pillR,
-          ),
-          child: Text(
-            LocaleKeys.onboardingTryCoachmark.tr(),
-            style: AppTextStyles.bodyStrong.copyWith(fontSize: 14, color: AppColors.white),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GameKeyboard(
-            keyStates: demoKeys,
-            onLetter: (_) => onFirstTap(),
-            onEnter: onFirstTap,
-            onDelete: onFirstTap,
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-}
-
-class _DotIndicator extends StatelessWidget {
-  const _DotIndicator({required this.step});
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < 3; i++)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            width: i == step ? 22 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: i == step ? AppColors.correct : AppColors.border,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-      ],
     );
   }
 }

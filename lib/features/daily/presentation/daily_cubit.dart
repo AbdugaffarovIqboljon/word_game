@@ -8,6 +8,7 @@ import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
+import '../../../core/game/presentation/clean_hint_pulse.dart';
 import '../../../core/time/game_clock.dart';
 import '../../hints/domain/hint_engine.dart';
 import '../../../features/stats/data/stats_repository.dart';
@@ -74,6 +75,10 @@ class DailyCubit extends Cubit<DailyState> {
 
   /// Keyboard hints applied this game (clean-keyboard), merged into key states.
   final Map<LogicalLetter, LetterResult> _hintOverrides = {};
+
+  /// Fires when the clean-keyboard hint grays a batch, so the keyboard can play
+  /// its staggered fade. Never emits a [DailyState] — it is a pure UI signal.
+  final ValueNotifier<CleanHintPulse?> cleanPulse = ValueNotifier(null);
 
   int get currentRow => _game.guesses.length;
   int get maxAttempts => _config.maxAttempts;
@@ -216,23 +221,56 @@ class DailyCubit extends Cubit<DailyState> {
     addLetter(letter);
   }
 
-  /// Clean-keyboard hint: grays out several genuinely-absent letters.
-  void cleanKeyboard() {
-    final known = <LogicalLetter>{
-      ..._game.keyboardStates.keys,
-      ..._hintOverrides.keys,
-    };
+  /// The letters already known (revealed on the keyboard by a submitted guess or
+  /// grayed by a prior clean hint) — excluded from clean-hint selection.
+  Set<LogicalLetter> get _knownLetters => {
+    ..._game.keyboardStates.keys,
+    ..._hintOverrides.keys,
+  };
+
+  /// Whether the clean-keyboard hint can gray at least one new letter. When
+  /// false the hint must be shown disabled and must never charge (req b).
+  bool get canCleanKeyboard =>
+      _game.status == GameStatus.playing &&
+      HintEngine.absentCandidates(_answer, _knownLetters).isNotEmpty;
+
+  /// Atomically buys the clean-keyboard hint: gates on availability, charges via
+  /// [pay] only when an effect will occur, and refunds via [refund] on any
+  /// failure so a charge never lands without a visible effect (req b/c).
+  Future<bool> purchaseCleanKeyboard({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+  }) async {
+    if (!canCleanKeyboard) return false;
+    if (!await pay()) return false;
+    final applied = cleanKeyboard();
+    if (applied.isEmpty) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Clean-keyboard hint: grays out up to [GameConfig.hintCleanCount] genuinely-
+  /// absent letters (however many qualify, min 1). Returns the letters actually
+  /// grayed — empty when none qualify, so the caller can avoid charging.
+  List<LogicalLetter> cleanKeyboard() {
     final picked = HintEngine.pickAbsentLetters(
       _answer,
-      known,
+      _knownLetters,
       count: _config.hintCleanCount,
       random: Random(),
     );
-    if (picked.isEmpty) return;
+    if (picked.isEmpty) return const [];
     for (final letter in picked) {
       _hintOverrides[letter] = LetterResult.absent;
     }
     emit(_build(phase: state.phase));
+    cleanPulse.value = CleanHintPulse(
+      letters: picked,
+      nonce: (cleanPulse.value?.nonce ?? 0) + 1,
+    );
+    return picked;
   }
 
   /// Refreshes the chest "unclaimed" dot after the chest dialog closes (the
@@ -305,6 +343,7 @@ class DailyCubit extends Cubit<DailyState> {
   @override
   Future<void> close() {
     input.dispose();
+    cleanPulse.dispose();
     return super.close();
   }
 }

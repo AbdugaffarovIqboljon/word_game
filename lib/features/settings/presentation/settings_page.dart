@@ -79,11 +79,7 @@ class SettingsPage extends StatelessWidget {
                           icon: AppIcons.notifications,
                           label: LocaleKeys.settingsNotifications.tr(),
                           value: settings.notifications,
-                          onChanged: (v) {
-                            settings.setNotifications(v);
-                            sl<StreakReminderScheduler>()
-                                .onNotificationsToggled(v);
-                          },
+                          onChanged: (v) => _toggleNotifications(context, v),
                         ),
                       ],
                     ),
@@ -93,6 +89,15 @@ class SettingsPage extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
+                        _ActionRow(
+                          icon: AppIcons.help,
+                          label: LocaleKeys.settingsReplayTutorial.tr(),
+                          onTap: () => context.push(
+                            AppRoutes.tutorial,
+                            extra: false,
+                          ),
+                        ),
+                        const _RowDivider(),
                         _ActionRow(
                           icon: AppIcons.shieldCheck,
                           label: LocaleKeys.settingsRemoveAds.tr(),
@@ -132,6 +137,52 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _restore(BuildContext context) async {
     await sl<PurchaseGateway>().restore();
+  }
+
+  /// Manual notifications toggle. Enabling requests the OS permission; if the OS
+  /// denies it, guide the user to system settings (WS2).
+  Future<void> _toggleNotifications(BuildContext context, bool enabled) async {
+    final settings = sl<SettingsService>();
+    final scheduler = sl<StreakReminderScheduler>();
+    settings.setNotifications(enabled);
+    if (!enabled) {
+      await scheduler.onNotificationsToggled(false);
+      return;
+    }
+    final granted = await scheduler.requestAndSchedule();
+    if (!granted && context.mounted) _showNotifDenied(context);
+  }
+
+  void _showNotifDenied(BuildContext context) {
+    showAppDialog<void>(
+      context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            LocaleKeys.settingsNotifDeniedTitle.tr(),
+            style: AppTextStyles.title,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            LocaleKeys.settingsNotifDeniedBody.tr(),
+            style: AppTextStyles.body.copyWith(color: AppColors.text2),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                LocaleKeys.settingsNotifDeniedCta.tr(),
+                style: AppTextStyles.bodyStrong.copyWith(color: AppColors.gem),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // CC BY-SA attribution for the bundled word data (assets/dictionary/README.md).
