@@ -89,6 +89,10 @@ class _PracticePlayViewState extends State<PracticePlayView> {
   void initState() {
     super.initState();
     _cubit.input.addListener(_onInput);
+    // The BlocConsumer listener misses the initial state, and start() emits
+    // synchronously during creation — so set the board up from the current state
+    // now (renders the locked first letter immediately, not after the first tap).
+    _sync(_cubit.state);
   }
 
   void _onInput() {

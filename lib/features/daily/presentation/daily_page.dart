@@ -87,6 +87,8 @@ class _DailyViewState extends State<DailyView> {
   // Captured once: whether this is the user's first-ever real daily board (drives
   // the warmer ghost affordance, WS1).
   late final bool _firstDailyHint = !_onboarding.hasSeenFirstDailyHint;
+  // Classic one-time coach mark; dismissed on tap or on the first keystroke.
+  late bool _coachDismissed = _onboarding.hasSeenDailyCoach;
   bool _resultAdShown = false;
   bool _showNotifPrompt = false;
   DailyPhase? _reminderPhase;
@@ -106,6 +108,17 @@ class _DailyViewState extends State<DailyView> {
     // Show the first-ever affordance only once: persist immediately, keep it for
     // this session via the captured flag.
     if (_firstDailyHint) _onboarding.markFirstDailyHintSeen();
+
+    // The BlocConsumer listener does not fire for the initial state, and load()
+    // usually emits synchronously during creation — so render the board from the
+    // current state now (frame 1), and run the full sync (dialogs, reminders,
+    // interstitial) after the first frame is built.
+    final s = _cubit.state;
+    _restoreBoard(s);
+    _keyStates.value = s.keyStates;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sync(_cubit.state);
+    });
   }
 
   Future<void> _maybeFreezeConsumedDialog() async {
@@ -133,6 +146,38 @@ class _DailyViewState extends State<DailyView> {
     _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
   }
 
+  /// Dismisses the first-attempt coach mark (tap or first keystroke) and persists
+  /// it so it does not reappear — classic one-time coach-mark behaviour.
+  void _dismissCoach() {
+    if (_coachDismissed) return;
+    setState(() => _coachDismissed = true);
+    _onboarding.markDailyCoachSeen();
+  }
+
+  void _onLetter(LogicalLetter letter) {
+    _dismissCoach();
+    _cubit.addLetter(letter);
+  }
+
+  /// One-time board setup from the current state — the locked first letter, any
+  /// restored guesses and the cursor. Called from initState (the BlocConsumer
+  /// listener never fires for the *initial* state, and load() often emits
+  /// synchronously during creation) and again from _sync, whichever lands first.
+  void _restoreBoard(DailyState s) {
+    if (_restored || s.phase == DailyPhase.loading) return;
+    _board.setLockedPrefix(_cubit.lockedPrefix); // WS4
+    for (var r = 0; r < s.guesses.length; r++) {
+      _board.restoreRow(r, s.guesses[r]);
+    }
+    _rendered = s.guesses.length;
+    _restored = true;
+    if (s.phase == DailyPhase.playing) {
+      // Locked first letter on the ACTIVE row only, cursor at tile 2.
+      _board.setInput(_cubit.currentRow, _cubit.input.value);
+      _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
+    }
+  }
+
   void _sync(DailyState s) {
     if (!_checkedPending && s.phase != DailyPhase.loading) {
       _checkedPending = true;
@@ -142,19 +187,8 @@ class _DailyViewState extends State<DailyView> {
       _checkedRules = true;
       _maybeAutoOpenRules(s);
     }
-    if (!_restored) {
-      _board.setLockedPrefix(_cubit.lockedPrefix); // WS4
-      for (var r = 0; r < s.guesses.length; r++) {
-        _board.restoreRow(r, s.guesses[r]);
-      }
-      _rendered = s.guesses.length;
-      _restored = true;
-      if (s.phase == DailyPhase.playing) {
-        // Render the locked first letter on the ACTIVE row only, cursor at tile 2.
-        _board.setInput(_cubit.currentRow, _cubit.input.value);
-        _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
-      }
-    } else if (s.guesses.length > _rendered) {
+    _restoreBoard(s);
+    if (_restored && s.guesses.length > _rendered) {
       for (var r = _rendered; r < s.guesses.length; r++) {
         _board.revealRow(r, s.guesses[r]);
       }
@@ -474,9 +508,12 @@ class _DailyViewState extends State<DailyView> {
               : null,
         ),
         // Coach mark on the first attempt: renders immediately with the board
-        // (state-driven, not cursor-driven), tells the player they have N tries.
-        if (state.guesses.isEmpty)
-          BoardCoachMark(attempts: _cubit.maxAttempts),
+        // (state-driven, not cursor-driven). Dismissed on tap or first keystroke.
+        if (state.guesses.isEmpty && !_coachDismissed)
+          BoardCoachMark(
+            attempts: _cubit.maxAttempts,
+            onDismiss: _dismissCoach,
+          ),
         Expanded(
           child: Center(
             child: ValueListenableBuilder<String>(
@@ -493,7 +530,7 @@ class _DailyViewState extends State<DailyView> {
         GameKeyboard(
           keyStates: _keyStates,
           cleanPulse: _cubit.cleanPulse,
-          onLetter: _cubit.addLetter,
+          onLetter: _onLetter,
           onEnter: _cubit.submit,
           onDelete: _cubit.removeLetter,
         ),

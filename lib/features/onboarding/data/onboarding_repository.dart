@@ -12,6 +12,7 @@ class OnboardingRepository {
   static const _rulesAutoShownKey = 'daily_rules_autoshown';
   static const _tutorialCompletedKey = 'tutorial_completed';
   static const _firstDailyHintKey = 'first_daily_hint_seen';
+  static const _dailyCoachKey = 'daily_coach_seen';
 
   final PreferencesService _prefs;
 
@@ -43,4 +44,10 @@ class OnboardingRepository {
 
   Future<void> markFirstDailyHintSeen() =>
       _prefs.setBool(_firstDailyHintKey, true);
+
+  /// Whether the "N urinish / first letter given" coach mark on the daily board
+  /// has been dismissed. A classic one-time coach mark — dismissed on tap.
+  bool get hasSeenDailyCoach => _prefs.getBool(_dailyCoachKey);
+
+  Future<void> markDailyCoachSeen() => _prefs.setBool(_dailyCoachKey, true);
 }

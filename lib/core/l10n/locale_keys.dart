@@ -13,6 +13,7 @@ abstract final class LocaleKeys {
   static const commonContinue = 'common.continue';
   static const commonStart = 'common.start';
   static const commonSkip = 'common.skip';
+  static const commonOk = 'common.ok';
   static const commonDomain = 'common.domain';
   static const commonRules = 'common.rules';
 

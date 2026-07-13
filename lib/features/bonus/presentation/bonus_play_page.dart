@@ -90,6 +90,10 @@ class _BonusPlayViewState extends State<BonusPlayView> {
   void initState() {
     super.initState();
     _cubit.input.addListener(_onInput);
+    // The BlocConsumer listener misses the initial state, and start() emits
+    // synchronously during creation — set the board up from the current state now
+    // so the locked first letter shows immediately, not after the first tap.
+    _sync(_cubit.state);
   }
 
   void _onInput() {
