@@ -12,13 +12,20 @@ class DailyBoardRepository {
   final PreferencesService _prefs;
 
   /// Returns the saved snapshot only if it belongs to [today]'s puzzle;
-  /// otherwise null (a new day → fresh board).
+  /// otherwise null (a new day → fresh board, or a corrupt/incompatible
+  /// snapshot — e.g. from a pre-migration build — which must never crash
+  /// launch).
   DailyBoardSnapshot? loadFor(DateTime today) {
     final raw = _prefs.getString(_key);
     if (raw == null) return null;
-    final snapshot = DailyBoardSnapshot.fromJson(
-      jsonDecode(raw) as Map<String, dynamic>,
-    );
+    final DailyBoardSnapshot snapshot;
+    try {
+      snapshot = DailyBoardSnapshot.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return null;
+    }
     final sameDay =
         snapshot.puzzleDate.year == today.year &&
         snapshot.puzzleDate.month == today.month &&

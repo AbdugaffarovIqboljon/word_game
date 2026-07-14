@@ -29,6 +29,7 @@ import '../../notifications/domain/notification_prompt_policy.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 import '../../onboarding/domain/daily_tour_step.dart';
 import '../../onboarding/presentation/widgets/rules_legend.dart';
+import '../../practice/presentation/widgets/practice_theme_banner.dart';
 import '../../shop/data/purchases_repository.dart';
 import '../../shop/data/skin_service.dart';
 import '../../streak/data/streak_reminder_scheduler.dart';
@@ -43,6 +44,7 @@ import 'daily_state.dart';
 import 'widgets/chest_dialog.dart';
 import 'widgets/daily_context_header.dart';
 import 'widgets/daily_header.dart';
+import 'widgets/daily_load_error_view.dart';
 import 'widgets/fail_view.dart';
 import 'widgets/mashq_pill.dart';
 import 'widgets/notification_prompt_card.dart';
@@ -114,6 +116,7 @@ class _DailyViewState extends State<DailyView> {
   int _rendered = 0;
   bool _restored = false;
   int _lastShake = 0;
+  int _lastNetworkError = 0;
   bool _checkedPending = false;
   bool _checkedRules = false;
   bool _checkedTour = false;
@@ -271,6 +274,15 @@ class _DailyViewState extends State<DailyView> {
       );
     }
 
+    // A guess couldn't reach the backend (offline/5xx) — surface a toast
+    // without shaking the row or clearing the staged input, so the player can
+    // just press submit again.
+    if (s.networkErrorSignal != _lastNetworkError) {
+      _lastNetworkError = s.networkErrorSignal;
+      AppHaptics.light();
+      InvalidWordToast.show(context, message: LocaleKeys.dailyNetworkError.tr());
+    }
+
     // Result interstitial (sj_result_inter): fired once when the daily resolves.
     if (!_resultAdShown &&
         (s.phase == DailyPhase.solved || s.phase == DailyPhase.failed)) {
@@ -412,6 +424,7 @@ class _DailyViewState extends State<DailyView> {
                 listener: (context, state) => _sync(state),
                 buildWhen: (a, b) =>
                     a.phase != b.phase ||
+                    a.loadError != b.loadError ||
                     a.guesses.length != b.guesses.length ||
                     a.streak != b.streak ||
                     a.chestUnclaimed != b.chestUnclaimed ||
@@ -472,6 +485,12 @@ class _DailyViewState extends State<DailyView> {
       revealAdAvailable: reward.isReady(RewardedPlacement.hintLetter).value,
       cleanAdAvailable: reward.isReady(RewardedPlacement.hintClean).value,
       cleanAvailable: _cubit.canCleanKeyboard,
+      // Reveal-letter/clean-keyboard need the plaintext answer, which the
+      // client no longer holds during play now that evaluation is
+      // server-authoritative — hidden until a dedicated hint endpoint exists
+      // (practice is unaffected).
+      showRevealCard: false,
+      showCleanCard: false,
       onBuy: (type, {required viaAd}) => _buyHint(type, viaAd: viaAd),
     );
   }
@@ -532,6 +551,9 @@ class _DailyViewState extends State<DailyView> {
   Widget _body(DailyState state) {
     switch (state.phase) {
       case DailyPhase.loading:
+        if (state.loadError) {
+          return DailyLoadErrorView(onRetry: _reloadForNewDay);
+        }
         return const Center(child: CircularProgressIndicator());
       case DailyPhase.solved:
         // Hold the board during the win choreography, then reveal the recap.
@@ -577,6 +599,15 @@ class _DailyViewState extends State<DailyView> {
           rulesButtonKey: _helpKey,
           hintButtonKey: _hintKey,
         ),
+        if (state.theme != null) ...[
+          const SizedBox(height: 8),
+          PracticeThemeBanner(
+            theme: state.theme,
+            roundNonce: state.puzzleNumber,
+            recallPrice: sl<GameConfig>().hintThemeRecallPrice,
+            onRecall: _cubit.purchaseThemeRecall,
+          ),
+        ],
         const SizedBox(height: 12),
         Expanded(
           child: Align(

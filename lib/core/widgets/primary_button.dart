@@ -5,7 +5,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_text_styles.dart';
 
-enum PrimaryButtonVariant { green, telegram, premium }
+enum PrimaryButtonVariant { green, telegram, premium, danger }
 
 /// Full-width primary CTA (component_spec (c)). Raised colored-glow treatment
 /// via [AppShadows.ctaGlow] plus a 1px top highlight approximating the spec's
@@ -17,6 +17,7 @@ class PrimaryButton extends StatelessWidget {
     this.variant = PrimaryButtonVariant.green,
     this.height = 54,
     this.icon,
+    this.horizontalPadding = 0,
     super.key,
   });
 
@@ -26,19 +27,29 @@ class PrimaryButton extends StatelessWidget {
   final double height;
   final IconData? icon;
 
+  /// Extra inline padding around the label/icon row. Full-width usages (the
+  /// common case) don't need it — the button already stretches to fill a
+  /// bounded-width parent regardless. Only compact usages placed in a `Row`
+  /// (shop hero/starter-pack CTAs) need real breathing room around the text.
+  final double horizontalPadding;
+
   Color get _brand => switch (variant) {
-    PrimaryButtonVariant.green => AppColors.correct,
-    PrimaryButtonVariant.telegram => AppColors.telegram,
-    PrimaryButtonVariant.premium => AppColors.coin,
-  };
+        PrimaryButtonVariant.green => AppColors.correct,
+        PrimaryButtonVariant.telegram => AppColors.telegram,
+        PrimaryButtonVariant.premium => AppColors.coin,
+        PrimaryButtonVariant.danger => AppColors.danger,
+      };
 
   /// Foreground on [_brand]. The gold `premium` brand is too light for white
   /// text/icons, so it pairs with `onGold` — the same gold/foreground contrast
   /// pair the shop's "best offer" badge already uses.
   Color get _onBrand => switch (variant) {
-    PrimaryButtonVariant.premium => AppColors.onGold,
-    PrimaryButtonVariant.green || PrimaryButtonVariant.telegram => AppColors.white,
-  };
+        PrimaryButtonVariant.premium => AppColors.onGold,
+        PrimaryButtonVariant.green ||
+        PrimaryButtonVariant.telegram ||
+        PrimaryButtonVariant.danger =>
+          AppColors.white,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -65,25 +76,28 @@ class PrimaryButton extends StatelessWidget {
                     )
                   : Border.all(color: AppColors.disabledBorder),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: enabled ? _onBrand : AppColors.disabledFg,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      size: 18,
+                      color: enabled ? _onBrand : AppColors.disabledFg,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: AppTextStyles.bodyStrong.copyWith(
+                      fontSize: 16,
+                      color: enabled ? _onBrand : AppColors.disabledFg,
+                    ),
                   ),
-                  const SizedBox(width: 8),
                 ],
-                Text(
-                  label,
-                  style: AppTextStyles.bodyStrong.copyWith(
-                    fontSize: 16,
-                    color: enabled ? _onBrand : AppColors.disabledFg,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

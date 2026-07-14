@@ -137,6 +137,10 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _restore(BuildContext context) async {
     await sl<PurchaseGateway>().restore();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(LocaleKeys.settingsRestore.tr())),
+    );
   }
 
   /// Manual notifications toggle. Enabling requests the OS permission; if the OS
@@ -184,7 +188,6 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _SectionLabel extends StatelessWidget {

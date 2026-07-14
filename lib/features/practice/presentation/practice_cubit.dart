@@ -68,6 +68,7 @@ class PracticeCubit extends Cubit<PracticeState> {
   late List<LogicalLetter> _answer;
   late List<LogicalLetter> _lockedPrefix = const [];
   String? _definition;
+  String? _theme;
   late PracticeTier _tier;
   late PracticeSession _session;
 
@@ -84,6 +85,13 @@ class PracticeCubit extends Cubit<PracticeState> {
   /// none, so it stays hidden in practice unless the word happens to have one.
   bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
 
+  /// The current practice word's theme/category label for the theme-hint
+  /// banner, or null when the dictionary has no theme data for it.
+  String? get theme => _theme;
+
+  /// Whether the theme-hint banner has anything to show for this round.
+  bool get hasTheme => _theme != null && _theme!.isNotEmpty;
+
   /// 1-based round number within today's session (context header).
   int get sessionRound => _session.played + 1;
 
@@ -99,6 +107,7 @@ class PracticeCubit extends Cubit<PracticeState> {
         ? const []
         : pool[_random.nextInt(pool.length)];
     _definition = _dictionary.definitionFor(_answer);
+    _theme = _dictionary.themeFor(_answer);
     // WS4: reveal + lock the answer's first letter (config-driven).
     _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
         ? [_answer.first]
@@ -247,6 +256,17 @@ class PracticeCubit extends Cubit<PracticeState> {
       return false;
     }
     return true;
+  }
+
+  /// Charges coins to recall the already-known theme-hint banner. Unlike the
+  /// other hints, the effect (showing [theme]) can never fail once bought, so
+  /// this is a plain atomic debit — no pay/refund dance needed.
+  Future<bool> purchaseThemeRecall() async {
+    if (!hasTheme) return false;
+    return _wallet.debitCoins(
+      _config.hintThemeRecallPrice,
+      reason: 'practice_theme_recall',
+    );
   }
 
   /// Grays up to [GameConfig.hintCleanCount] genuinely-absent letters (however

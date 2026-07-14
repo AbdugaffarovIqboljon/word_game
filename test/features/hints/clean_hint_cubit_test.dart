@@ -1,20 +1,32 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_game/core/config/game_config.dart';
 import 'package:word_game/core/game/data/in_memory_dictionary.dart';
 import 'package:word_game/core/game/domain/letter_result.dart';
+import 'package:word_game/core/game/domain/logical_letter.dart';
+import 'package:word_game/core/game/domain/word_tokenizer.dart';
 import 'package:word_game/core/storage/preferences_service.dart';
 import 'package:word_game/core/time/game_clock.dart';
-import 'package:word_game/features/daily/data/daily_board_repository.dart';
-import 'package:word_game/features/daily/data/daily_chest_repository.dart';
-import 'package:word_game/features/daily/presentation/daily_cubit.dart';
-import 'package:word_game/features/stats/data/stats_repository.dart';
-import 'package:word_game/features/streak/data/streak_history_repository.dart';
-import 'package:word_game/features/streak/data/streak_repository.dart';
+import 'package:word_game/features/ads/domain/reward_gateway.dart';
+import 'package:word_game/features/practice/data/practice_repository.dart';
+import 'package:word_game/features/practice/presentation/practice_cubit.dart';
 import 'package:word_game/features/wallet/data/wallet_service.dart';
 
-/// Cubit-level contract for the clean-keyboard hint (WS3). Both DailyCubit and
-/// PracticeCubit share the same implementation; testing one covers the logic.
+class _SpyGateway implements RewardGateway {
+  final ValueNotifier<bool> _ready = ValueNotifier<bool>(true);
+  @override
+  Future<bool> showRewardedAd(RewardedPlacement placement) async => true;
+  @override
+  Future<void> showInterstitial(InterstitialPlacement placement) async {}
+  @override
+  ValueListenable<bool> isReady(RewardedPlacement placement) => _ready;
+}
+
+/// Cubit-level contract for the clean-keyboard hint (WS3). Daily's copy of
+/// this hint is temporarily disabled — server-side guess evaluation means the
+/// client no longer holds the plaintext answer needed to pick absent letters
+/// — so PracticeCubit is now the one place this behavior lives.
 void main() {
   const config = GameConfig();
   final dict = InMemoryDictionary(
@@ -23,21 +35,22 @@ void main() {
       DictionaryEntry('kitob', 'Oʻqish uchun asar'),
     ],
   );
+  final answer = WordTokenizer.tokenize('qalam');
+  List<List<LogicalLetter>> answersForTier(PracticeTier _) => [answer];
   final clock = GameClock(config: config, now: () => DateTime.utc(2026, 7, 10, 12));
 
   late PreferencesService prefs;
   late WalletService wallet;
 
-  DailyCubit newCubit() => DailyCubit(
+  PracticeCubit newCubit() => PracticeCubit(
+    tier: PracticeTier.easy,
     dictionary: dict,
-    clock: clock,
+    answersForTier: answersForTier,
     config: config,
-    boardRepo: DailyBoardRepository(prefs),
-    chestRepo: DailyChestRepository(prefs),
-    streakRepo: StreakRepository(prefs),
-    historyRepo: StreakHistoryRepository(prefs),
-    statsRepo: StatsRepository(prefs),
     wallet: wallet,
+    rewardGateway: _SpyGateway(),
+    clock: clock,
+    repository: PracticeRepository(prefs),
   );
 
   setUp(() async {
@@ -47,8 +60,7 @@ void main() {
   });
 
   test('normal case grays exactly hintCleanCount absent letters', () async {
-    final cubit = newCubit();
-    await cubit.load();
+    final cubit = newCubit()..start(PracticeTier.easy);
     final answerSet = cubit.state.answer.toSet();
 
     expect(cubit.canCleanKeyboard, isTrue);
@@ -62,8 +74,7 @@ void main() {
   });
 
   test('idempotency: a second use picks different letters', () async {
-    final cubit = newCubit();
-    await cubit.load();
+    final cubit = newCubit()..start(PracticeTier.easy);
     final first = cubit.cleanKeyboard().toSet();
     final second = cubit.cleanKeyboard().toSet();
     expect(first.intersection(second), isEmpty);
@@ -71,8 +82,7 @@ void main() {
   });
 
   test('atomic success charges once and never refunds', () async {
-    final cubit = newCubit();
-    await cubit.load();
+    final cubit = newCubit()..start(PracticeTier.easy);
     var paid = 0;
     var refunded = 0;
     final ok = await cubit.purchaseCleanKeyboard(
@@ -89,8 +99,7 @@ void main() {
   });
 
   test('zero-available: card disabled and purchase never charges', () async {
-    final cubit = newCubit();
-    await cubit.load();
+    final cubit = newCubit()..start(PracticeTier.easy);
 
     // Exhaust every qualifying letter via repeated hints.
     var guard = 0;
@@ -114,8 +123,7 @@ void main() {
   });
 
   test('failed payment applies nothing', () async {
-    final cubit = newCubit();
-    await cubit.load();
+    final cubit = newCubit()..start(PracticeTier.easy);
     final before = cubit.state.keyStates.length;
     final ok = await cubit.purchaseCleanKeyboard(
       pay: () async => false,

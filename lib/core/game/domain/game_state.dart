@@ -160,6 +160,45 @@ class GameState extends Equatable {
   /// re-stages the next row with both. Domain-only: scoring itself is untouched.
   GameState submitWithCarryForward() => _submit(carryForward: true);
 
+  /// Commits externally-evaluated [results] instead of running the local
+  /// [GuessEvaluator] — for modes (daily) whose scoring is authoritative
+  /// server-side. Otherwise identical to [submitWithCarryForward]: grows
+  /// [lockedPositions]/[prefillPositions] the same way. [revealedAnswer]
+  /// optionally sets the real word once the server has revealed it (win or a
+  /// granted final-attempt reveal); omitted/null leaves [answer] unchanged.
+  GameState submitWithServerResults(
+    List<LetterResult> results, {
+    List<LogicalLetter>? revealedAnswer,
+  }) {
+    if (status != GameStatus.playing || !isInputFull) return this;
+    final nextGuesses = [...guesses, Guess(letters: input, results: results)];
+    final won = results.every((r) => r == LetterResult.correct);
+    final lost = !won && nextGuesses.length >= maxAttempts;
+
+    final locked = Map<int, LogicalLetter>.of(lockedPositions);
+    final prefill = <int, LogicalLetter>{};
+    for (var i = 0; i < results.length; i++) {
+      if (results[i] == LetterResult.correct) {
+        locked[i] = input[i];
+      } else if (results[i] == LetterResult.present && !locked.containsKey(i)) {
+        prefill[i] = input[i];
+      }
+    }
+
+    return copyWith(
+      answer: revealedAnswer ?? answer,
+      guesses: nextGuesses,
+      input: _seedInput(wordLength, locked, prefill),
+      status: won
+          ? GameStatus.won
+          : lost
+              ? GameStatus.lost
+              : GameStatus.playing,
+      lockedPositions: locked,
+      prefillPositions: prefill,
+    );
+  }
+
   GameState _submit({required bool carryForward}) {
     if (status != GameStatus.playing || !isInputFull) return this;
     final results = GuessEvaluator.evaluate(input, answer);

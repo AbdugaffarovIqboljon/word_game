@@ -12,7 +12,8 @@
     "next": "Keyingi",
     "ok": "OK",
     "domain": "soz-jangi.uz",
-    "rules": "Qoidalar"
+    "rules": "Qoidalar",
+    "retry": "Qayta urinish"
   },
   "onboarding": {
     "welcome_tagline": "Har kuni bitta jang. 5 harf, 5 imkoniyat.",
@@ -52,6 +53,9 @@
     "next_word_in": "Keyingi soʻzgacha",
     "share_result": "Natijani ulashish",
     "failed_label": "Topilmadi — bugungi javob",
+    "network_error": "Internetga ulanishda xatolik. Qayta urining",
+    "load_error_title": "Yuklab boʻlmadi",
+    "load_error_body": "Internet aloqasini tekshirib, qayta urining",
     "tour_top_bar_title": "Yuqori panel",
     "tour_top_bar_body": "Bu yerda: kunlik streak, tangalar, gemlar, statistika, kunlik sandiq va sozlamalar",
     "tour_help_title": "Qoidalar",
@@ -93,7 +97,9 @@
     "again": "Yana",
     "next_tier": "Keyingi daraja",
     "solved_overlay": "Yechildi!",
-    "failed_overlay": "Topilmadi"
+    "failed_overlay": "Topilmadi",
+    "theme_hint": "Bu soʻz — {theme} mavzusida",
+    "theme_insufficient": "Tanga yetarli emas"
   },
   "hint": {
     "title": "Yordam",
@@ -126,6 +132,7 @@
     "best_offer": "ENG YAXSHI TAKLIF",
     "hero_title": "Reklamasiz + kunlik yordam",
     "hero_subtitle": "Reklamalarni olib tashlang va har kuni yordam oling",
+    "hero_buy": "Sotib olish",
     "best_value": "Eng foydali",
     "bonus_gems": "+{count} bonus",
     "gems_title": "Olmoslar",
@@ -134,15 +141,13 @@
     "hint_pack_subtitle": "Har qanday jumboq uchun yordam",
     "starter_title": "Boshlangʻich toʻplam",
     "starter_subtitle": "{gems} gem + {hints} yordam",
-    "starter_ends_in": "Tugashiga",
     "skins_title": "Naqshlar",
     "skin_standart": "Standart",
     "skin_milliy": "Milliy naqsh",
     "skin_neon": "Neon",
     "skin_oltin": "Oltin",
     "skin_active": "Faol",
-    "skin_apply": "Qoʻllash",
-    "restore": "Xaridlarni tiklash"
+    "skin_apply": "Qoʻllash"
   },
   "streak": {
     "nav_title": "Streak",

@@ -15,6 +15,8 @@ import 'package:word_game/features/streak/data/streak_history_repository.dart';
 import 'package:word_game/features/streak/data/streak_repository.dart';
 import 'package:word_game/features/wallet/data/wallet_service.dart';
 
+import 'fake_daily_puzzle_repository.dart';
+
 /// WS4: first letter revealed + locked, 5 attempts. (DailyCubit and PracticeCubit
 /// share the mechanic; testing one covers the engine wiring.)
 void main() {
@@ -29,6 +31,7 @@ void main() {
 
   DailyCubit newCubit() => DailyCubit(
     dictionary: dict,
+    puzzleRepo: FakeDailyPuzzleRepository(dict),
     clock: clock,
     config: config,
     boardRepo: DailyBoardRepository(prefs),

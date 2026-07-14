@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/analytics/analytics_service.dart';
@@ -11,6 +12,7 @@ import 'core/di/service_locator.dart';
 import 'core/firebase/firebase_bootstrap.dart';
 import 'core/l10n/app_locales.dart';
 import 'core/services/notification_service.dart';
+import 'core/supabase/supabase_bootstrap.dart';
 import 'features/ads/data/admob_reward_gateway.dart';
 import 'features/ads/domain/reward_gateway.dart';
 import 'features/shop/data/purchase_fulfiller.dart';
@@ -32,9 +34,15 @@ Future<void> main() async {
     firebaseAvailable: firebaseAvailable,
   );
 
+  // Supabase comes up defensively too; when absent (no --dart-define in a
+  // debug build) daily mode's puzzle repository fails fast with a retry-able
+  // error instead of touching an uninitialized client.
+  final supabaseAvailable = await bootstrapSupabase();
+
   await configureDependencies(
     analytics: analytics,
     configOverrides: configOverrides,
+    supabaseClient: supabaseAvailable ? Supabase.instance.client : null,
   );
 
   // Release builds swap the fake reward gateway for real AdMob. Consent + SDK

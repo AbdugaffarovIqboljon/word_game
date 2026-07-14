@@ -24,6 +24,9 @@ class DailyState extends Equatable {
     this.chestUnclaimed = false,
     this.shakeSignal = 0,
     this.invalidWord = false,
+    this.loadError = false,
+    this.networkErrorSignal = 0,
+    this.theme,
   });
 
   final DailyPhase phase;
@@ -42,6 +45,18 @@ class DailyState extends Equatable {
   /// Whether the current shake should also surface the "not in dictionary" toast.
   final bool invalidWord;
 
+  /// True when [phase] is [DailyPhase.loading] because fetching today's puzzle
+  /// metadata from the backend failed (offline/5xx) — distinct from the
+  /// ordinary momentary loading spinner; the screen shows a retry action.
+  final bool loadError;
+
+  /// Bumped whenever a guess submission couldn't reach the backend — the UI
+  /// surfaces a retry-friendly toast without shaking the row or clearing input.
+  final int networkErrorSignal;
+
+  /// Today's puzzle theme/category clue, or null when the puzzle has none.
+  final String? theme;
+
   int get attemptsUsed => guesses.length;
   bool get isTerminal =>
       phase == DailyPhase.solved || phase == DailyPhase.failed;
@@ -58,6 +73,9 @@ class DailyState extends Equatable {
     bool? chestUnclaimed,
     int? shakeSignal,
     bool? invalidWord,
+    bool? loadError,
+    int? networkErrorSignal,
+    Object? theme = _keep,
   }) => DailyState(
     phase: phase ?? this.phase,
     guesses: guesses ?? this.guesses,
@@ -72,6 +90,9 @@ class DailyState extends Equatable {
     chestUnclaimed: chestUnclaimed ?? this.chestUnclaimed,
     shakeSignal: shakeSignal ?? this.shakeSignal,
     invalidWord: invalidWord ?? this.invalidWord,
+    loadError: loadError ?? this.loadError,
+    networkErrorSignal: networkErrorSignal ?? this.networkErrorSignal,
+    theme: theme == _keep ? this.theme : theme as String?,
   );
 
   static const Object _keep = Object();
@@ -89,5 +110,8 @@ class DailyState extends Equatable {
     chestUnclaimed,
     shakeSignal,
     invalidWord,
+    loadError,
+    networkErrorSignal,
+    theme,
   ];
 }

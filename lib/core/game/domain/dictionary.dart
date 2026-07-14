@@ -18,6 +18,11 @@ abstract interface class Dictionary {
   /// hint; null if unknown.
   String? definitionFor(List<LogicalLetter> word);
 
+  /// A short, vague theme/category label (e.g. "tabiat") for the practice
+  /// theme-hint banner; null if unknown. Deliberately coarser than
+  /// [definitionFor] — it must not give away the word.
+  String? themeFor(List<LogicalLetter> word);
+
   /// Stable, monotonically-increasing puzzle number for [date] (the "#142" in
   /// the share card header).
   int puzzleNumberForDate(DateTime date);

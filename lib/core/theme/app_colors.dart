@@ -47,6 +47,8 @@ abstract final class AppColors {
   static const Color gem = Color(0xFF7BC8FF);
   static const Color telegram = Color(0xFF229ED9);
   static const Color danger = Color(0xFFE5484D);
+  static const Color dangerLight = Color(0xFFF08488); // starter-pack icon tint
+  static const Color dangerSoft = Color(0xFFE5A0A2); // starter-pack subtitle tint
   static const Color successBright = Color(0xFF5FBE73); // decisions §4
 
   // ── Text ──────────────────────────────────────────────────────────────────
@@ -66,4 +68,10 @@ abstract final class AppColors {
   static const Color disabledBg = Color(0xFF131C2C);
   static const Color disabledBorder = Color(0xFF22304C);
   static const Color disabledFg = Color(0xFF5E6D8C);
+
+  // ── Shop hero / starter-pack card gradients ──────────────────────────────
+  static const Color heroGradientStart = Color(0xFF164A2C);
+  static const Color heroGradientEnd = Color(0xFF0F2E1E);
+  static const Color starterGradientStart = Color(0xFF3A1C14);
+  static const Color starterGradientEnd = Color(0xFF2A130F);
 }

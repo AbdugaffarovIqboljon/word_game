@@ -17,6 +17,7 @@ abstract final class LocaleKeys {
   static const commonOk = 'common.ok';
   static const commonDomain = 'common.domain';
   static const commonRules = 'common.rules';
+  static const commonRetry = 'common.retry';
 
   static const onboardingWelcomeTagline = 'onboarding.welcome_tagline';
   static const onboardingRulesTitle = 'onboarding.rules_title';
@@ -53,6 +54,9 @@ abstract final class LocaleKeys {
   static const dailyNextWordIn = 'daily.next_word_in';
   static const dailyShareResult = 'daily.share_result';
   static const dailyFailedLabel = 'daily.failed_label';
+  static const dailyNetworkError = 'daily.network_error';
+  static const dailyLoadErrorTitle = 'daily.load_error_title';
+  static const dailyLoadErrorBody = 'daily.load_error_body';
   static const dailyTourTopBarTitle = 'daily.tour_top_bar_title';
   static const dailyTourTopBarBody = 'daily.tour_top_bar_body';
   static const dailyTourHelpTitle = 'daily.tour_help_title';
@@ -93,6 +97,8 @@ abstract final class LocaleKeys {
   static const practiceNextTier = 'practice.next_tier';
   static const practiceSolvedOverlay = 'practice.solved_overlay';
   static const practiceFailedOverlay = 'practice.failed_overlay';
+  static const practiceThemeHint = 'practice.theme_hint';
+  static const practiceThemeInsufficient = 'practice.theme_insufficient';
 
   static const hintTitle = 'hint.title';
   static const hintRevealName = 'hint.reveal_name';
@@ -129,6 +135,7 @@ abstract final class LocaleKeys {
   static const shopBestOffer = 'shop.best_offer';
   static const shopHeroTitle = 'shop.hero_title';
   static const shopHeroSubtitle = 'shop.hero_subtitle';
+  static const shopHeroBuy = 'shop.hero_buy';
   static const shopBestValue = 'shop.best_value';
   static const shopBonusGems = 'shop.bonus_gems';
   static const shopGemsTitle = 'shop.gems_title';
@@ -137,7 +144,6 @@ abstract final class LocaleKeys {
   static const shopHintPackSubtitle = 'shop.hint_pack_subtitle';
   static const shopStarterTitle = 'shop.starter_title';
   static const shopStarterSubtitle = 'shop.starter_subtitle';
-  static const shopStarterEndsIn = 'shop.starter_ends_in';
   static const shopSkinsTitle = 'shop.skins_title';
   static const shopSkinStandart = 'shop.skin_standart';
   static const shopSkinMilliy = 'shop.skin_milliy';
@@ -145,7 +151,6 @@ abstract final class LocaleKeys {
   static const shopSkinOltin = 'shop.skin_oltin';
   static const shopSkinActive = 'shop.skin_active';
   static const shopSkinApply = 'shop.skin_apply';
-  static const shopRestore = 'shop.restore';
 
   static const streakNavTitle = 'streak.nav_title';
   static const streakPersonalBest = 'streak.personal_best';

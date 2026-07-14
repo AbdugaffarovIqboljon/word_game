@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../analytics/analytics_service.dart';
 import '../services/notification_service.dart';
@@ -8,6 +9,8 @@ import '../../features/wallet/data/analytics_wallet_bridge.dart';
 import '../../features/bonus/data/bonus_played_repository.dart';
 import '../../features/daily/data/daily_board_repository.dart';
 import '../../features/daily/data/daily_chest_repository.dart';
+import '../../features/daily/data/supabase_daily_puzzle_repository.dart';
+import '../../features/daily/domain/daily_puzzle_repository.dart';
 import '../../features/daily/presentation/daily_cubit.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
 import '../../features/practice/data/practice_repository.dart';
@@ -40,6 +43,7 @@ final GetIt sl = GetIt.instance;
 Future<void> configureDependencies({
   AnalyticsService analytics = const NoopAnalyticsService(),
   Map<String, Object> configOverrides = const {},
+  SupabaseClient? supabaseClient,
 }) async {
   // ── Core ──────────────────────────────────────────────────────────────────
   final prefs = await PreferencesService.create();
@@ -118,7 +122,14 @@ Future<void> configureDependencies({
   sl.registerLazySingleton<PracticeRepository>(() => PracticeRepository(sl()));
 
   // ── Daily / streak / stats ────────────────────────────────────────────────
+  // Guess evaluation and puzzle metadata are server-authoritative (see
+  // SupabaseDailyPuzzleRepository) — the repository fails fast with
+  // DailyPuzzleUnavailableException when supabaseClient is null (Supabase
+  // never initialized), which the cubit surfaces as a retry-able error.
   sl
+    ..registerLazySingleton<DailyPuzzleRepository>(
+      () => SupabaseDailyPuzzleRepository(supabaseClient),
+    )
     ..registerLazySingleton<DailyBoardRepository>(() => DailyBoardRepository(sl()))
     ..registerLazySingleton<DailyChestRepository>(() => DailyChestRepository(sl()))
     ..registerLazySingleton<StreakRepository>(() => StreakRepository(sl()))
@@ -132,6 +143,7 @@ Future<void> configureDependencies({
     ..registerFactory<DailyCubit>(
       () => DailyCubit(
         dictionary: sl(),
+        puzzleRepo: sl(),
         clock: sl(),
         config: sl(),
         boardRepo: sl(),

@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,9 +8,9 @@ import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
+import '../../../core/game/domain/word_tokenizer.dart';
 import '../../../core/game/presentation/clean_hint_pulse.dart';
 import '../../../core/time/game_clock.dart';
-import '../../hints/domain/hint_engine.dart';
 import '../../../features/stats/data/stats_repository.dart';
 import '../../../features/streak/data/streak_history_repository.dart';
 import '../../../features/streak/data/streak_repository.dart';
@@ -19,18 +19,24 @@ import '../../../features/wallet/data/wallet_service.dart';
 import '../data/daily_board_repository.dart';
 import '../data/daily_chest_repository.dart';
 import '../domain/daily_board_snapshot.dart';
+import '../domain/daily_puzzle_repository.dart';
 import '../domain/daily_reward.dart';
 import 'daily_state.dart';
 
-/// Orchestrates the daily puzzle: loads/restores the board, applies typing,
-/// validates & reveals submissions, and on terminal states records the streak,
-/// stats, and coin reward exactly once.
+/// Orchestrates the daily puzzle: loads today's metadata and any restored
+/// board, stages typing, and submits guesses to the server-authoritative
+/// `evaluate-guess` Edge Function (via [DailyPuzzleRepository]) — the client
+/// never knows the answer during play, only what each guess's evaluation
+/// reveals about it, plus a leading letter the backend explicitly reveals
+/// (WS4). On terminal states it records the streak, stats, and coin reward
+/// exactly once.
 ///
 /// The staged typing row is exposed as [input] (a hot path) so keystrokes never
 /// emit a new [DailyState] — only submissions, reveals and phase changes do.
 class DailyCubit extends Cubit<DailyState> {
   DailyCubit({
     required Dictionary dictionary,
+    required DailyPuzzleRepository puzzleRepo,
     required GameClock clock,
     required GameConfig config,
     required DailyBoardRepository boardRepo,
@@ -40,6 +46,7 @@ class DailyCubit extends Cubit<DailyState> {
     required StatsRepository statsRepo,
     required WalletService wallet,
   }) : _dictionary = dictionary,
+       _puzzleRepo = puzzleRepo,
        _clock = clock,
        _config = config,
        _boardRepo = boardRepo,
@@ -51,6 +58,7 @@ class DailyCubit extends Cubit<DailyState> {
        super(const DailyState());
 
   final Dictionary _dictionary;
+  final DailyPuzzleRepository _puzzleRepo;
   final GameClock _clock;
   final GameConfig _config;
   final DailyBoardRepository _boardRepo;
@@ -68,13 +76,16 @@ class DailyCubit extends Cubit<DailyState> {
 
   late GameState _game;
   late DateTime _today;
-  late List<LogicalLetter> _answer;
   late List<LogicalLetter> _lockedPrefix = const [];
-  late int _puzzleNumber;
-  String? _definition;
+  int _puzzleNumber = 0;
+  String? _theme;
   late DailyBoardSnapshot _snapshot;
 
+  /// Re-entrancy guard: a submission is already in flight against the network.
+  bool _isSubmitting = false;
+
   /// Keyboard hints applied this game (clean-keyboard), merged into key states.
+  /// Always empty for daily — see [canCleanKeyboard].
   final Map<LogicalLetter, LetterResult> _hintOverrides = {};
 
   /// Fires when the clean-keyboard hint grays a batch, so the keyboard can play
@@ -84,10 +95,11 @@ class DailyCubit extends Cubit<DailyState> {
   int get currentRow => _game.guesses.length;
   int get maxAttempts => _config.maxAttempts;
   int get wordLength => _config.wordLength;
-  String? get definition => _definition;
   DateTime get today => _today;
 
-  /// Revealed/locked leading letters for the board to pre-fill (WS4).
+  /// Revealed/locked leading letters for the board to pre-fill (WS4). Now
+  /// server-granted (`daily_puzzle_public.locked_prefix_raw`), not derived
+  /// from a client-known answer.
   List<LogicalLetter> get lockedPrefix => _lockedPrefix;
 
   /// Board positions carried forward as locked/pre-filled from prior guesses —
@@ -95,16 +107,29 @@ class DailyCubit extends Cubit<DailyState> {
   Map<int, LogicalLetter> get lockedPositions => _game.lockedPositions;
   Map<int, LogicalLetter> get prefillPositions => _game.prefillPositions;
 
-  /// Whether a Lugʻat (dictionary) definition exists for today's word. The hint
-  /// card is shown only when this is true (WS1 req b).
-  bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
+  /// The Lugʻat (definition) hint has no server-side source yet — evaluation
+  /// moving server-side means the client no longer holds the plaintext answer
+  /// needed to look one up locally. Temporarily disabled for daily (practice
+  /// is unaffected) pending a dedicated backend endpoint.
+  bool get hasDefinition => false;
+  String? get definition => null;
 
   Future<void> load() async {
     final today = _clock.puzzleDate();
     _today = today;
-    _answer = _dictionary.answerForDate(today);
-    _puzzleNumber = _dictionary.puzzleNumberForDate(today);
-    _definition = _dictionary.definitionFor(_answer);
+    emit(const DailyState()); // fresh loading spinner (retry / day rollover)
+
+    final DailyPuzzleMeta meta;
+    try {
+      meta = await _puzzleRepo.fetchMeta(today);
+    } catch (_) {
+      emit(const DailyState(loadError: true));
+      return;
+    }
+
+    _puzzleNumber = meta.puzzleNumber;
+    _theme = meta.theme;
+    _lockedPrefix = _resolveLockedPrefix(meta);
 
     // Reconcile any missed days (consume freezes / break), idempotently.
     var streak = _streakRepo.load();
@@ -126,25 +151,22 @@ class DailyCubit extends Cubit<DailyState> {
       }
     }
 
-    // WS4: reveal + lock the answer's first letter (config-driven).
-    _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
-        ? [_answer.first]
-        : const [];
-
-    // Replay any persisted board for today through the engine. Each stored word
-    // is re-evaluated as a whole (robust to legacy boards saved before the
-    // first-letter lock existed).
+    // Replay any persisted board for today through the engine. Each stored
+    // guess already carries its server-evaluated results (never recomputed
+    // locally — daily's scoring is authoritative server-side).
     var game = GameState.playing(
-      answer: _answer,
+      answer: const [],
       wordLength: _config.wordLength,
       maxAttempts: _config.maxAttempts,
       lockedPrefix: _lockedPrefix,
     );
     var snapshot = _boardRepo.loadFor(today);
     if (snapshot != null) {
-      for (final word in snapshot.guesses) {
+      for (final guess in snapshot.guesses) {
         if (game.status != GameStatus.playing) break;
-        game = game.copyWith(input: word).submitWithCarryForward();
+        game = game
+            .copyWith(input: guess.letters)
+            .submitWithServerResults(guess.results);
       }
     } else {
       snapshot = DailyBoardSnapshot(
@@ -155,6 +177,15 @@ class DailyCubit extends Cubit<DailyState> {
     }
     _game = game;
     input.value = _game.input; // stage the locked prefix for the active row
+
+    // A restored, already-lost board never persisted the answer locally (it
+    // must not be) — opportunistically re-fetch it for FailView; best-effort,
+    // never blocks the board from showing.
+    if (game.status == GameStatus.lost &&
+        game.answer.isEmpty &&
+        game.guesses.isNotEmpty) {
+      unawaited(_refetchRevealedAnswer(today, game.guesses.last.letters));
+    }
 
     DailyReward? reward;
     if (game.isTerminal && !snapshot.outcomeRecorded) {
@@ -181,6 +212,33 @@ class DailyCubit extends Cubit<DailyState> {
     );
   }
 
+  List<LogicalLetter> _resolveLockedPrefix(DailyPuzzleMeta meta) {
+    if (!_config.revealFirstLetter) return const [];
+    final raw = meta.lockedPrefixRaw;
+    if (raw == null || raw.isEmpty) return const [];
+    final tokens = WordTokenizer.tokenize(raw);
+    return tokens.isEmpty ? const [] : [tokens.first];
+  }
+
+  Future<void> _refetchRevealedAnswer(
+    DateTime date,
+    List<LogicalLetter> lastGuess,
+  ) async {
+    try {
+      final evaluation = await _puzzleRepo.evaluateGuess(
+        puzzleDate: date,
+        guess: lastGuess.map((l) => l.value).join(),
+        revealOnFail: true,
+      );
+      final answer = evaluation.answer;
+      if (answer == null || isClosed) return;
+      _game = _game.copyWith(answer: WordTokenizer.tokenize(answer));
+      emit(_build(phase: state.phase));
+    } catch (_) {
+      // Best-effort only — FailView simply shows no answer if this fails.
+    }
+  }
+
   void addLetter(LogicalLetter letter) {
     final next = _game.addLetter(letter);
     if (identical(next, _game)) return;
@@ -196,7 +254,7 @@ class DailyCubit extends Cubit<DailyState> {
   }
 
   Future<void> submit() async {
-    if (_game.status != GameStatus.playing) return;
+    if (_game.status != GameStatus.playing || _isSubmitting) return;
     final word = _game.input;
     if (word.length < _config.wordLength) {
       _bumpShake(invalid: false);
@@ -207,11 +265,39 @@ class DailyCubit extends Cubit<DailyState> {
       return;
     }
 
-    _game = _game.submitWithCarryForward();
-    input.value = _game.input; // now empty
-    _snapshot = _snapshot.copyWith(
-      guesses: _game.guesses.map((g) => g.letters).toList(),
+    _isSubmitting = true;
+    final isLastAttempt = _game.guesses.length == _config.maxAttempts - 1;
+
+    final GuessEvaluation evaluation;
+    try {
+      evaluation = await _puzzleRepo.evaluateGuess(
+        puzzleDate: _today,
+        guess: word.map((l) => l.value).join(),
+        revealOnFail: isLastAttempt,
+      );
+    } on InvalidGuessWordException {
+      _isSubmitting = false;
+      _bumpShake(invalid: true);
+      return;
+    } on DailyPuzzleUnavailableException {
+      _isSubmitting = false;
+      if (!isClosed) {
+        emit(state.copyWith(networkErrorSignal: state.networkErrorSignal + 1));
+      }
+      return;
+    }
+    _isSubmitting = false;
+    if (isClosed) return;
+
+    final revealedAnswer = evaluation.answer != null
+        ? WordTokenizer.tokenize(evaluation.answer!)
+        : null;
+    _game = _game.submitWithServerResults(
+      evaluation.results,
+      revealedAnswer: revealedAnswer,
     );
+    input.value = _game.input; // now empty
+    _snapshot = _snapshot.copyWith(guesses: _game.guesses);
     await _boardRepo.save(_snapshot);
 
     // First emit keeps phase=playing so the submitted row flips before the
@@ -234,84 +320,39 @@ class DailyCubit extends Cubit<DailyState> {
     }
   }
 
-  /// Reveal-letter hint: auto-types the correct letter for the next slot.
-  void revealLetter() {
-    final letter = HintEngine.nextCorrectLetter(_game);
-    if (letter == null) return;
-    addLetter(letter);
-  }
+  /// Reveal-letter hint: temporarily disabled for daily. Server-side
+  /// evaluation means the client no longer holds the answer during play, so
+  /// this can't be computed locally anymore — see [hasDefinition] for the
+  /// same reasoning. A no-op until a dedicated hint endpoint exists.
+  void revealLetter() {}
 
-  /// The letters already known (revealed on the keyboard by a submitted guess or
-  /// grayed by a prior clean hint) — excluded from clean-hint selection.
-  Set<LogicalLetter> get _knownLetters => {
-    ..._game.keyboardStates.keys,
-    ..._hintOverrides.keys,
-  };
+  /// Clean-keyboard hint: temporarily disabled for daily for the same reason
+  /// as [revealLetter] — always unavailable until a dedicated hint endpoint
+  /// exists.
+  bool get canCleanKeyboard => false;
 
-  /// Whether the clean-keyboard hint can gray at least one new letter. When
-  /// false the hint must be shown disabled and must never charge (req b).
-  bool get canCleanKeyboard =>
-      _game.status == GameStatus.playing &&
-      HintEngine.absentCandidates(_answer, _knownLetters).isNotEmpty;
-
-  /// Atomically buys the clean-keyboard hint: gates on availability, charges via
-  /// [pay] only when an effect will occur, and refunds via [refund] on any
-  /// failure so a charge never lands without a visible effect (req b/c).
   Future<bool> purchaseCleanKeyboard({
     required Future<bool> Function() pay,
     required Future<void> Function() refund,
-  }) async {
-    if (!canCleanKeyboard) return false;
-    if (!await pay()) return false;
-    final applied = cleanKeyboard();
-    if (applied.isEmpty) {
-      await refund();
-      return false;
-    }
-    return true;
-  }
+  }) async => false;
 
-  /// Atomically buys the Lugʻat (definition) hint: gates on a definition being
-  /// available, charges via [pay] only then, displays it via [reveal], and
-  /// refunds via [refund] if the display fails — so a charge never lands without
-  /// the definition actually being shown (WS1 req c). [reveal] returns whether
-  /// the definition was displayed.
   Future<bool> purchaseDefinition({
     required Future<bool> Function() pay,
     required Future<void> Function() refund,
     required Future<bool> Function(String definition) reveal,
-  }) async {
-    final def = _definition;
-    if (def == null || def.isEmpty) return false;
-    if (!await pay()) return false;
-    final shown = await reveal(def);
-    if (!shown) {
-      await refund();
-      return false;
-    }
-    return true;
-  }
+  }) async => false;
 
-  /// Clean-keyboard hint: grays out up to [GameConfig.hintCleanCount] genuinely-
-  /// absent letters (however many qualify, min 1). Returns the letters actually
-  /// grayed — empty when none qualify, so the caller can avoid charging.
-  List<LogicalLetter> cleanKeyboard() {
-    final picked = HintEngine.pickAbsentLetters(
-      _answer,
-      _knownLetters,
-      count: _config.hintCleanCount,
-      random: Random(),
+  List<LogicalLetter> cleanKeyboard() => const [];
+
+  /// Charges coins to recall the already-known theme-hint banner. Unlike a
+  /// gated hint, the effect (showing [DailyState.theme]) can never fail once
+  /// bought, so this is a plain atomic debit — no pay/refund dance needed.
+  Future<bool> purchaseThemeRecall() async {
+    if (_theme == null || _theme!.isEmpty) return false;
+    return _wallet.debitCoins(
+      _config.hintThemeRecallPrice,
+      reason: 'daily_theme_recall',
     );
-    if (picked.isEmpty) return const [];
-    for (final letter in picked) {
-      _hintOverrides[letter] = LetterResult.absent;
-    }
-    emit(_build(phase: state.phase));
-    cleanPulse.value = CleanHintPulse(
-      letters: picked,
-      nonce: (cleanPulse.value?.nonce ?? 0) + 1,
-    );
-    return picked;
   }
 
   /// Refreshes the chest "unclaimed" dot after the chest dialog closes (the
@@ -374,11 +415,12 @@ class DailyCubit extends Cubit<DailyState> {
     keyStates: _mergedKeyStates(),
     streak: streak ?? state.streak,
     puzzleNumber: _puzzleNumber,
-    answer: _answer,
-    answerDefinition: _definition,
+    answer: _game.answer,
+    answerDefinition: null,
     reward: reward ?? (phase == DailyPhase.solved ? state.reward : null),
     chestUnclaimed: chestUnclaimed ?? state.chestUnclaimed,
     shakeSignal: state.shakeSignal,
+    theme: _theme,
   );
 
   @override

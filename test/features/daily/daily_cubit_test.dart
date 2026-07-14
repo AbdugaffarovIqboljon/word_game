@@ -15,6 +15,8 @@ import 'package:word_game/features/streak/data/streak_history_repository.dart';
 import 'package:word_game/features/streak/data/streak_repository.dart';
 import 'package:word_game/features/wallet/data/wallet_service.dart';
 
+import 'fake_daily_puzzle_repository.dart';
+
 void main() {
   // Reward/streak/restore are orthogonal to the first-letter lock (WS4), so the
   // reveal is turned off here to keep typing full arbitrary words; the lock has
@@ -34,6 +36,7 @@ void main() {
 
   DailyCubit newCubit() => DailyCubit(
     dictionary: dict,
+    puzzleRepo: FakeDailyPuzzleRepository(dict),
     clock: clock,
     config: config,
     boardRepo: DailyBoardRepository(prefs),

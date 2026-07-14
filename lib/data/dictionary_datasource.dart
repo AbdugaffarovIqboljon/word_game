@@ -136,6 +136,11 @@ class SupabaseAssetDictionary implements Dictionary {
   String? definitionFor(List<LogicalLetter> word) =>
       _definitionByKey[WordTokenizer.keyOf(word)];
 
+  // No theme/category data source is wired up yet (no Supabase column, no
+  // asset field) — always null until that data is added server-side.
+  @override
+  String? themeFor(List<LogicalLetter> word) => null;
+
   @override
   int puzzleNumberForDate(DateTime date) {
     final n = _dayIndex(date) - _dayIndex(_launchEpoch) + 1;

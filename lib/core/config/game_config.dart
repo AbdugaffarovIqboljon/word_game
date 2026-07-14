@@ -44,6 +44,8 @@ class GameConfig {
   int get hintCleanPrice => _int('hint_clean_price', 100);
   int get hintDictionaryPrice => _int('hint_dictionary_price', 75);
   int get hintCleanCount => _int('hint_clean_count', 5);
+  // Practice theme-hint banner: free on auto-appear, coin-charged to recall.
+  int get hintThemeRecallPrice => _int('hint_theme_recall_price', 30);
 
   // ── Rewarded ad ───────────────────────────────────────────────────────────
   int get rewardedAdCoins => _int('rewarded_ad_coins', 150);
@@ -125,6 +127,7 @@ class GameConfig {
     'hint_clean_price': hintCleanPrice,
     'hint_dictionary_price': hintDictionaryPrice,
     'hint_clean_count': hintCleanCount,
+    'hint_theme_recall_price': hintThemeRecallPrice,
     'rewarded_ad_coins': rewardedAdCoins,
     'daily_chest_reward': dailyChestReward,
     'daily_chest_double_multiplier': dailyChestDoubleMultiplier,

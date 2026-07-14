@@ -36,6 +36,7 @@ import 'practice_cubit.dart';
 import 'practice_state.dart';
 import 'tier_presentation.dart';
 import 'widgets/practice_overlay.dart';
+import 'widgets/practice_theme_banner.dart';
 
 class PracticePlayPage extends StatelessWidget {
   const PracticePlayPage({required this.tier, super.key});
@@ -250,6 +251,16 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                         tier: state.tier,
                         round: _cubit.sessionRound,
                       ),
+                      if (state.phase == PracticePhase.playing &&
+                          _cubit.hasTheme) ...[
+                        PracticeThemeBanner(
+                          theme: _cubit.theme,
+                          roundNonce: state.roundNonce,
+                          recallPrice: sl<GameConfig>().hintThemeRecallPrice,
+                          onRecall: _cubit.purchaseThemeRecall,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Expanded(
                         child: Center(
                           child: ValueListenableBuilder<String>(

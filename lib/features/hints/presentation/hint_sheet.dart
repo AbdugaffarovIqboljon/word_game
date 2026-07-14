@@ -26,6 +26,8 @@ Future<void> showHintSheet(
   bool revealAdAvailable = true,
   bool cleanAdAvailable = true,
   bool cleanAvailable = true,
+  bool showRevealCard = true,
+  bool showCleanCard = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -42,6 +44,8 @@ Future<void> showHintSheet(
       revealAdAvailable: revealAdAvailable,
       cleanAdAvailable: cleanAdAvailable,
       cleanAvailable: cleanAvailable,
+      showRevealCard: showRevealCard,
+      showCleanCard: showCleanCard,
     ),
   );
 }
@@ -60,6 +64,8 @@ class HintSheet extends StatefulWidget {
     this.revealAdAvailable = true,
     this.cleanAdAvailable = true,
     this.cleanAvailable = true,
+    this.showRevealCard = true,
+    this.showCleanCard = true,
     super.key,
   });
 
@@ -78,6 +84,12 @@ class HintSheet extends StatefulWidget {
   // Whether any letter still qualifies for the clean hint; when false the card
   // is locked with reason text and cannot charge (WS3 req b).
   final bool cleanAvailable;
+  // Whether the reveal-letter / clean-keyboard cards render at all — false
+  // hides the card entirely (e.g. daily mode, where the hint has no
+  // server-side source yet), independent of [cleanAvailable]'s "no qualifying
+  // letters" lock.
+  final bool showRevealCard;
+  final bool showCleanCard;
 
   @override
   State<HintSheet> createState() => _HintSheetState();
@@ -129,38 +141,42 @@ class _HintSheetState extends State<HintSheet> {
                       style: AppTextStyles.caption.copyWith(color: AppColors.danger),
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  HintActionCard(
-                    icon: AppIcons.reveal,
-                    iconColor: AppColors.fire,
-                    name: LocaleKeys.hintRevealName.tr(),
-                    description: LocaleKeys.hintRevealDesc.tr(),
-                    price: widget.revealPrice,
-                    canAffordCoins: coins >= widget.revealPrice,
-                    emphasizeAd: insufficient,
-                    onCoin: () => _buy(HintType.revealLetter, viaAd: false),
-                    onAd: widget.revealAdAvailable
-                        ? () => _buy(HintType.revealLetter, viaAd: true)
-                        : null,
-                  ),
-                  const SizedBox(height: 11),
-                  HintActionCard(
-                    icon: AppIcons.clean,
-                    iconColor: AppColors.gem,
-                    name: LocaleKeys.hintCleanName.tr(),
-                    description: widget.cleanAvailable
-                        ? LocaleKeys.hintCleanDesc.tr()
-                        : LocaleKeys.hintCleanUnavailable.tr(),
-                    price: widget.cleanPrice,
-                    canAffordCoins: coins >= widget.cleanPrice,
-                    emphasizeAd: insufficient,
-                    // No qualifying letters → locked card, cannot charge (req b).
-                    locked: !widget.cleanAvailable,
-                    onCoin: () => _buy(HintType.cleanKeyboard, viaAd: false),
-                    onAd: widget.cleanAdAvailable
-                        ? () => _buy(HintType.cleanKeyboard, viaAd: true)
-                        : null,
-                  ),
+                  if (widget.showRevealCard) ...[
+                    const SizedBox(height: 16),
+                    HintActionCard(
+                      icon: AppIcons.reveal,
+                      iconColor: AppColors.fire,
+                      name: LocaleKeys.hintRevealName.tr(),
+                      description: LocaleKeys.hintRevealDesc.tr(),
+                      price: widget.revealPrice,
+                      canAffordCoins: coins >= widget.revealPrice,
+                      emphasizeAd: insufficient,
+                      onCoin: () => _buy(HintType.revealLetter, viaAd: false),
+                      onAd: widget.revealAdAvailable
+                          ? () => _buy(HintType.revealLetter, viaAd: true)
+                          : null,
+                    ),
+                  ],
+                  if (widget.showCleanCard) ...[
+                    const SizedBox(height: 11),
+                    HintActionCard(
+                      icon: AppIcons.clean,
+                      iconColor: AppColors.gem,
+                      name: LocaleKeys.hintCleanName.tr(),
+                      description: widget.cleanAvailable
+                          ? LocaleKeys.hintCleanDesc.tr()
+                          : LocaleKeys.hintCleanUnavailable.tr(),
+                      price: widget.cleanPrice,
+                      canAffordCoins: coins >= widget.cleanPrice,
+                      emphasizeAd: insufficient,
+                      // No qualifying letters → locked card, cannot charge (req b).
+                      locked: !widget.cleanAvailable,
+                      onCoin: () => _buy(HintType.cleanKeyboard, viaAd: false),
+                      onAd: widget.cleanAdAvailable
+                          ? () => _buy(HintType.cleanKeyboard, viaAd: true)
+                          : null,
+                    ),
+                  ],
                   // Lugʻat card renders ONLY when the word has a definition
                   // (WS1 req b) — no card, no charge when data is missing.
                   if (widget.dictionaryAvailable) ...[
