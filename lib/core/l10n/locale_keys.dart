@@ -123,7 +123,7 @@ abstract final class LocaleKeys {
   static const bonusSolved = 'bonus.solved';
   static const bonusFailed = 'bonus.failed';
   static const bonusEmpty = 'bonus.empty';
-  static const bonusProHint = 'bonus.pro_hint';
+  static const bonusProCta = 'bonus.pro_cta';
 
   static const shopNavTitle = 'shop.nav_title';
   static const shopBestOffer = 'shop.best_offer';
@@ -131,6 +131,8 @@ abstract final class LocaleKeys {
   static const shopHeroSubtitle = 'shop.hero_subtitle';
   static const shopBestValue = 'shop.best_value';
   static const shopBonusGems = 'shop.bonus_gems';
+  static const shopGemsTitle = 'shop.gems_title';
+  static const shopHelpSectionTitle = 'shop.help_section_title';
   static const shopHintPackTitle = 'shop.hint_pack_title';
   static const shopHintPackSubtitle = 'shop.hint_pack_subtitle';
   static const shopStarterTitle = 'shop.starter_title';

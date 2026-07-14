@@ -5,7 +5,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_text_styles.dart';
 
-enum PrimaryButtonVariant { green, telegram }
+enum PrimaryButtonVariant { green, telegram, premium }
 
 /// Full-width primary CTA (component_spec (c)). Raised colored-glow treatment
 /// via [AppShadows.ctaGlow] plus a 1px top highlight approximating the spec's
@@ -29,6 +29,15 @@ class PrimaryButton extends StatelessWidget {
   Color get _brand => switch (variant) {
     PrimaryButtonVariant.green => AppColors.correct,
     PrimaryButtonVariant.telegram => AppColors.telegram,
+    PrimaryButtonVariant.premium => AppColors.coin,
+  };
+
+  /// Foreground on [_brand]. The gold `premium` brand is too light for white
+  /// text/icons, so it pairs with `onGold` — the same gold/foreground contrast
+  /// pair the shop's "best offer" badge already uses.
+  Color get _onBrand => switch (variant) {
+    PrimaryButtonVariant.premium => AppColors.onGold,
+    PrimaryButtonVariant.green || PrimaryButtonVariant.telegram => AppColors.white,
   };
 
   @override
@@ -63,7 +72,7 @@ class PrimaryButton extends StatelessWidget {
                   Icon(
                     icon,
                     size: 18,
-                    color: enabled ? AppColors.white : AppColors.disabledFg,
+                    color: enabled ? _onBrand : AppColors.disabledFg,
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -71,7 +80,7 @@ class PrimaryButton extends StatelessWidget {
                   label,
                   style: AppTextStyles.bodyStrong.copyWith(
                     fontSize: 16,
-                    color: enabled ? AppColors.white : AppColors.disabledFg,
+                    color: enabled ? _onBrand : AppColors.disabledFg,
                   ),
                 ),
               ],

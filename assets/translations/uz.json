@@ -15,7 +15,7 @@
     "rules": "Qoidalar"
   },
   "onboarding": {
-    "welcome_tagline": "Har kuni yangi oʻzbekcha soʻz. 5 harf, 5 urinish.",
+    "welcome_tagline": "Har kuni bitta jang. 5 harf, 5 imkoniyat.",
     "rules_title": "Ranglar nimani bildiradi?",
     "rule_correct": "Harf toʻgʻri joyda",
     "rule_present": "Soʻzda bor, ammo boshqa joyda",
@@ -128,12 +128,14 @@
     "hero_subtitle": "Reklamalarni olib tashlang va har kuni yordam oling",
     "best_value": "Eng foydali",
     "bonus_gems": "+{count} bonus",
+    "gems_title": "Olmoslar",
+    "help_section_title": "Yordam toʻplamlari",
     "hint_pack_title": "10× yordam toʻplami",
     "hint_pack_subtitle": "Har qanday jumboq uchun yordam",
     "starter_title": "Boshlangʻich toʻplam",
     "starter_subtitle": "{gems} gem + {hints} yordam",
     "starter_ends_in": "Tugashiga",
-    "skins_title": "Kafel bezaklari",
+    "skins_title": "Naqshlar",
     "skin_standart": "Standart",
     "skin_milliy": "Milliy naqsh",
     "skin_neon": "Neon",
@@ -208,6 +210,6 @@
     "solved": "Ajoyib!",
     "failed": "Topilmadi",
     "empty": "Barcha bonus soʻzlar hozircha tugadi",
-    "pro_hint": "Cheksiz oʻyin — Pro"
+    "pro_cta": "Pro bilan cheksiz mashqlar!"
   }
 }

@@ -10,6 +10,7 @@ import '../../../core/l10n/locale_keys.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radii.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/countdown_text.dart';
@@ -89,29 +90,23 @@ class _ShopPageState extends State<ShopPage> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.s5,
+                  AppSpacing.s2,
+                  AppSpacing.s5,
+                  AppSpacing.s6,
+                ),
                 children: [
                   HeroOfferCard(
                     price: _config.removeAdsBundleUsd,
                     owned: _purchases.removeAds.value,
                     onBuy: _buyRemoveAds,
                   ),
-                  const SizedBox(height: 20),
-                  for (final sku in _config.gemSkus) ...[
-                    GemSkuTile(sku: sku, onBuy: () => _buyGems(sku)),
-                    const SizedBox(height: 11),
-                  ],
-                  const SizedBox(height: 4),
-                  SimpleIapCard(
-                    icon: AppIcons.package,
-                    title: LocaleKeys.shopHintPackTitle.tr(),
-                    subtitle: LocaleKeys.shopHintPackSubtitle.tr(),
-                    price: _config.hintPackUsd,
-                    onBuy: _buyHintPack,
-                  ),
-                  const SizedBox(height: 20),
-                  // One-time offer: hidden once owned (gated locally).
-                  if (!_purchases.isOwned(SkuIds.starterPack))
+                  const SizedBox(height: AppSpacing.s6),
+                  // One-time offer: hidden once owned (gated locally). Promoted
+                  // to right after the hero card — it carries urgency (the
+                  // countdown) and converts best right after the top offer.
+                  if (!_purchases.isOwned(SkuIds.starterPack)) ...[
                     StarterPackBanner(
                       price: _config.starterPackUsd,
                       wasPrice: _config.starterPackWasUsd,
@@ -124,19 +119,43 @@ class _ShopPageState extends State<ShopPage> {
                           .difference(DateTime.now()),
                       onBuy: _buyStarter,
                     ),
-                  const SizedBox(height: 24),
-                  Text(LocaleKeys.shopSkinsTitle.tr(), style: AppTextStyles.sectionTitle),
-                  const SizedBox(height: 12),
-                  for (final sku in _config.skins) ...[
-                    SkinCard(
-                      sku: sku,
-                      owned: _skins.isOwned(sku.id),
-                      active: _skins.isActive(sku.id),
-                      onTap: () => _onSkin(sku),
-                    ),
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.s6),
                   ],
-                  const SizedBox(height: 8),
+                  Text(LocaleKeys.shopGemsTitle.tr(), style: AppTextStyles.sectionTitle),
+                  const SizedBox(height: AppSpacing.s3),
+                  for (var i = 0; i < _config.gemSkus.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.gap11),
+                    GemSkuTile(
+                      sku: _config.gemSkus[i],
+                      onBuy: () => _buyGems(_config.gemSkus[i]),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.s6),
+                  Text(
+                    LocaleKeys.shopHelpSectionTitle.tr(),
+                    style: AppTextStyles.sectionTitle,
+                  ),
+                  const SizedBox(height: AppSpacing.s3),
+                  SimpleIapCard(
+                    icon: AppIcons.package,
+                    title: LocaleKeys.shopHintPackTitle.tr(),
+                    subtitle: LocaleKeys.shopHintPackSubtitle.tr(),
+                    price: _config.hintPackUsd,
+                    onBuy: _buyHintPack,
+                  ),
+                  const SizedBox(height: AppSpacing.s6),
+                  Text(LocaleKeys.shopSkinsTitle.tr(), style: AppTextStyles.sectionTitle),
+                  const SizedBox(height: AppSpacing.s3),
+                  for (var i = 0; i < _config.skins.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.gap11),
+                    SkinCard(
+                      sku: _config.skins[i],
+                      owned: _skins.isOwned(_config.skins[i].id),
+                      active: _skins.isActive(_config.skins[i].id),
+                      onTap: () => _onSkin(_config.skins[i]),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.s2),
                   Center(
                     child: TextButton(
                       onPressed: _restore,
@@ -173,7 +192,7 @@ class HeroOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.cardPad),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -332,7 +351,7 @@ class StarterPackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.cardPad),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_icons.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/counter_chip.dart';
 import '../../../../core/widgets/streak_chip.dart';
@@ -10,7 +11,8 @@ import '../../../../core/widgets/streak_chip.dart';
 /// streak chip → streak, coin/gem chips → shop, bar-chart-3 → stats, gift →
 /// chest, settings → settings. The hint action moved to the board context
 /// header so three chips + three icon buttons stay uncrowded down to 360px
-/// width; the chips share one tight (4px) group inside a scroll insurance.
+/// width; every gap — inside the chip group and between the icon buttons —
+/// uses the same [AppSpacing.s2] so nothing reads as clustered or spread out.
 class DailyHeader extends StatelessWidget {
   const DailyHeader({
     required this.streak,
@@ -45,23 +47,23 @@ class DailyHeader extends StatelessWidget {
             child: Row(
               children: [
                 StreakChip(streak: streak, onTap: onStreak),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.s2),
                 CoinChip(balance: coins, onTap: onShop),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.s2),
                 GemChip(balance: gems, onTap: onShop),
               ],
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.s2),
         AppIconButton(icon: AppIcons.stats, onPressed: onStats),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.s2),
         AppIconButton(
           icon: AppIcons.gift,
           onPressed: onChest,
           dot: chestUnclaimed,
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.s2),
         AppIconButton(icon: AppIcons.settings, onPressed: onSettings),
       ],
     );
