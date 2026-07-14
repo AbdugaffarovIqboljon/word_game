@@ -9,6 +9,7 @@
     "continue": "Davom etish",
     "start": "Boshlash",
     "skip": "Oʻtkazib yuborish",
+    "next": "Keyingi",
     "ok": "OK",
     "domain": "soz-jangi.uz",
     "rules": "Qoidalar"
@@ -41,7 +42,6 @@
     "puzzle_number": "Soʻz Jangi #{n}",
     "ghost_hint": "5 harfli soʻzni tering…",
     "ghost_hint_first": "Istalgan soʻzdan boshlang — ranglar yoʻl koʻrsatadi",
-    "attempts_coach": "Sizda {count} ta urinish bor · birinchi harf ochib berilgan",
     "too_short": "Barcha harflarni kiriting",
     "practice_pill": "Mashq",
     "invalid_word": "Soʻz lugʻatda yoʻq",
@@ -51,7 +51,17 @@
     "next_word": "Keyingi soʻz",
     "next_word_in": "Keyingi soʻzgacha",
     "share_result": "Natijani ulashish",
-    "failed_label": "Topilmadi — bugungi javob"
+    "failed_label": "Topilmadi — bugungi javob",
+    "tour_top_bar_title": "Yuqori panel",
+    "tour_top_bar_body": "Bu yerda: kunlik streak, tangalar, gemlar, statistika, kunlik sandiq va sozlamalar",
+    "tour_help_title": "Qoidalar",
+    "tour_help_body": "Ranglar nimani bildirishini istalgan payt shu yerdan koʻrishingiz mumkin",
+    "tour_hint_title": "Yordam",
+    "tour_hint_body": "Qiynalsangiz, shu yerdan maslahat sotib oling",
+    "tour_mashq_title": "Mashq",
+    "tour_mashq_body": "Kunlik soʻzdan tashqari istalgancha mashq qiling",
+    "tour_board_title": "Oʻyin taxtasi",
+    "tour_board_body": "Har bir qator — bitta urinish, jami {count} tasi bor · birinchi harf ochib berilgan"
   },
   "share": {
     "nav_title": "Natija",

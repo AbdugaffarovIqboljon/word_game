@@ -90,6 +90,11 @@ class DailyCubit extends Cubit<DailyState> {
   /// Revealed/locked leading letters for the board to pre-fill (WS4).
   List<LogicalLetter> get lockedPrefix => _lockedPrefix;
 
+  /// Board positions carried forward as locked/pre-filled from prior guesses —
+  /// see [GameState.lockedPositions] / [GameState.prefillPositions].
+  Map<int, LogicalLetter> get lockedPositions => _game.lockedPositions;
+  Map<int, LogicalLetter> get prefillPositions => _game.prefillPositions;
+
   /// Whether a Lugʻat (dictionary) definition exists for today's word. The hint
   /// card is shown only when this is true (WS1 req b).
   bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
@@ -139,7 +144,7 @@ class DailyCubit extends Cubit<DailyState> {
     if (snapshot != null) {
       for (final word in snapshot.guesses) {
         if (game.status != GameStatus.playing) break;
-        game = game.copyWith(input: word).submit();
+        game = game.copyWith(input: word).submitWithCarryForward();
       }
     } else {
       snapshot = DailyBoardSnapshot(
@@ -202,7 +207,7 @@ class DailyCubit extends Cubit<DailyState> {
       return;
     }
 
-    _game = _game.submit();
+    _game = _game.submitWithCarryForward();
     input.value = _game.input; // now empty
     _snapshot = _snapshot.copyWith(
       guesses: _game.guesses.map((g) => g.letters).toList(),

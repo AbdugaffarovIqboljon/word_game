@@ -13,6 +13,7 @@ abstract final class LocaleKeys {
   static const commonContinue = 'common.continue';
   static const commonStart = 'common.start';
   static const commonSkip = 'common.skip';
+  static const commonNext = 'common.next';
   static const commonOk = 'common.ok';
   static const commonDomain = 'common.domain';
   static const commonRules = 'common.rules';
@@ -42,7 +43,6 @@ abstract final class LocaleKeys {
   static const dailyPuzzleNumber = 'daily.puzzle_number';
   static const dailyGhostHint = 'daily.ghost_hint';
   static const dailyGhostHintFirst = 'daily.ghost_hint_first';
-  static const dailyAttemptsCoach = 'daily.attempts_coach';
   static const dailyTooShort = 'daily.too_short';
   static const dailyPracticePill = 'daily.practice_pill';
   static const dailyInvalidWord = 'daily.invalid_word';
@@ -53,6 +53,16 @@ abstract final class LocaleKeys {
   static const dailyNextWordIn = 'daily.next_word_in';
   static const dailyShareResult = 'daily.share_result';
   static const dailyFailedLabel = 'daily.failed_label';
+  static const dailyTourTopBarTitle = 'daily.tour_top_bar_title';
+  static const dailyTourTopBarBody = 'daily.tour_top_bar_body';
+  static const dailyTourHelpTitle = 'daily.tour_help_title';
+  static const dailyTourHelpBody = 'daily.tour_help_body';
+  static const dailyTourHintTitle = 'daily.tour_hint_title';
+  static const dailyTourHintBody = 'daily.tour_hint_body';
+  static const dailyTourMashqTitle = 'daily.tour_mashq_title';
+  static const dailyTourMashqBody = 'daily.tour_mashq_body';
+  static const dailyTourBoardTitle = 'daily.tour_board_title';
+  static const dailyTourBoardBody = 'daily.tour_board_body';
 
   static const shareNavTitle = 'share.nav_title';
   static const shareCardHeader = 'share.card_header';

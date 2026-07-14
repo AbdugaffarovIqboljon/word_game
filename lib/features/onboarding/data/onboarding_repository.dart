@@ -12,7 +12,7 @@ class OnboardingRepository {
   static const _rulesAutoShownKey = 'daily_rules_autoshown';
   static const _tutorialCompletedKey = 'tutorial_completed';
   static const _firstDailyHintKey = 'first_daily_hint_seen';
-  static const _dailyCoachKey = 'daily_coach_seen';
+  static const _dailyTourKey = 'daily_tour_seen';
 
   final PreferencesService _prefs;
 
@@ -45,9 +45,11 @@ class OnboardingRepository {
   Future<void> markFirstDailyHintSeen() =>
       _prefs.setBool(_firstDailyHintKey, true);
 
-  /// Whether the "N urinish / first letter given" coach mark on the daily board
-  /// has been dismissed. A classic one-time coach mark — dismissed on tap.
-  bool get hasSeenDailyCoach => _prefs.getBool(_dailyCoachKey);
+  /// Whether the fresh-install spotlight tour of the daily board (top bar,
+  /// help, hint, "Mashq" pill, board = 5 attempts) has run. Shown at most once
+  /// ever, on the very first daily board a fresh install ever reaches —
+  /// never again, across app kills, relaunches and days.
+  bool get hasSeenDailyTour => _prefs.getBool(_dailyTourKey);
 
-  Future<void> markDailyCoachSeen() => _prefs.setBool(_dailyCoachKey, true);
+  Future<void> markDailyTourSeen() => _prefs.setBool(_dailyTourKey, true);
 }

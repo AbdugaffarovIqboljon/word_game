@@ -18,6 +18,7 @@ import '../../../core/services/app_haptics.dart';
 import '../../../core/time/game_clock.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/confetti_overlay.dart';
+import '../../../core/widgets/spotlight_tour.dart';
 import '../../ads/domain/reward_gateway.dart';
 import '../../bonus/presentation/widgets/bonus_button.dart';
 import '../../hints/domain/hint_type.dart';
@@ -26,6 +27,7 @@ import '../../hints/presentation/hint_sheet.dart';
 import '../../notifications/data/notification_prompt_repository.dart';
 import '../../notifications/domain/notification_prompt_policy.dart';
 import '../../onboarding/data/onboarding_repository.dart';
+import '../../onboarding/domain/daily_tour_step.dart';
 import '../../onboarding/presentation/widgets/rules_legend.dart';
 import '../../shop/data/purchases_repository.dart';
 import '../../shop/data/skin_service.dart';
@@ -38,7 +40,6 @@ import '../data/daily_chest_repository.dart';
 import '../domain/daily_share_data.dart';
 import 'daily_cubit.dart';
 import 'daily_state.dart';
-import 'widgets/board_coach_mark.dart';
 import 'widgets/chest_dialog.dart';
 import 'widgets/daily_context_header.dart';
 import 'widgets/daily_header.dart';
@@ -70,6 +71,12 @@ class DailyView extends StatefulWidget {
 }
 
 class _DailyViewState extends State<DailyView> {
+  // Single source of truth for the board's tile geometry, shared by
+  // [GameBoard] and the spotlight tour so its board step targets the exact
+  // rendered board rect.
+  static const double _tileSize = 56;
+  static const double _gap = 6;
+
   late final DailyCubit _cubit = context.read<DailyCubit>();
   late final BoardController _board = BoardController(
     rows: _cubit.maxAttempts,
@@ -87,8 +94,17 @@ class _DailyViewState extends State<DailyView> {
   // Captured once: whether this is the user's first-ever real daily board (drives
   // the warmer ghost affordance, WS1).
   late final bool _firstDailyHint = !_onboarding.hasSeenFirstDailyHint;
-  // Classic one-time coach mark; dismissed on tap or on the first keystroke.
-  late bool _coachDismissed = _onboarding.hasSeenDailyCoach;
+
+  // Spotlight-tour anchors: top bar, help/hint icons, "Mashq" pill and the
+  // board itself. Wired onto the real, already-rendered widgets below.
+  final GlobalKey _headerKey = GlobalKey();
+  final GlobalKey _helpKey = GlobalKey();
+  final GlobalKey _hintKey = GlobalKey();
+  final GlobalKey _mashqPillKey = GlobalKey();
+  final GlobalKey _boardKey = GlobalKey();
+  late final SpotlightTourController _tourController =
+      SpotlightTourController(stepCount: DailyTourStep.values.length);
+
   bool _resultAdShown = false;
   bool _showNotifPrompt = false;
   DailyPhase? _reminderPhase;
@@ -100,11 +116,13 @@ class _DailyViewState extends State<DailyView> {
   int _lastShake = 0;
   bool _checkedPending = false;
   bool _checkedRules = false;
+  bool _checkedTour = false;
 
   @override
   void initState() {
     super.initState();
     _cubit.input.addListener(_onInput);
+    _tourController.addListener(_onTourStep);
     // Show the first-ever affordance only once: persist immediately, keep it for
     // this session via the captured flag.
     if (_firstDailyHint) _onboarding.markFirstDailyHintSeen();
@@ -142,21 +160,57 @@ class _DailyViewState extends State<DailyView> {
   }
 
   void _onInput() {
-    _board.setInput(_cubit.currentRow, _cubit.input.value);
+    _board.setInput(
+      _cubit.currentRow,
+      _cubit.input.value,
+      lockedPositions: _cubit.lockedPositions,
+      prefillPositions: _cubit.prefillPositions,
+    );
     _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
   }
 
-  /// Dismisses the first-attempt coach mark (tap or first keystroke) and persists
-  /// it so it does not reappear — classic one-time coach-mark behaviour.
-  void _dismissCoach() {
-    if (_coachDismissed) return;
-    setState(() => _coachDismissed = true);
-    _onboarding.markDailyCoachSeen();
+  void _onLetter(LogicalLetter letter) {
+    _cubit.addLetter(letter);
   }
 
-  void _onLetter(LogicalLetter letter) {
-    _dismissCoach();
-    _cubit.addLetter(letter);
+  /// Starts the fresh-install spotlight tour the first time the board reaches
+  /// [DailyPhase.playing] — i.e. the very first daily board the app has ever
+  /// shown — and persists so it never runs again.
+  void _maybeStartTour(DailyState s) {
+    if (s.phase != DailyPhase.playing || _onboarding.hasSeenDailyTour) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _tourController.start();
+    });
+  }
+
+  void _onTourStep() {
+    if (_tourController.isActive) return;
+    _onboarding.markDailyTourSeen();
+  }
+
+  List<SpotlightStep> _buildTourSteps() {
+    final targets = {
+      DailyTourStep.topBar: _headerKey,
+      DailyTourStep.help: _helpKey,
+      DailyTourStep.hint: _hintKey,
+      DailyTourStep.mashqPill: _mashqPillKey,
+      DailyTourStep.board: _boardKey,
+    };
+    const iconSteps = {DailyTourStep.help, DailyTourStep.hint};
+    return DailyTourStep.values
+        .map(
+          (step) => SpotlightStep(
+            targetKey: targets[step]!,
+            title: step.titleKey.tr(),
+            description: step == DailyTourStep.board
+                ? step.bodyKey.tr(namedArgs: {'count': '${_cubit.maxAttempts}'})
+                : step.bodyKey.tr(),
+            shape: iconSteps.contains(step)
+                ? SpotlightShape.circle
+                : SpotlightShape.roundedRect,
+          ),
+        )
+        .toList();
   }
 
   /// One-time board setup from the current state — the locked first letter, any
@@ -173,7 +227,12 @@ class _DailyViewState extends State<DailyView> {
     _restored = true;
     if (s.phase == DailyPhase.playing) {
       // Locked first letter on the ACTIVE row only, cursor at tile 2.
-      _board.setInput(_cubit.currentRow, _cubit.input.value);
+      _board.setInput(
+        _cubit.currentRow,
+        _cubit.input.value,
+        lockedPositions: _cubit.lockedPositions,
+        prefillPositions: _cubit.prefillPositions,
+      );
       _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
     }
   }
@@ -186,6 +245,10 @@ class _DailyViewState extends State<DailyView> {
     if (!_checkedRules && s.phase != DailyPhase.loading) {
       _checkedRules = true;
       _maybeAutoOpenRules(s);
+    }
+    if (!_checkedTour && s.phase != DailyPhase.loading) {
+      _checkedTour = true;
+      _maybeStartTour(s);
     }
     _restoreBoard(s);
     if (_restored && s.guesses.length > _rendered) {
@@ -329,6 +392,8 @@ class _DailyViewState extends State<DailyView> {
   @override
   void dispose() {
     _cubit.input.removeListener(_onInput);
+    _tourController.removeListener(_onTourStep);
+    _tourController.dispose();
     _board.dispose();
     _keyStates.dispose();
     _confetti.dispose();
@@ -356,6 +421,7 @@ class _DailyViewState extends State<DailyView> {
                     children: [
                       const SizedBox(height: 8),
                       DailyHeader(
+                        key: _headerKey,
                         streak: state.streak,
                         coins: _wallet.coins,
                         gems: _wallet.gems,
@@ -374,6 +440,7 @@ class _DailyViewState extends State<DailyView> {
             ),
           ),
           ConfettiOverlay(trigger: _confetti),
+          SpotlightTour(controller: _tourController, steps: _buildTourSteps()),
         ],
       ),
     );
@@ -442,7 +509,8 @@ class _DailyViewState extends State<DailyView> {
     if (type == HintType.dictionary) {
       return _cubit.purchaseDefinition(
         pay: pay,
-        refund: () => _wallet.creditCoins(price, reason: 'hint_dictionary_refund'),
+        refund: () =>
+            _wallet.creditCoins(price, reason: 'hint_dictionary_refund'),
         reveal: _showDefinitionDialog,
       );
     }
@@ -506,26 +574,29 @@ class _DailyViewState extends State<DailyView> {
           onHint: interactive && state.phase == DailyPhase.playing
               ? _openHint
               : null,
+          rulesButtonKey: _helpKey,
+          hintButtonKey: _hintKey,
         ),
-        // Coach mark on the first attempt: renders immediately with the board
-        // (state-driven, not cursor-driven). Dismissed on tap or first keystroke.
-        if (state.guesses.isEmpty && !_coachDismissed)
-          BoardCoachMark(
-            attempts: _cubit.maxAttempts,
-            onDismiss: _dismissCoach,
-          ),
+        const SizedBox(height: 12),
         Expanded(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ValueListenableBuilder<String>(
               valueListenable: _skins.activeSkinId,
               builder: (context, id, _) => TileSkinScope(
                 skin: TileSkin.byId(id),
-                child: GameBoard(controller: _board),
+                child: GameBoard(
+                  key: _boardKey,
+                  controller: _board,
+                  tileSize: _tileSize,
+                  gap: _gap,
+                ),
               ),
             ),
           ),
         ),
-        MashqPill(onTap: () => context.push(AppRoutes.practice)),
+        MashqPill(
+            key: _mashqPillKey, onTap: () => context.push(AppRoutes.practice)),
         const SizedBox(height: 12),
         GameKeyboard(
           keyStates: _keyStates,

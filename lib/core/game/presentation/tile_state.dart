@@ -2,13 +2,15 @@ import 'package:equatable/equatable.dart';
 
 import '../domain/letter_result.dart';
 
-/// Visual state of a board tile (component_spec (b) — 5 states).
+/// Visual state of a board tile (component_spec (b) — 5 states, plus
+/// [prefill] for the carry-forward convenience pre-fill on an active row).
 enum TileState {
   empty,
   typing, // filled, not submitted
   absent,
   present,
-  correct;
+  correct,
+  prefill; // carried-forward `present` suggestion on the active row — editable
 
   bool get isRevealed =>
       this == TileState.absent ||

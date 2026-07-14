@@ -18,6 +18,8 @@ class DailyContextHeader extends StatelessWidget {
     required this.date,
     required this.onRules,
     this.onHint,
+    this.rulesButtonKey,
+    this.hintButtonKey,
     super.key,
   });
 
@@ -27,6 +29,10 @@ class DailyContextHeader extends StatelessWidget {
 
   /// Present only while a puzzle is playable.
   final VoidCallback? onHint;
+
+  /// Optional spotlight-tour anchors for the rules/hint icon buttons.
+  final GlobalKey? rulesButtonKey;
+  final GlobalKey? hintButtonKey;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +52,7 @@ class DailyContextHeader extends StatelessWidget {
               ),
             ),
             AppIconButton(
+              key: rulesButtonKey,
               icon: AppIcons.help,
               onPressed: onRules,
               tooltip: LocaleKeys.commonRules.tr(),
@@ -53,6 +60,7 @@ class DailyContextHeader extends StatelessWidget {
             if (onHint != null) ...[
               const SizedBox(width: 6),
               AppIconButton(
+                key: hintButtonKey,
                 icon: AppIcons.hint,
                 iconColor: AppColors.fire,
                 onPressed: onHint!,
