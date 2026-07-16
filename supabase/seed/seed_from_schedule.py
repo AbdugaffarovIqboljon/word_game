@@ -16,10 +16,11 @@ words_import.sql) — every scheduled word must exist in `words`, or its day is
 skipped (the seed prints a warning and a post-check in the deploy runbook
 asserts the row count).
 
-Definitions are intentionally NOT seeded: the live schema stores none (they ship
-client-side in the bundled schedule for the offline fallback — see WS-A audit
-decision). `difficulty`/tier also isn't stored per-puzzle here; it lives on the
-`words` row.
+Definitions/themes are intentionally NOT seeded here: they live on the `words`
+row (words_import.sql carries theme + definition_uz for every answer, WS-B) and
+reach clients via the daily_puzzle_public view; the bundled schedule duplicates
+them for the offline fallback. `difficulty`/tier also isn't stored per-puzzle
+here; it lives on the `words` row.
 
 Idempotent: `on conflict (puzzle_date) do update` re-points a date to the newly
 scheduled word, so re-running to correct/extend the schedule is safe.
