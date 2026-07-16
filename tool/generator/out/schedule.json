@@ -20,630 +20,721 @@
       "date": "2026-07-16",
       "word": "miting",
       "difficulty": 2,
-      "definition_uz": "Odamlarning siyosiy yoki ijtimoiy talab bilan ochiq maydonda toʻplanishi; ommaviy yigʻin."
+      "definition_uz": "Odamlarning ochiq maydonda talab bilan toʻplanishi.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 7,
       "date": "2026-07-17",
-      "word": "balon",
+      "word": "havza",
       "difficulty": 2,
-      "definition_uz": "Ichiga gaz yoki havo toʻldiriladigan yopiq idish yoxud pufak."
+      "definition_uz": "Suv toʻplanadigan hudud yoki idish.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 8,
       "date": "2026-07-18",
-      "word": "sauna",
+      "word": "tovoq",
       "difficulty": 3,
-      "definition_uz": "Issiq bugʻ va quruq issiqlikda choʻmiladigan maxsus hammom."
+      "definition_uz": "Taom tortiladigan chuqurroq idish.",
+      "theme": "Uy-roʻzgʻor"
     },
     {
       "puzzle_number": 9,
       "date": "2026-07-19",
       "word": "rasta",
       "difficulty": 3,
-      "definition_uz": "Bozorda bir xil mol sotiladigan doʻkonlar qatori; savdo joyi."
+      "definition_uz": "Bozorning bir turdagi mollar qatori.",
+      "theme": "Savdo"
     },
     {
       "puzzle_number": 10,
       "date": "2026-07-20",
       "word": "halqa",
       "difficulty": 1,
-      "definition_uz": "Doira shaklidagi uzuk yoki zanjirning bir boʻgʻini."
+      "definition_uz": "Aylana shaklidagi tutashgan buyum.",
+      "theme": "Asbob"
     },
     {
       "puzzle_number": 11,
       "date": "2026-07-21",
       "word": "okean",
       "difficulty": 1,
-      "definition_uz": "Materiklarni ajratib turuvchi eng katta suv havzasi."
+      "definition_uz": "Qitʼalarni ajratib turuvchi ulkan suvlik.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 12,
       "date": "2026-07-22",
-      "word": "vosit",
+      "word": "oshpaz",
       "difficulty": 2,
-      "definition_uz": "Maqsadga erishish uchun foydalaniladigan qurol yoki usul."
+      "definition_uz": "Taom tayyorlovchi usta.",
+      "theme": "Kasb-hunar"
     },
     {
       "puzzle_number": 13,
       "date": "2026-07-23",
       "word": "lider",
       "difficulty": 2,
-      "definition_uz": "Guruh yoki jamoaga boshchilik qiluvchi yetakchi shaxs."
+      "definition_uz": "Guruhni boshqarib boruvchi yetakchi.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 14,
       "date": "2026-07-24",
-      "word": "piano",
+      "word": "gʻurur",
       "difficulty": 2,
-      "definition_uz": "Klavishli, torli katta musiqa asbobi."
+      "definition_uz": "Oʻz qadrini bilish, iftixor hissi.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 15,
       "date": "2026-07-25",
-      "word": "miraj",
+      "word": "muchal",
       "difficulty": 3,
-      "definition_uz": "Issiq havoda uzoqdan koʻrinadigan aldamchi manzara; sarob."
+      "definition_uz": "Oʻn ikki yillik hayvon taqvimi.",
+      "theme": "Vaqt"
     },
     {
       "puzzle_number": 16,
       "date": "2026-07-26",
-      "word": "mufid",
+      "word": "toʻsin",
       "difficulty": 3,
-      "definition_uz": "Foyda keltiradigan, asqotadigan; naf beruvchi."
+      "definition_uz": "Tom koʻtarib turuvchi yoʻgʻon yogʻoch.",
+      "theme": "Qurilish"
     },
     {
       "puzzle_number": 17,
       "date": "2026-07-27",
-      "word": "bargi",
+      "word": "huquq",
       "difficulty": 1,
-      "definition_uz": "Daraxt yoki oʻsimlikning yashil, yassi qismi."
+      "definition_uz": "Qonun bilan berilgan erk va imkoniyatlar.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 18,
       "date": "2026-07-28",
       "word": "qamish",
       "difficulty": 1,
-      "definition_uz": "Suv boʻyida oʻsadigan ichi boʻsh, uzun poyali oʻsimlik."
+      "definition_uz": "Suv boʻyida oʻsadigan uzun poyali oʻsimlik.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 19,
       "date": "2026-07-29",
-      "word": "karma",
+      "word": "varaq",
       "difficulty": 2,
-      "definition_uz": "Sharq falsafasida qilingan amallarning oqibati haqidagi tushuncha."
+      "definition_uz": "Qogʻozning bir beti.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 20,
       "date": "2026-07-30",
-      "word": "aqoid",
+      "word": "ahvol",
       "difficulty": 2,
-      "definition_uz": "Diniy eʼtiqod va ishonchlar majmui."
+      "definition_uz": "Kimningdir hozirgi holati, kayfiyati yoki turmushi.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 21,
       "date": "2026-07-31",
-      "word": "mugʻom",
+      "word": "hijob",
       "difficulty": 2,
-      "definition_uz": "Sharq mumtoz musiqasidagi kuy-ohang usuli."
+      "definition_uz": "Ayollarning boshni yopuvchi diniy libosi.",
+      "theme": "Kiyim"
     },
     {
       "puzzle_number": 22,
       "date": "2026-08-01",
-      "word": "ukrop",
+      "word": "qimiz",
       "difficulty": 3,
-      "definition_uz": "Taomga solinadigan xushboʻy, mayda bargli koʻkat."
+      "definition_uz": "Biya sutidan tayyorlanadigan achigan ichimlik.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 23,
       "date": "2026-08-02",
-      "word": "gurji",
+      "word": "koriz",
       "difficulty": 3,
-      "definition_uz": "Kavkazdagi bir xalq vakili; gruzin."
+      "definition_uz": "Yer ostidan suv keltiruvchi qadimiy inshoot.",
+      "theme": "Tarix"
     },
     {
       "puzzle_number": 24,
       "date": "2026-08-03",
       "word": "bodom",
       "difficulty": 1,
-      "definition_uz": "Danakli, moygʻa boy magʻizli daraxt mevasi."
+      "definition_uz": "Qattiq poʻchoqli, magʻzi shirin danakli meva.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 25,
       "date": "2026-08-04",
       "word": "idora",
       "difficulty": 1,
-      "definition_uz": "Rasmiy ish yuritiladigan muassasa yoki boshqarma."
+      "definition_uz": "Ish yuritiladigan muassasa binosi.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 26,
       "date": "2026-08-05",
-      "word": "oqtosh",
+      "word": "qasam",
       "difficulty": 2,
-      "definition_uz": "Oq rangli, yumshoq qurilish toshi; ohaktosh."
+      "definition_uz": "Ont ichib berilgan vaʼda.",
+      "theme": "Til"
     },
     {
       "puzzle_number": 27,
       "date": "2026-08-06",
       "word": "chaman",
       "difficulty": 2,
-      "definition_uz": "Gullarga burkangan chiroyli maydon; gulzor."
+      "definition_uz": "Gullar ochilib yotgan yam-yashil maydon.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 28,
       "date": "2026-08-07",
       "word": "kovak",
       "difficulty": 2,
-      "definition_uz": "Biror narsaning ichidagi boʻsh joy yoki tuynuk."
+      "definition_uz": "Daraxt yoki devordagi oʻyiq boʻshliq.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 29,
       "date": "2026-08-08",
-      "word": "pinta",
+      "word": "boʻgʻiz",
       "difficulty": 3,
-      "definition_uz": "Ingliz oʻlchov tizimidagi suyuqlik birligi."
+      "definition_uz": "Tomoqning ichki nafas yoʻli qismi.",
+      "theme": "Jism"
     },
     {
       "puzzle_number": 30,
       "date": "2026-08-09",
       "word": "gulcha",
       "difficulty": 3,
-      "definition_uz": "Juda kichik gul."
+      "definition_uz": "Mayda ochilgan gul, chechakcha.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 31,
       "date": "2026-08-10",
       "word": "yarim",
       "difficulty": 1,
-      "definition_uz": "Butunning teng ikki boʻlagidan biri."
+      "definition_uz": "Butunning teng ikkidan bir qismi.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 32,
       "date": "2026-08-11",
-      "word": "yevro",
+      "word": "yechim",
       "difficulty": 1,
-      "definition_uz": "Bir qancha gʻarb davlatlarining umumiy pul birligi."
+      "definition_uz": "Masalani hal qiluvchi javob yoʻli.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 33,
       "date": "2026-08-12",
       "word": "qayir",
       "difficulty": 2,
-      "definition_uz": "Daryo boʻyidagi qumli, sayoz joy."
+      "definition_uz": "Daryo boʻyidagi unumdor pastqam yer.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 34,
       "date": "2026-08-13",
       "word": "buqoq",
       "difficulty": 2,
-      "definition_uz": "Boʻyindagi qalqonsimon bez kattalashuvidan hosil boʻlgan shish."
+      "definition_uz": "Boʻyindagi bezning kattalashish kasalligi.",
+      "theme": "Jism"
     },
     {
       "puzzle_number": 35,
       "date": "2026-08-14",
       "word": "ilgak",
       "difficulty": 2,
-      "definition_uz": "Ilib qoʻyish yoki ulash uchun ishlatiladigan egri metall qism."
+      "definition_uz": "Narsalarni osish uchun qayrilgan uchli moslama.",
+      "theme": "Asbob"
     },
     {
       "puzzle_number": 36,
       "date": "2026-08-15",
       "word": "dohiy",
       "difficulty": 3,
-      "definition_uz": "Ulugʻ yoʻlboshchi, buyuk zot."
+      "definition_uz": "Xalqni yetaklovchi buyuk rahnamo.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 37,
       "date": "2026-08-16",
-      "word": "baton",
+      "word": "kimsa",
       "difficulty": 3,
-      "definition_uz": "Choʻzinchoq shakldagi oq non."
+      "definition_uz": "Nomaʼlum bir odam, shaxs.",
+      "theme": "Oila"
     },
     {
       "puzzle_number": 38,
       "date": "2026-08-17",
-      "word": "abort",
+      "word": "oʻtroq",
       "difficulty": 1,
-      "definition_uz": "Homilaning sunʼiy yoki tabiiy tarzda tushishi."
+      "definition_uz": "Bir joyda muqim yashovchi turmush tarzi.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 39,
       "date": "2026-08-18",
       "word": "tovon",
       "difficulty": 1,
-      "definition_uz": "Oyoq panjasining orqa, pastki qismi."
+      "definition_uz": "Oyoq kaftining orqa qismi.",
+      "theme": "Jism"
     },
     {
       "puzzle_number": 40,
       "date": "2026-08-19",
       "word": "qamar",
       "difficulty": 2,
-      "definition_uz": "Osmondagi Yer yoʻldoshi; oy."
+      "definition_uz": "Oyning kitobiy nomi.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 41,
       "date": "2026-08-20",
       "word": "ehrom",
       "difficulty": 2,
-      "definition_uz": "Qadimgi Misrdagi uchburchak qirrali ulkan maqbara."
+      "definition_uz": "Qadimgi Misrdagi ulkan uchburchak maqbara.",
+      "theme": "Tarix"
     },
     {
       "puzzle_number": 42,
       "date": "2026-08-21",
       "word": "qoziq",
       "difficulty": 2,
-      "definition_uz": "Yerga qoqiladigan uchi oʻtkir yogʻoch yoki temir."
+      "definition_uz": "Yerga qoqiladigan uchli yogʻoch.",
+      "theme": "Asbob"
     },
     {
       "puzzle_number": 43,
       "date": "2026-08-22",
-      "word": "dalla",
+      "word": "popuk",
       "difficulty": 3,
-      "definition_uz": "Sovchilik va vositachilik bilan shugʻullanuvchi ayol."
+      "definition_uz": "Ip tolalaridan yasalgan osma bezakcha.",
+      "theme": "Kiyim"
     },
     {
       "puzzle_number": 44,
       "date": "2026-08-23",
       "word": "qoʻnoq",
       "difficulty": 3,
-      "definition_uz": "Birovnikiga vaqtincha kelib turgan mehmon."
+      "definition_uz": "Uyga tashrif buyurgan mehmon.",
+      "theme": "Oila"
     },
     {
       "puzzle_number": 45,
       "date": "2026-08-24",
       "word": "taqiq",
       "difficulty": 1,
-      "definition_uz": "Biror ishni qilishni man etish; manʼ."
+      "definition_uz": "Man etilganlik holati.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 46,
       "date": "2026-08-25",
       "word": "bandi",
       "difficulty": 1,
-      "definition_uz": "Asirga olingan yoki qamoqqa tashlangan kishi."
+      "definition_uz": "Ozodlikdan mahrum etilgan tutqun kishi.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 47,
       "date": "2026-08-26",
-      "word": "iddao",
+      "word": "qoʻnim",
       "difficulty": 2,
-      "definition_uz": "Asossiz talab yoki oʻzini yuqori tutib qilingan daʼvo."
+      "definition_uz": "Bir joyda muqim qolish holati.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 48,
       "date": "2026-08-27",
-      "word": "dungan",
+      "word": "dumba",
       "difficulty": 2,
-      "definition_uz": "Markaziy Osiyoda yashovchi xitoy musulmon xalqi."
+      "definition_uz": "Qoʻyning orqasidagi yogʻli qismi.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 49,
       "date": "2026-08-28",
       "word": "vasiy",
       "difficulty": 2,
-      "definition_uz": "Yetim yoki voyaga yetmaganning ishlarini boshqaruvchi homiy."
+      "definition_uz": "Voyaga yetmagan bolaga qonuniy gʻamxoʻr shaxs.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 50,
       "date": "2026-08-29",
       "word": "yugan",
       "difficulty": 3,
-      "definition_uz": "Otni boshqarish uchun boshiga kiygiziladigan jilov."
+      "definition_uz": "Otning boshiga solinadigan jilovli anjom.",
+      "theme": "Asbob"
     },
     {
       "puzzle_number": 51,
       "date": "2026-08-30",
       "word": "aytim",
       "difficulty": 3,
-      "definition_uz": "Ogʻzaki ijodda maʼlum ohangda aytiladigan qisqa matn."
+      "definition_uz": "Xalq ogʻzaki ijodidagi kuylanadigan janr.",
+      "theme": "Sanʼat"
     },
     {
       "puzzle_number": 52,
       "date": "2026-08-31",
       "word": "isbot",
       "difficulty": 1,
-      "definition_uz": "Biror fikrning toʻgʻriligini dalil bilan koʻrsatish."
+      "definition_uz": "Haqiqatni tasdiqlovchi dalil keltirish.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 53,
       "date": "2026-09-01",
       "word": "sahna",
       "difficulty": 1,
-      "definition_uz": "Teatrda tomosha koʻrsatiladigan baland maydon."
+      "definition_uz": "Tomosha koʻrsatiladigan maxsus maydoncha.",
+      "theme": "Sanʼat"
     },
     {
       "puzzle_number": 54,
       "date": "2026-09-02",
       "word": "chalov",
       "difficulty": 2,
-      "definition_uz": "Dashtda oʻsadigan, ingichka bargli oʻt oʻsimlik."
+      "definition_uz": "Choʻl-dashtda oʻsadigan boshoqli yovvoyi oʻt.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 55,
       "date": "2026-09-03",
       "word": "shingil",
       "difficulty": 2,
-      "definition_uz": "Uzum boshining kichik boʻlagi; bir siqim gʻujum."
+      "definition_uz": "Uzum boshining kichik bir shoxchasi.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 56,
       "date": "2026-09-04",
       "word": "girih",
       "difficulty": 2,
-      "definition_uz": "Ganch yoki yogʻochga solingan geometrik naqsh."
+      "definition_uz": "Sharq meʼmorligidagi geometrik naqsh turi.",
+      "theme": "Sanʼat"
     },
     {
       "puzzle_number": 57,
       "date": "2026-09-05",
       "word": "figʻon",
       "difficulty": 3,
-      "definition_uz": "Dard va alam bilan qilingan baland nola."
+      "definition_uz": "Alam bilan chekilgan oh-nola.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 58,
       "date": "2026-09-06",
-      "word": "butil",
+      "word": "madang",
       "difficulty": 3,
-      "definition_uz": "Suyuqlik quyiladigan, boʻyni tor shisha idish."
+      "definition_uz": "Eshikni ichdan bekituvchi yogʻoch tambasi.",
+      "theme": "Qurilish"
     },
     {
       "puzzle_number": 59,
       "date": "2026-09-07",
       "word": "paxta",
       "difficulty": 1,
-      "definition_uz": "Chigitidan tola olinadigan oq momiq oʻsimlik hosili."
+      "definition_uz": "Oq tolali asosiy texnik ekin.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 60,
       "date": "2026-09-08",
       "word": "oʻlpon",
       "difficulty": 1,
-      "definition_uz": "Oʻtmishda aholidan yigʻilgan majburiy soliq."
+      "definition_uz": "Qadimda yerdan olingan soliq turi.",
+      "theme": "Tarix"
     },
     {
       "puzzle_number": 61,
       "date": "2026-09-09",
       "word": "badan",
       "difficulty": 2,
-      "definition_uz": "Insonning butun jismi; gavda."
+      "definition_uz": "Insonning butun tanasi.",
+      "theme": "Jism"
     },
     {
       "puzzle_number": 62,
       "date": "2026-09-10",
-      "word": "eskiz",
+      "word": "qiyos",
       "difficulty": 2,
-      "definition_uz": "Rasm yoki loyihaning dastlabki, chizib qoʻyilgan koʻrinishi."
+      "definition_uz": "Ikki narsani solishtirib koʻrish.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 63,
       "date": "2026-09-11",
       "word": "koʻpik",
       "difficulty": 2,
-      "definition_uz": "Suyuqlik yuzasida hosil boʻladigan mayda pufakchalar."
+      "definition_uz": "Suyuqlik yuzasidagi mayda pufakchalar uyumi.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 64,
       "date": "2026-09-12",
       "word": "oziqa",
       "difficulty": 3,
-      "definition_uz": "Tirik jonzot uchun quvvat beruvchi yegulik."
+      "definition_uz": "Jonzotga quvvat beruvchi yegulik.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 65,
       "date": "2026-09-13",
-      "word": "aksiz",
+      "word": "yorma",
       "difficulty": 3,
-      "definition_uz": "Ayrim tovarlardan olinadigan davlat soligʻi."
+      "definition_uz": "Maydalangan dondan tayyorlanadigan mahsulot.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 66,
       "date": "2026-09-14",
-      "word": "senat",
+      "word": "rivoj",
       "difficulty": 1,
-      "definition_uz": "Parlamentning yuqori palatasi."
+      "definition_uz": "Oʻsish, taraqqiy etish jarayoni.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 67,
       "date": "2026-09-15",
-      "word": "lozim",
+      "word": "daryo",
       "difficulty": 1,
-      "definition_uz": "Zarur, kerak boʻlgan; ado etilishi shart."
+      "definition_uz": "Katta oʻzanda oqadigan yirik suv oqimi.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 68,
       "date": "2026-09-16",
       "word": "toshma",
       "difficulty": 2,
-      "definition_uz": "Teri yuzasida paydo boʻladigan mayda dogʻ va pufakchalar."
+      "definition_uz": "Terida paydo boʻladigan mayda donachalar.",
+      "theme": "Jism"
     },
     {
       "puzzle_number": 69,
       "date": "2026-09-17",
       "word": "ixlos",
       "difficulty": 2,
-      "definition_uz": "Chin koʻngildan berilganlik, samimiy muhabbat."
+      "definition_uz": "Chin dildan berilgan sadoqat.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 70,
       "date": "2026-09-18",
       "word": "laqqa",
       "difficulty": 2,
-      "definition_uz": "Boshi katta, tangasiz, yirik daryo baligʻi."
+      "definition_uz": "Moʻylovli yirik daryo baligʻi.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 71,
       "date": "2026-09-19",
       "word": "chayla",
       "difficulty": 3,
-      "definition_uz": "Shox-shabbadan qurilgan vaqtinchalik kulba."
+      "definition_uz": "Shox-shabbadan qurilgan yengil boshpana.",
+      "theme": "Qurilish"
     },
     {
       "puzzle_number": 72,
       "date": "2026-09-20",
       "word": "arxar",
       "difficulty": 3,
-      "definition_uz": "Togʻlarda yashaydigan yovvoyi qoʻy."
+      "definition_uz": "Togʻda yashovchi yirik yovvoyi qoʻy.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 73,
       "date": "2026-09-21",
       "word": "qayin",
       "difficulty": 1,
-      "definition_uz": "Oq poʻstloqli, ingichka novdali oʻrmon daraxti."
+      "definition_uz": "Oq poʻstloqli nozik daraxt.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 74,
       "date": "2026-09-22",
       "word": "shanba",
       "difficulty": 1,
-      "definition_uz": "Haftaning dam olish kunlaridan biri; jumadan keyingi kun."
+      "definition_uz": "Haftaning oltinchi kuni.",
+      "theme": "Vaqt"
     },
     {
       "puzzle_number": 75,
       "date": "2026-09-23",
-      "word": "ilohi",
+      "word": "xoqon",
       "difficulty": 2,
-      "definition_uz": "Xudoga oid, muqaddas; yoki 'ey Tangrim' degan nido."
+      "definition_uz": "Qadimgi turkiy davlatlar hukmdori.",
+      "theme": "Tarix"
     },
     {
       "puzzle_number": 76,
       "date": "2026-09-24",
       "word": "xatna",
       "difficulty": 2,
-      "definition_uz": "Oʻgʻil bolaga oʻtkaziladigan diniy jarrohlik marosimi."
+      "definition_uz": "Oʻgʻil bolani sunnat qilish marosimi.",
+      "theme": "Din"
     },
     {
       "puzzle_number": 77,
       "date": "2026-09-25",
       "word": "palos",
       "difficulty": 2,
-      "definition_uz": "Uy poliga toʻshaladigan tuksiz gilam."
+      "definition_uz": "Patsiz toʻqilgan yerga yoziladigan gilamcha.",
+      "theme": "Uy-roʻzgʻor"
     },
     {
       "puzzle_number": 78,
       "date": "2026-09-26",
       "word": "suvchi",
       "difficulty": 3,
-      "definition_uz": "Ekin maydonlarini sugʻorish bilan shugʻullanuvchi kishi."
+      "definition_uz": "Ekinlarga suv taratuvchi kishi.",
+      "theme": "Kasb-hunar"
     },
     {
       "puzzle_number": 79,
       "date": "2026-09-27",
       "word": "tinim",
       "difficulty": 3,
-      "definition_uz": "Ish orasidagi dam olish, toʻxtash pallasi."
+      "definition_uz": "Dam olish, orom topish.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 80,
       "date": "2026-09-28",
       "word": "sohil",
       "difficulty": 1,
-      "definition_uz": "Dengiz yoki daryoning quruqlik bilan tutashgan chekkasi."
+      "definition_uz": "Suv havzasining quruqlik cheti.",
+      "theme": "Tabiat"
     },
     {
       "puzzle_number": 81,
       "date": "2026-09-29",
       "word": "bolta",
       "difficulty": 1,
-      "definition_uz": "Yogʻoch chopadigan, dastali oʻtkir asbob."
+      "definition_uz": "Oʻtin yorish uchun dastali keskir qurol.",
+      "theme": "Asbob"
     },
     {
       "puzzle_number": 82,
       "date": "2026-09-30",
-      "word": "gumus",
+      "word": "lavha",
       "difficulty": 2,
-      "definition_uz": "Tuproqning chirindiga boy, unumdor qatlami."
+      "definition_uz": "Kichik tasvir yoki yozuvli taxtacha.",
+      "theme": "Sanʼat"
     },
     {
       "puzzle_number": 83,
       "date": "2026-10-01",
       "word": "burga",
       "difficulty": 2,
-      "definition_uz": "Sakrab yuradigan, mayda qon soʻruvchi hasharot."
+      "definition_uz": "Sakrab yuruvchi mayda qon soʻruvchi hasharot.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 84,
       "date": "2026-10-02",
-      "word": "chuvash",
+      "word": "zarra",
       "difficulty": 2,
-      "definition_uz": "Volgaboʻyida yashovchi turkiy xalq vakili."
+      "definition_uz": "Moddaning eng kichik boʻlagi.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 85,
       "date": "2026-10-03",
       "word": "kakku",
       "difficulty": 3,
-      "definition_uz": "Boshqa qushlar uyasiga tuxum qoʻyadigan oʻrmon qushi."
+      "definition_uz": "Oʻz nomini takrorlab sayrovchi qush.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 86,
       "date": "2026-10-04",
-      "word": "bobiy",
+      "word": "aygʻir",
       "difficulty": 3,
-      "definition_uz": "XIX asrda paydo boʻlgan diniy oqim tarafdori."
+      "definition_uz": "Naslga qoʻyiladigan erkak ot.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 87,
       "date": "2026-10-05",
       "word": "qator",
       "difficulty": 1,
-      "definition_uz": "Bir chiziq boʻylab tizilgan narsalar; saf."
+      "definition_uz": "Bir chiziqqa tizilgan narsalar ketma-ketligi.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 88,
       "date": "2026-10-06",
       "word": "ustoz",
       "difficulty": 1,
-      "definition_uz": "Shogirdga ilm va hunar oʻrgatuvchi murabbiy."
+      "definition_uz": "Bilim beruvchi muallim.",
+      "theme": "Ilm"
     },
     {
       "puzzle_number": 89,
       "date": "2026-10-07",
       "word": "boʻtqa",
       "difficulty": 2,
-      "definition_uz": "Donni suv yoki sutda qaynatib tayyorlangan quyuq taom."
+      "definition_uz": "Yormadan pishiriladigan quyuq taom.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 90,
       "date": "2026-10-08",
       "word": "xayol",
       "difficulty": 2,
-      "definition_uz": "Koʻngildan kechgan tasavvur va oʻy."
+      "definition_uz": "Ongda jonlanadigan tasavvur oqimi.",
+      "theme": "Tuygʻu"
     },
     {
       "puzzle_number": 91,
       "date": "2026-10-09",
       "word": "qobon",
       "difficulty": 2,
-      "definition_uz": "Yovvoyi choʻchqa."
+      "definition_uz": "Yovvoyi toʻngʻizning erkagi.",
+      "theme": "Hayvonot"
     },
     {
       "puzzle_number": 92,
       "date": "2026-10-10",
       "word": "burda",
       "difficulty": 3,
-      "definition_uz": "Bir tishlam yoki bir boʻlak non."
+      "definition_uz": "Nonning bir tishlamlik parchasi.",
+      "theme": "Oshxona"
     },
     {
       "puzzle_number": 93,
       "date": "2026-10-11",
-      "word": "manot",
+      "word": "gʻanim",
       "difficulty": 3,
-      "definition_uz": "Ayrim mamlakatlarda ishlatiladigan pul birligi."
+      "definition_uz": "Dushmanlik qiluvchi raqib.",
+      "theme": "Jamiyat"
     },
     {
       "puzzle_number": 94,
       "date": "2026-10-12",
       "word": "undosh",
       "difficulty": 1,
-      "definition_uz": "Talaffuzida shovqin ishtirok etadigan, unli boʻlmagan tovush."
+      "definition_uz": "Ovoz va shovqindan hosil boʻluvchi nutq tovushi.",
+      "theme": "Til"
     },
     {
       "puzzle_number": 95,
       "date": "2026-10-13",
       "word": "hovuz",
       "difficulty": 1,
-      "definition_uz": "Suv saqlanadigan tosh yoki gʻishtli havza."
+      "definition_uz": "Suv toʻplab qoʻyiladigan sunʼiy koʻlcha.",
+      "theme": "Tabiat"
     }
-  ]
+  ],
+  "patched_at": "2026-07-16T10:42:06.743182+00:00"
 }

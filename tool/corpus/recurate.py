@@ -93,9 +93,7 @@ def recurate(out_dir):
     # --- write answer assets (valid_guesses.txt stays untouched) ------------
     with open(os.path.join(out_dir, "answers.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(answers_sorted) + "\n")
-    with open(os.path.join(out_dir, "answers_tiered.tsv"), "w", encoding="utf-8") as f:
-        for w in answers_sorted:
-            f.write(f"{w}\t{tier[w]}\t{total(w)}\n")
+    B.write_answers_tiered(out_dir, answers_sorted, tier, total)
 
     # --- stats: carry unchanged guess-list fields, refresh answer fields ----
     from collections import Counter
@@ -122,6 +120,14 @@ def recurate(out_dir):
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
     assert n == tier_counts[1] + tier_counts[2] + tier_counts[3]
+    # hard gate: exclusions applied, 5LL, answers ⊆ valid_guesses (POS data is
+    # not loaded here — noun-only is enforced by the full build that feeds us)
+    vg_path = os.path.join(out_dir, "valid_guesses.txt")
+    valid_guesses = None
+    if os.path.exists(vg_path):
+        with open(vg_path, encoding="utf-8") as f:
+            valid_guesses = {line.strip() for line in f if line.strip()}
+    B.assert_answer_invariants(answers_sorted, valid_guesses)
     return stats, non_ans_removed
 
 

@@ -339,6 +339,80 @@ def is_inflected_of_hunspell(token, hun_all, hun_pos):
     return False
 
 
+WORD_CONTENT_PATH = os.path.join(
+    HERE, "..", "generator", "word_content_uz.tsv")
+
+
+def load_word_content(path=None):
+    """{word: (theme, definition_uz)} from the WS-B content master."""
+    path = path or WORD_CONTENT_PATH
+    content = {}
+    if not os.path.exists(path):
+        return content
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if not line or line.startswith("#"):
+                continue
+            word, theme, definition = line.split("\t")
+            content[word] = (theme, definition)
+    return content
+
+
+def write_answers_tiered(out_dir, answers_sorted, tier, total):
+    """answers_tiered.tsv: word, tier, freq, theme, definition_uz.
+
+    The theme/definition columns come from the WS-B content master
+    (tool/generator/word_content_uz.tsv) and are REQUIRED for every answer —
+    the hint features (Mavzu + Lugʻat) must cover the whole pool, so a new
+    answer without authored content fails the build rather than shipping a
+    silent gap.
+    """
+    content = load_word_content()
+    missing = [w for w in answers_sorted if w not in content]
+    assert not missing, (
+        f"{len(missing)} answers missing theme/definition in "
+        f"word_content_uz.tsv: {missing[:15]}")
+    with open(os.path.join(out_dir, "answers_tiered.tsv"), "w",
+              encoding="utf-8") as f:
+        for w in answers_sorted:
+            theme, definition = content[w]
+            f.write(f"{w}\t{tier[w]}\t{total(w)}\t{theme}\t{definition}\n")
+
+
+def assert_answer_invariants(answers, valid_guesses=None, hun_pos=None):
+    """Hard build gate — raises AssertionError (build FAILS) on any violation:
+
+      1. exclusions applied: excluded ∩ answers = ∅ (offensive + non_answers);
+      2. every answer is exactly 5 logical letters;
+      3. answers ⊆ valid_guesses (when the guess list is available);
+      4. noun-only: every answer is a hunspell noun lemma (when POS is available).
+
+    Called by build_corpus (full build), recurate (re-cut) and
+    generate_schedule (schedule generation), so an exclusion added to
+    exclusions/*.txt can never silently reappear downstream — the regression
+    that let MANOT back into the schedule.
+    """
+    excl_dir = os.path.join(HERE, "exclusions")
+    is_off = load_exclusions(os.path.join(excl_dir, "offensive_uz.txt"))
+    is_non = load_exclusions(os.path.join(excl_dir, "non_answers.txt"),
+                             root_match=False)
+    leaked = sorted(w for w in answers if is_off(w) or is_non(w))
+    assert not leaked, f"excluded words leaked into answers: {leaked[:20]}"
+
+    bad_len = sorted(w for w in answers
+                     if len(U.logical_letters(w) or []) != 5)
+    assert not bad_len, f"answers not 5 logical letters: {bad_len[:20]}"
+
+    if valid_guesses is not None:
+        missing = sorted(set(answers) - set(valid_guesses))
+        assert not missing, f"answers missing from valid_guesses: {missing[:20]}"
+
+    if hun_pos is not None:
+        non_noun = sorted(w for w in answers if hun_pos.get(w) != "noun")
+        assert not non_noun, f"non-noun answers: {non_noun[:20]}"
+
+
 def build(sources_dir, out_dir):
     dic = os.path.join(sources_dir, "uz_Latn_UZ.dic")
     wiki = os.path.join(sources_dir, "wiki_freq.tsv")
@@ -440,9 +514,7 @@ def build(sources_dir, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, "answers.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(answers_sorted) + "\n")
-    with open(os.path.join(out_dir, "answers_tiered.tsv"), "w", encoding="utf-8") as f:
-        for w in answers_sorted:
-            f.write(f"{w}\t{tier[w]}\t{total(w)}\n")
+    write_answers_tiered(out_dir, answers_sorted, tier, total)
     with open(os.path.join(out_dir, "valid_guesses.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(valid_guesses) + "\n")
 
@@ -459,7 +531,8 @@ def build(sources_dir, out_dir):
         "answers_with_compound": sum(1 for w in answers if U.has_compound(w)),
         "answers_with_ng": sum(1 for w in answers if U.has_letter(w, "ng")),
     })
-    assert set(answers_sorted) <= set(valid_guesses), "answers must be subset of valid_guesses"
+    # hard gate: exclusions applied, 5LL, noun-only, answers ⊆ valid_guesses
+    assert_answer_invariants(answers_sorted, valid_guesses, hun_pos)
 
     _write_report(out_dir, stats, answers_sorted, tier, total)
     with open(os.path.join(out_dir, "build_stats.json"), "w", encoding="utf-8") as f:

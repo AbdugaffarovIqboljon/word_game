@@ -29,6 +29,12 @@ import datetime as dt
 import json
 import os
 import random
+import sys
+
+# corpus tooling (exclusion lists + the shared hard-assert gate)
+_CORPUS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "corpus")
+sys.path.insert(0, os.path.abspath(_CORPUS))
+import build_corpus as B  # noqa: E402
 
 # weekday() : Mon=0 .. Sun=6
 TIER_BY_WEEKDAY = {0: 1, 1: 1, 2: 2, 3: 2, 4: 2, 5: 3, 6: 3}
@@ -50,14 +56,12 @@ def load_tiers(path):
     return tiers
 
 
-def load_definitions(path):
-    """{word: definition_uz} master (WS1). Keyed by word so definitions survive a
-    tier re-cut / schedule regeneration — they re-attach to whichever dates keep
-    the word. Missing file → no definitions (every puzzle gets null)."""
-    if not path or not os.path.exists(path):
-        return {}
-    with open(path, encoding="utf-8") as f:
-        return {k: v for k, v in json.load(f).items() if v}
+def load_content(path):
+    """{word: (theme, definition_uz)} — the WS-B content master. Keyed by word
+    so content survives a tier re-cut / schedule regeneration — it re-attaches
+    to whichever dates keep the word. Every answer MUST have content (enforced
+    below), so hints cover the whole pool."""
+    return B.load_word_content(path)
 
 
 def load_history(path):
@@ -105,6 +109,7 @@ def build_schedule(tiers, start, days, seed, history, start_number=1):
             "date": date.isoformat(),
             "word": word,
             "difficulty": tier,
+            "theme": None,
             "definition_uz": None,
         })
     return puzzles
@@ -143,29 +148,40 @@ def main():
     ap.add_argument("--days", type=int, default=90)
     ap.add_argument("--seed", type=int, default=142)
     ap.add_argument("--history", default=None, help="prior schedule/history JSON (optional)")
-    ap.add_argument("--definitions",
-                    default=os.path.join(os.path.dirname(__file__), "definitions_uz.json"),
-                    help="word->definition_uz master (WS1)")
+    ap.add_argument("--content",
+                    default=os.path.join(os.path.dirname(__file__), "word_content_uz.tsv"),
+                    help="word->theme/definition_uz master (WS-B)")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "out", "schedule.json"))
     args = ap.parse_args()
 
     tiers = load_tiers(args.answers)
+    # Hard gate (WS-DC): the input pool AND therefore every scheduled word must
+    # be exclusion-clean and 5LL. This is the layer that let MANOT reappear —
+    # the generator used to trust answers_tiered.tsv blindly, so an exclusion
+    # applied anywhere downstream (DB, schedule edit) silently regressed on the
+    # next regeneration. Now the build fails instead.
+    B.assert_answer_invariants([w for pool in tiers.values() for w in pool])
     history = load_history(args.history)
-    defs = load_definitions(args.definitions)
+    content = load_content(args.content)
     start = dt.date.fromisoformat(args.start)
     puzzles = build_schedule(tiers, start, args.days, args.seed, history,
                              start_number=args.start_number)
 
-    # Attach definitions by word (WS1). A definition must never contain its own
-    # answer word — the dialog shows it *without* revealing the word.
+    # Attach theme + definition by word (WS-B). A definition must never contain
+    # its own answer word — the dialog shows it *without* revealing the word.
+    # Coverage is total by construction (write_answers_tiered asserts it), so a
+    # scheduled word without content is a hard failure, not a null.
     missing = []
     for p in puzzles:
-        d = defs.get(p["word"])
+        theme, d = content.get(p["word"], (None, None))
         if d and p["word"] in d.lower():
             raise SystemExit(f"definition for '{p['word']}' reveals the word: {d!r}")
+        p["theme"] = theme
         p["definition_uz"] = d
-        if not d:
+        if not d or not theme:
             missing.append(p["word"])
+    if missing:
+        raise SystemExit(f"scheduled words missing theme/definition: {missing}")
 
     # invariants
     words = [p["word"] for p in puzzles]
@@ -189,8 +205,7 @@ def main():
     print(f"wrote {len(puzzles)} puzzles {puzzles[0]['date']}..{puzzles[-1]['date']} "
           f"-> {args.out}")
     print(f"tier counts: {tier_counts}")
-    print(f"definitions attached: {len(puzzles) - len(missing)}/{len(puzzles)}"
-          + (f"  (missing: {missing})" if missing else ""))
+    print(f"theme+definition attached: {len(puzzles)}/{len(puzzles)}")
     print("first 7:", ", ".join(f"{p['date']}={p['word']}(t{p['difficulty']})" for p in puzzles[:7]))
 
 

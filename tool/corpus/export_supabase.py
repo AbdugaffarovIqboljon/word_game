@@ -8,16 +8,19 @@ manually-populated store that must never diverge from the same curated corpus
 
 Input : out/answers_tiered.tsv (curated, tail-dropped answer pool + tier)
          out/valid_guesses.txt  (superset accepted-guess list)
-Output: output/words_import.sql — batched, idempotent INSERTs matching the
+Output: output/words_import.sql — batched, idempotent upserts matching the
          live `words` schema exactly: (word, length, tier, theme,
-         is_answer_candidate). `theme` is left NULL everywhere (full-corpus
-         theming is separate future work); `tier` is the Uzbek difficulty
-         label for answers ("oson"/"oʻrta"/"qiyin") and the table's own
-         "standart" default for every other accepted guess.
+         definition_uz, is_answer_candidate). `theme`/`definition_uz` come
+         from the WS-B content master via answers_tiered.tsv and are set for
+         every answer candidate (NULL for guess-only rows); `tier` is the
+         Uzbek difficulty label for answers ("oson"/"oʻrta"/"qiyin") and the
+         table's own "standart" default for every other accepted guess.
 
-ON CONFLICT (word) DO NOTHING makes re-running this after a future corpus
-rebuild (e.g. a new suffix fix) safe: existing rows — including anything
-curated by hand directly in Supabase — are never touched or duplicated.
+ON CONFLICT (word) DO UPDATE keeps the live table convergent with the corpus:
+re-running after a curation pass corrects tier/theme/definition and — crucially
+— revokes is_answer_candidate from words the deep clean excluded (they remain
+valid guesses). The corpus build is the single source of truth; do not hand-edit
+rows in Supabase.
 
 Usage:
   python3 export_supabase.py                    # out/ -> output/words_import.sql
@@ -43,15 +46,16 @@ NON_ANSWER_TIER = "standart"  # matches the column's own DB default
 
 
 def load_answer_tiers(path):
-    """Return {word: tier_label} from answers_tiered.tsv (word\ttier\tfreq)."""
+    """{word: (tier_label, theme, definition_uz)} from the enriched
+    answers_tiered.tsv (word\ttier\tfreq\ttheme\tdefinition_uz)."""
     tiers = {}
     with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.rstrip("\n")
             if not line:
                 continue
-            word, tier, _freq = line.split("\t")
-            tiers[word] = TIER_LABELS[int(tier)]
+            word, tier, _freq, theme, definition = line.split("\t")
+            tiers[word] = (TIER_LABELS[int(tier)], theme, definition)
     return tiers
 
 
@@ -72,8 +76,11 @@ def build_rows(answer_tiers, valid_guesses):
     for word in valid_guesses:
         length = U.logical_len(word)
         is_answer = word in answer_tiers
-        tier = answer_tiers[word] if is_answer else NON_ANSWER_TIER
-        rows.append((word.upper(), length, tier, is_answer))
+        if is_answer:
+            tier, theme, definition = answer_tiers[word]
+        else:
+            tier, theme, definition = NON_ANSWER_TIER, None, None
+        rows.append((word.upper(), length, tier, theme, definition, is_answer))
     return rows
 
 
@@ -87,21 +94,32 @@ def write_sql(rows, sql_out):
             "-- Practice mode's local dictionary and Daily's `words` table must never\n"
             "-- diverge again — always regenerate this file from the same corpus build\n"
             "-- rather than hand-editing either side.\n"
-            "-- Safe to re-run: ON CONFLICT (word) DO NOTHING never touches existing rows.\n\n"
+            "-- Safe to re-run: ON CONFLICT (word) DO UPDATE converges existing rows\n"
+            "-- onto the current corpus (tier/theme/definition/is_answer_candidate).\n\n"
         )
         for i in range(0, len(rows), BATCH_SIZE):
             batch = rows[i : i + BATCH_SIZE]
             f.write(
                 "INSERT INTO public.words (word, length, tier, theme, "
-                "is_answer_candidate)\nVALUES\n"
+                "definition_uz, is_answer_candidate)\nVALUES\n"
             )
+            def lit(v):
+                return "NULL" if v is None else sql_literal(v)
             values = [
                 f"  ({sql_literal(word)}, {length}, {sql_literal(tier)}, "
-                f"NULL, {'true' if is_answer else 'false'})"
-                for word, length, tier, is_answer in batch
+                f"{lit(theme)}, {lit(definition)}, "
+                f"{'true' if is_answer else 'false'})"
+                for word, length, tier, theme, definition, is_answer in batch
             ]
             f.write(",\n".join(values))
-            f.write("\nON CONFLICT (word) DO NOTHING;\n\n")
+            f.write(
+                "\nON CONFLICT (word) DO UPDATE SET\n"
+                "  length = excluded.length,\n"
+                "  tier = excluded.tier,\n"
+                "  theme = excluded.theme,\n"
+                "  definition_uz = excluded.definition_uz,\n"
+                "  is_answer_candidate = excluded.is_answer_candidate;\n\n"
+            )
 
 
 def main():
@@ -121,7 +139,7 @@ def main():
     rows = build_rows(answer_tiers, valid_guesses)
     write_sql(rows, args.sql_out)
 
-    answer_rows = sum(1 for _, _, _, is_answer in rows if is_answer)
+    answer_rows = sum(1 for r in rows if r[-1])
     print(
         f"wrote {len(rows)} rows ({answer_rows} answer candidates, "
         f"{len(rows) - answer_rows} guess-only) -> {args.sql_out}"

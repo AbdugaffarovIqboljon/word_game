@@ -1,0 +1,22 @@
+# So'z Jangi — fixed theme taxonomy (WS-B, 2026-07). 20 categories.
+# One Uzbek category word per theme; shown to the player as "🔮 Mavzu: <theme>".
+Oshxona	taomlar, oziq-ovqat, ichimliklar
+Tabiat	ob-havo, geografiya, osmon, suv, oʻsimliklar
+Hayvonot	hayvonlar, qushlar, hasharotlar
+Jism	tana aʼzolari, salomatlik, kasalliklar
+Kiyim	kiyim-kechak, mato, taqinchoq
+Uy-roʻzgʻor	uy jihozlari, idish-tovoq, roʻzgʻor buyumlari
+Qurilish	bino, inshoot, qurilish materiallari
+Asbob	mehnat qurollari, texnika, jihozlar
+Kasb-hunar	kasblar, hunarlar, faoliyat egalari
+Oila	qarindoshlik, insonlar, munosabatlar
+Jamiyat	davlat, huquq, ijtimoiy hayot, harbiy ish
+Savdo	pul, bozor, iqtisod, mulk
+Ilm	fan, taʼlim, bilim, hujjatlar
+Til	tilshunoslik, soʻz, nutq
+Sanʼat	musiqa, adabiyot, tasviriy sanʼat
+Din	eʼtiqod, diniy amallar va tushunchalar
+Tarix	oʻtmish, meros, qadimiy atamalar
+Tuygʻu	his-tuygʻu, xarakter, mavhum tushunchalar
+Oʻyin	sport, oʻyin, hordiq
+Vaqt	vaqt, taqvim, fasllar
