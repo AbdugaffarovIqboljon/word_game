@@ -76,7 +76,7 @@ def load_history(path):
     return {p["date"]: p["word"] for p in data}
 
 
-def build_schedule(tiers, start, days, seed, history):
+def build_schedule(tiers, start, days, seed, history, start_number=1):
     rng = random.Random(seed)
     queues = {}
     for t in (1, 2, 3):
@@ -98,6 +98,10 @@ def build_schedule(tiers, start, days, seed, history):
         word = _pick(queues, tier, date, last_used)
         last_used[word] = date
         puzzles.append({
+            # Monotonic id matching the server's daily_puzzles.puzzle_number, so
+            # the bundled offline fallback reports the same puzzle number as the
+            # backend view for a given date.
+            "puzzle_number": start_number + i,
             "date": date.isoformat(),
             "word": word,
             "difficulty": tier,
@@ -134,6 +138,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--answers", required=True, help="answers_tiered.tsv (word\\ttier\\tfreq)")
     ap.add_argument("--start", default=dt.date.today().isoformat(), help="YYYY-MM-DD")
+    ap.add_argument("--start-number", type=int, default=1,
+                    help="puzzle_number of the first day (continues the live series)")
     ap.add_argument("--days", type=int, default=90)
     ap.add_argument("--seed", type=int, default=142)
     ap.add_argument("--history", default=None, help="prior schedule/history JSON (optional)")
@@ -147,7 +153,8 @@ def main():
     history = load_history(args.history)
     defs = load_definitions(args.definitions)
     start = dt.date.fromisoformat(args.start)
-    puzzles = build_schedule(tiers, start, args.days, args.seed, history)
+    puzzles = build_schedule(tiers, start, args.days, args.seed, history,
+                             start_number=args.start_number)
 
     # Attach definitions by word (WS1). A definition must never contain its own
     # answer word — the dialog shows it *without* revealing the word.
@@ -168,6 +175,7 @@ def main():
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "seed": args.seed,
         "start_date": args.start,
+        "start_number": args.start_number,
         "days": args.days,
         "no_repeat_days": NO_REPEAT_DAYS,
         "tier_by_weekday": {str(k): v for k, v in TIER_BY_WEEKDAY.items()},

@@ -37,6 +37,11 @@ MAX_ANSWERS = 3000       # upper bound of the answer pool (task target 1500-3000
 MIN_ANSWERS = 1500       # lower bound; if unmet, MIN_ANSWER_FREQ is relaxed to 1
 VG_FREQ_KEEP = 5         # a non-lexicon wiki 5LL form is accepted as a valid guess
                          # only if it occurs at least this often (drops junk)
+MIN_VG_ATTEST = 10       # uniform wiki-attestation floor for BOTH inflection paths:
+                         # a generated (path b) or wiki-validated (path c) 5LL form
+                         # is kept only if it occurs at least this often in running
+                         # text. Lifts the guess list off the freq-1 long tail while
+                         # leaving genuine forms (verb tenses, vazni/vaznga) intact.
 PROPER_TITLE_RATIO = 0.85  # >= this share of Titlecase occurrences (and not in the
 PROPER_MIN_TOTAL = 4        # lexicon) flags a token as a proper noun -> excluded
 SAMPLE_PER_TIER = 30
@@ -53,12 +58,62 @@ SUFFIXES = sorted({
     "imni", "ingni", "niki", "ini", "ida", "idan", "iga", "im", "ing", "si",
     "ni", "ning", "ga", "ka", "qa", "da", "ta", "dan", "cha", "day", "dek",
     "roq", "gina", "kina", "mi",
-    # verbal
+    # verbal: past/converb/conditional/progressive
     "yapman", "yapsan", "yapti", "moqda", "gandi", "kandi", "qandi", "gan",
     "kan", "qan", "yap", "sa", "sang", "sak", "masa", "may", "mas", "mang",
     "ib", "ver", "gani", "kani", "moq", "di", "ti", "dim", "ding", "dik",
     "gan", "sin", "sizlar",
+    # verbal: aorist / future-habitual ("noaniq kelasi-hozirgi zamon"), e.g.
+    # kel+adi=keladi, o'qi+ydi=o'qiydi, kel+ar=kelar, yasha+r=yashar. -adi/-ar
+    # follow a consonant-final stem, -ydi/-r a vowel-final one (same allomorph
+    # pairing already used for -di/-ti and -ga/-ka/-qa above).
+    "adi", "ydi", "ar", "r",
 }, key=len, reverse=True)
+
+# The aorist suffixes are the shortest in SUFFIXES (1-3 letters), so stripping
+# them off an unrelated noun stem (rang+ar, but+ar) coincidentally lands on a
+# real hunspell entry far more often than the longer suffixes above do. Since
+# hunspell stores each verb as its bare `-moq` infinitive (kelmoq, bormoq —
+# never the bare root "kel"/"bor"), is_inflected_of_hunspell's normal stem
+# lookup can't confirm these are genuinely verbal. Reconstructing the
+# infinitive (stem + "moq") and checking THAT against hun_all is the actual
+# verb-root check, so it is required for these four specifically.
+AORIST_SUFFIXES = frozenset({"adi", "ydi", "ar", "r"})
+
+# POS classification of every surface suffix, for the path-(c) validation gate.
+# A stripped suffix only confirms a wiki form as a real inflection when it
+# attaches to the RIGHT class of stem:
+#   * VERBAL tense/aspect/mood endings need a VERB. Hunspell stores every verb
+#     only as its "-moq" infinitive (kelmoq, never the bare root "kel") with no
+#     `po:` tag, so the verb-root check is `stem + "moq" in hun_all` — the same
+#     technique the aorist already uses. This blocks the "biyti" bug class: a
+#     verbal ending stripped off a noun that merely ends in those letters
+#     (biy[noun] + -ti), which the old bare-stem lookup wrongly confirmed.
+#   * NOMINAL case/number/possessive/derivation endings need a NOMINAL stem
+#     (noun/adj/num/pron — the declinable classes), never a conjunction/adverb
+#     (yoʻq[conj] + -ing) or a verb.
+# Endings that attach to any class (question -mi, focus -gina/-kina) are left
+# ungated. AORIST_SUFFIXES ⊂ VERBAL_SUFFIXES (they keep their extra allomorph
+# guard); every member of SUFFIXES is in exactly one of these two sets or is a
+# neutral clitic above.
+VERBAL_SUFFIXES = frozenset({
+    "yapman", "yapsan", "yapti", "moqda", "gandi", "kandi", "qandi", "gan",
+    "kan", "qan", "yap", "sa", "sang", "sak", "masa", "may", "mas", "mang",
+    "ib", "ver", "gani", "kani", "moq", "di", "ti", "dim", "ding", "dik",
+    "sin", "sizlar", "adi", "ydi", "ar", "r",
+})
+NOMINAL_SUFFIXES = frozenset({
+    "larimizni", "laringizni", "larimiz", "laringiz", "larini", "larida",
+    "laridan", "lariga", "larim", "laring", "larni", "larga", "larda",
+    "lardan", "lari", "lar", "imizni", "ingizni", "ningni", "imiz", "ingiz",
+    "imni", "ingni", "niki", "ini", "ida", "idan", "iga", "im", "ing", "si",
+    "ni", "ning", "ga", "ka", "qa", "da", "ta", "dan", "cha", "day", "dek",
+    "roq",
+})
+NOMINAL_POS = frozenset({"noun", "adj", "num", "pron"})
+# Dative allomorphs: -ka after a k-final stem, -qa after q, -ga otherwise
+# (mirrors generate_inflections). Guarded so zam+"ka"=zamka never validates.
+DATIVE_SUFFIXES = frozenset({"ka", "qa", "ga"})
 
 
 # Standard literary-Uzbek nominal morphology. Uzbek suffixes are (unlike Turkish)
@@ -69,19 +124,27 @@ _VOICELESS = frozenset(["p", "t", "k", "q", "s", "sh", "ch", "f", "x", "h"])
 
 
 def generate_inflections(stem, pos=None):
-    """Regular inflections + productive derivations of a stem.
+    """Regular inflections + productive derivations of a NOMINAL stem.
 
     Handles the consonant sandhi that matters for correctness:
       * dative      -ga / -ka (after k) / -qa (after q)
       * locative    -da / -ta  and ablative -dan / -tan after a voiceless final
       * possessive  k -> g, q -> gʻ softening before a vowel-initial suffix
                     (yurak+i -> yuragi, qishloq+im -> qishlogʻim)
-    Nominal case/number/possessive suffixes apply to any stem. The productive
-    DERIVATIONAL suffixes (-li "with", -siz "without", -cha diminutive,
-    -day/-dek "like") are restricted to noun stems, where they always yield a
-    genuine Uzbek word. Verb morphology is left to the hunspell -moq lemmas.
-    Caller filters to exactly 5 logical letters.
+    Every suffix this generator emits is NOMINAL (case/number/possessive plus the
+    derivations -li/-siz/-cha/-day/-dek), so the whole function is POS-gated to
+    the declinable classes: it fires only for stems tagged noun/adj/num/pron in
+    hunspell (NOMINAL_POS) and returns nothing for conjunctions, verbs, adverbs
+    and untagged stems. This is the same gate path (c)'s NOMINAL_SUFFIXES use in
+    is_inflected_of_hunspell, and it is the root-cause fix for junk like
+    vash[conj]+im=vashim: those forms are never generated at all rather than
+    relying on their happening to be rare in wiki. The DERIVATIONAL suffixes stay
+    further restricted to plain nouns, where they always yield a genuine Uzbek
+    word. Verb morphology is left to the hunspell -moq lemmas. Caller filters to
+    exactly 5 logical letters.
     """
+    if pos not in NOMINAL_POS:
+        return ()
     toks = U.tokenize(stem)
     if not toks:
         return ()
@@ -193,28 +256,86 @@ def assign_tiers(answers):
             for i, w in enumerate(answers)}
 
 
-def is_inflected_of_hunspell(token, hun_all):
-    """True if stripping one surface suffix yields a real hunspell stem.
+def is_inflected_of_hunspell(token, hun_all, hun_pos):
+    """True if stripping one surface suffix yields a real hunspell stem of the
+    part-of-speech that suffix can actually attach to.
 
-    Guarantees the accepted word is genuinely Uzbek (root is in the lexicon), so
-    it is safe against foreign/markup tokens that merely happen to use only Uzbek
-    letters. Reverses the possessive/dative consonant softening (yuragi->yurak,
-    qishlogʻi->qishloq) and tolerates a stem final vowel dropped in the surface.
+    Guarantees the accepted word is genuinely Uzbek (root is in the lexicon) AND
+    morphologically well-formed, so it is safe against foreign/markup tokens that
+    merely happen to use only Uzbek letters, and against a suffix landing on an
+    unrelated stem that just ends in those letters. Two guards make the pairing
+    real (see VERBAL_SUFFIXES/NOMINAL_SUFFIXES/DATIVE_SUFFIXES):
+      * verbal endings validate only against a verb root (stem+"moq" in lexicon);
+      * nominal endings validate only against a nominal stem (noun/adj/num/pron),
+        and the dative -ka/-qa/-ga must match the stem's final-consonant allomorph.
+    Reverses the possessive consonant softening (yuragi->yurak, qishlogʻi->qishloq)
+    and tolerates a stem final vowel dropped in the surface (bola+si).
     """
     gcomma = "g" + U.TURNED_COMMA
     for suf in SUFFIXES:
-        if token.endswith(suf) and len(token) - len(suf) >= 2:
-            stem = token[: -len(suf)]
-            if stem in hun_all:
+        if not (token.endswith(suf) and len(token) - len(suf) >= 2):
+            continue
+        stem = token[: -len(suf)]
+        stem_toks = U.tokenize(stem)
+        if not stem_toks:
+            continue
+        slast = stem_toks[-1]
+        ends_vowel = slast in _VOWELS
+
+        if suf in VERBAL_SUFFIXES:
+            # Verbs live in hunspell only as their "-moq" infinitive, so the
+            # verb-root check is stem+"moq" — this both confirms the root is a
+            # real verb and POS-gates the ending (a verbal suffix never
+            # validates against a noun/adj that merely ends in those letters).
+            if suf in AORIST_SUFFIXES:
+                # allomorph: -ar/-adi after a consonant-final stem, -r/-ydi
+                # after a vowel-final one (kel+ar=kelar, yasha+r=yashar — never
+                # the reverse; skips e.g. "surt"+"r"). The stem vowel is kept in
+                # the surface here, so no vowel-absorption branch is needed.
+                if ends_vowel != (suf in ("r", "ydi")):
+                    continue
+                if stem + "moq" in hun_all:
+                    return True
+                continue
+            if stem + "moq" in hun_all:
                 return True
-            # reverse softening: g -> k, gʻ -> q
-            if stem.endswith(gcomma) and (stem[:-2] + "q") in hun_all:
+            # A converb/tense ending starting with a vowel (-ib) absorbs a
+            # vowel-final verb root's last vowel (tani+b -> tanib, stripped to
+            # "tan"), so also try restoring it: tani+moq=tanimoq is the real
+            # verb. Still POS-gated — a real -moq infinitive must exist.
+            if any(stem + v + "moq" in hun_all for v in ("a", "i", "o", "u", "e")):
                 return True
-            if stem.endswith("g") and (stem[:-1] + "k") in hun_all:
-                return True
-            # tolerate a stem final vowel absorbed by the suffix (bola+si)
-            if any(stem + v in hun_all for v in ("a", "i", "o", "u", "e")):
-                return True
+            continue
+
+        # --- nominal suffixes -------------------------------------------------
+        if suf in DATIVE_SUFFIXES:
+            # allomorph: -ka after k, -qa after q, -ga otherwise. Reject the
+            # mismatched pairing (zam+"ka"=zamka, zal+"ka"=zalka) that would
+            # otherwise land on an unrelated k/q-free noun.
+            want = "ka" if slast == "k" else "qa" if slast == "q" else "ga"
+            if suf != want:
+                continue
+
+        # Resolve the actual lexicon entry this suffix stripped back to.
+        cand = None
+        if stem in hun_all:
+            cand = stem
+        elif stem.endswith(gcomma) and (stem[:-2] + "q") in hun_all:  # gʻ -> q
+            cand = stem[:-2] + "q"
+        elif stem.endswith("g") and (stem[:-1] + "k") in hun_all:     # g -> k
+            cand = stem[:-1] + "k"
+        else:
+            for v in ("a", "i", "o", "u", "e"):  # stem final vowel absorbed
+                if stem + v in hun_all:
+                    cand = stem + v
+                    break
+        if cand is None:
+            continue
+        # POS-gate nominal case/number/possessive/derivation endings; neutral
+        # clitics (-mi/-gina/-kina) are not in NOMINAL_SUFFIXES and stay ungated.
+        if suf in NOMINAL_SUFFIXES and hun_pos.get(cand) not in NOMINAL_POS:
+            continue
+        return True
     return False
 
 
@@ -248,9 +369,13 @@ def build(sources_dir, out_dir):
     non_ans_removed = sum(
         1 for w in hun_5ll if is_non_answer(w) and not is_offensive(w))
     min_freq = MIN_ANSWER_FREQ
+    # Answers are restricted to nouns: a common concrete noun is the fairest,
+    # most guessable daily target. Adjectives/verbs/adverbs/pronouns/conjunctions
+    # (and untagged stems) stay legitimate valid_guesses but are never the answer.
     def answer_candidates(mf):
         return [w for w in hun_5ll
-                if not is_offensive(w) and not is_non_answer(w) and total(w) >= mf]
+                if not is_offensive(w) and not is_non_answer(w)
+                and hun_pos.get(w) == "noun" and total(w) >= mf]
     cands = answer_candidates(min_freq)
     if len(cands) < MIN_ANSWERS:  # relax so we always reach the floor
         min_freq = 1
@@ -280,6 +405,14 @@ def build(sources_dir, out_dir):
         for form in generate_inflections(stem, hun_pos.get(stem)):
             if form in vg or is_offensive(form) or not U.is_game_word(form):
                 continue
+            # wiki-attestation gate: a generated form is kept only if it occurs
+            # at least MIN_VG_ATTEST times in running text. generate_inflections
+            # is a morphological generator (every rule fires on every nominal
+            # stem), so this is what separates real, current surface words
+            # (bogʻ+im=bogʻim, attested) from grammatical-but-unused ones
+            # (yoʻq+im=yoʻgʻim, freq 0) and the freq-1 long tail.
+            if total(form) < MIN_VG_ATTEST:
+                continue
             vg.add(form); src["generated_inflection"] += 1
     # 3) wiki 5LL forms attested in running text AND validated as a real
     #    inflection of a lexicon stem. We deliberately do NOT admit words on raw
@@ -289,12 +422,15 @@ def build(sources_dir, out_dir):
     for tok, (t, ti) in freq.items():
         if tok in vg or is_offensive(tok) or is_proper(tok):
             continue
+        if t < MIN_VG_ATTEST:  # uniform attestation floor, shared with path (b)
+            continue
         toks = U.tokenize(tok)
         if toks is None or len(toks) != 5:
             continue
-        # Validation (not frequency) is what guarantees the word is real Uzbek,
-        # so a single attestation is enough once the root is in the lexicon.
-        if is_inflected_of_hunspell(tok, hun_all):
+        # Validation guarantees the word is real Uzbek (root in the lexicon +
+        # well-formed morphology); the MIN_VG_ATTEST floor above additionally
+        # requires it to be a form that actually recurs in running text.
+        if is_inflected_of_hunspell(tok, hun_all, hun_pos):
             vg.add(tok); src["wiki_inflection"] += 1
 
     valid_guesses = sorted(vg)

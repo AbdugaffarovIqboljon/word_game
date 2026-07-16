@@ -40,9 +40,10 @@ void main() {
   test('answerForDate serves the bundled schedule, then cycles the pool', () async {
     final dict = await build();
 
-    // 2026-07-10 is the first scheduled day (see generated schedule, WS7 re-cut).
-    final scheduled = dict.answerForDate(DateTime.utc(2026, 7, 10));
-    expect(scheduled.map((l) => l.value).join(), 'notiq');
+    // 2026-07-16 is the first scheduled day of the regenerated noun-only
+    // schedule (start_number 6); the bundle ships it as the offline fallback.
+    final scheduled = dict.answerForDate(DateTime.utc(2026, 7, 16));
+    expect(scheduled.map((l) => l.value).join(), 'miting');
 
     // A date far outside the 90-day window still returns a real pool word.
     final beyond = dict.answerForDate(DateTime.utc(2035, 1, 1));
@@ -50,11 +51,13 @@ void main() {
     expect(dict.contains(beyond), isTrue);
   });
 
-  test('puzzle number is 1 at launch epoch and monotonic', () async {
+  test('puzzle number matches the schedule start_number and is monotonic', () async {
     final dict = await build();
-    final n0 = dict.puzzleNumberForDate(DateTime.utc(2026, 7, 10));
-    final n1 = dict.puzzleNumberForDate(DateTime.utc(2026, 7, 11));
-    expect(n0, 1);
+    // Schedule start_number is 6, so the first scheduled day is puzzle #6 and
+    // numbering increments by one per day — matching daily_puzzles on the server.
+    final n0 = dict.puzzleNumberForDate(DateTime.utc(2026, 7, 16));
+    final n1 = dict.puzzleNumberForDate(DateTime.utc(2026, 7, 17));
+    expect(n0, 6);
     expect(n1, n0 + 1);
   });
 

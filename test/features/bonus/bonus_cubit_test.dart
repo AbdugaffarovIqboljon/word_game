@@ -6,6 +6,7 @@ import 'package:word_game/core/config/game_config.dart';
 import 'package:word_game/core/game/data/in_memory_dictionary.dart';
 import 'package:word_game/core/game/domain/word_tokenizer.dart';
 import 'package:word_game/core/storage/preferences_service.dart';
+import 'package:word_game/core/time/game_clock.dart';
 import 'package:word_game/features/bonus/data/bonus_played_repository.dart';
 import 'package:word_game/features/bonus/presentation/bonus_cubit.dart';
 import 'package:word_game/features/bonus/presentation/bonus_state.dart';
@@ -39,6 +40,7 @@ void main() {
     wallet: wallet,
     statsRepo: statsRepo,
     playedRepo: playedRepo,
+    clock: GameClock(config: config),
     random: Random(seed),
   );
 

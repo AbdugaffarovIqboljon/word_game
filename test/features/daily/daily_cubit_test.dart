@@ -8,6 +8,8 @@ import 'package:word_game/core/storage/preferences_service.dart';
 import 'package:word_game/core/time/game_clock.dart';
 import 'package:word_game/features/daily/data/daily_board_repository.dart';
 import 'package:word_game/features/daily/data/daily_chest_repository.dart';
+import 'package:word_game/features/daily/data/fallback_daily_puzzle_repository.dart';
+import 'package:word_game/features/daily/domain/daily_puzzle_repository.dart';
 import 'package:word_game/features/daily/presentation/daily_cubit.dart';
 import 'package:word_game/features/daily/presentation/daily_state.dart';
 import 'package:word_game/features/stats/data/stats_repository.dart';
@@ -34,9 +36,9 @@ void main() {
   late PreferencesService prefs;
   late WalletService wallet;
 
-  DailyCubit newCubit() => DailyCubit(
+  DailyCubit newCubit({DailyPuzzleRepository? puzzleRepo}) => DailyCubit(
     dictionary: dict,
-    puzzleRepo: FakeDailyPuzzleRepository(dict),
+    puzzleRepo: puzzleRepo ?? FakeDailyPuzzleRepository(dict),
     clock: clock,
     config: config,
     boardRepo: DailyBoardRepository(prefs),
@@ -148,4 +150,80 @@ void main() {
     expect(second.state.guesses, hasLength(1));
     await second.close();
   });
+
+  test('start online, go offline mid-game, finish — no loss or double-score',
+      () async {
+    final primary = _FlakyPrimary(FakeDailyPuzzleRepository(dict));
+    DailyCubit build() => newCubit(
+          puzzleRepo: FallbackDailyPuzzleRepository(
+            primary: primary,
+            bundled: dict,
+            networkTimeout: const Duration(milliseconds: 200),
+          ),
+        );
+
+    final cubit = build();
+    await cubit.load(); // online
+    expect(cubit.state.phase, DailyPhase.playing);
+
+    // Online: one wrong guess, scored by the server.
+    await typeWord(cubit, otherWord());
+    await cubit.submit();
+    expect(cubit.state.guesses, hasLength(1));
+    expect(primary.evalCalls, 1);
+
+    // Connection drops mid-game.
+    primary.online = false;
+
+    // Offline: the winning guess is scored locally against the bundled answer.
+    await typeWord(cubit, answerToday());
+    await cubit.submit(); // awaits reveal + outcome
+    expect(cubit.state.phase, DailyPhase.solved);
+    expect(cubit.state.streak, 1);
+    expect(cubit.state.guesses, hasLength(2));
+    expect(wallet.coinBalance, greaterThan(0));
+    final credited = wallet.coinBalance;
+    await cubit.close();
+
+    // Reconnect + relaunch: the finished board is replayed from storage, never
+    // re-scored or re-credited (dedupe by persisted attempt list).
+    primary.online = true;
+    final second = build();
+    await second.load();
+    expect(second.state.phase, DailyPhase.solved);
+    expect(second.state.guesses, hasLength(2));
+    expect(wallet.coinBalance, credited);
+    await second.close();
+  });
+}
+
+/// Online-toggleable primary: healthy until [online] is cleared, then every call
+/// fails like an offline/5xx server so the fallback path engages.
+class _FlakyPrimary implements DailyPuzzleRepository {
+  _FlakyPrimary(this._inner);
+
+  final DailyPuzzleRepository _inner;
+  bool online = true;
+  int evalCalls = 0;
+
+  @override
+  Future<DailyPuzzleMeta> fetchMeta(DateTime puzzleDate) {
+    if (!online) throw const DailyPuzzleUnavailableException('offline');
+    return _inner.fetchMeta(puzzleDate);
+  }
+
+  @override
+  Future<GuessEvaluation> evaluateGuess({
+    required DateTime puzzleDate,
+    required String guess,
+    required bool revealOnFail,
+  }) {
+    evalCalls++;
+    if (!online) throw const DailyPuzzleUnavailableException('offline');
+    return _inner.evaluateGuess(
+      puzzleDate: puzzleDate,
+      guess: guess,
+      revealOnFail: revealOnFail,
+    );
+  }
 }

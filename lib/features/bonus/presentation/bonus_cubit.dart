@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/config/game_config.dart';
 import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
@@ -10,6 +11,7 @@ import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
 import '../../../core/game/domain/word_tokenizer.dart';
 import '../../../core/game/presentation/clean_hint_pulse.dart';
+import '../../../core/time/game_clock.dart';
 import '../../hints/domain/hint_engine.dart';
 import '../../stats/data/stats_repository.dart';
 import '../../wallet/data/wallet_service.dart';
@@ -31,14 +33,18 @@ class BonusCubit extends Cubit<BonusState> {
     required WalletService wallet,
     required StatsRepository statsRepo,
     required BonusPlayedRepository playedRepo,
+    required GameClock clock,
     Random? random,
+    AnalyticsService analytics = const NoopAnalyticsService(),
   }) : _dictionary = dictionary,
        _pool = pool,
        _config = config,
        _wallet = wallet,
        _statsRepo = statsRepo,
        _playedRepo = playedRepo,
+       _clock = clock,
        _random = random ?? Random(),
+       _analytics = analytics,
        super(const BonusState());
 
   final Dictionary _dictionary;
@@ -47,7 +53,9 @@ class BonusCubit extends Cubit<BonusState> {
   final WalletService _wallet;
   final StatsRepository _statsRepo;
   final BonusPlayedRepository _playedRepo;
+  final GameClock _clock;
   final Random _random;
+  final AnalyticsService _analytics;
 
   static const Duration revealDuration = Duration(milliseconds: 700);
 
@@ -136,6 +144,11 @@ class BonusCubit extends Cubit<BonusState> {
       return;
     }
     if (!_dictionary.contains(word)) {
+      _analytics.wordRejected(
+        word: word.map((l) => l.value).join(),
+        mode: 'bonus',
+        date: _clock.puzzleDate().toIso8601String(),
+      );
       _bumpShake(invalid: true);
       return;
     }

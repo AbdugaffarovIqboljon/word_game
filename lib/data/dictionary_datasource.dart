@@ -16,10 +16,18 @@ import '../core/game/domain/word_tokenizer.dart';
 ///   app (built by `tool/corpus` + `tool/generator`):
 ///     - `valid_guesses.txt.gz`  — accepted-guess list (superset of answers)
 ///     - `answers_tiered.tsv.gz` — answer pool with a difficulty tier (practice)
-///     - `schedule.json.gz`      — 90-day daily schedule (offline fallback)
-/// * **The daily answer** is fetched from Supabase and cached 7 days ahead, with
-///   a full offline fallback: the Supabase cache → the bundled schedule → a
-///   deterministic cycle through the answer pool (so a date is *never* missing).
+///     - `schedule.json.gz`      — 90-day daily schedule (bundled offline source)
+/// * **Daily** is server-authoritative (the `evaluate-guess` Edge Function via
+///   `SupabaseDailyPuzzleRepository`); this class is Daily's *offline fallback*
+///   data source — `FallbackDailyPuzzleRepository` reads `answerForDate` /
+///   `puzzleNumberForDate` / `definitionFor` / `contains` from the bundled
+///   schedule when the network is unavailable, so a date is *never* missing.
+///
+/// NB: the legacy Supabase REST refresh below targets the pre-normalisation flat
+/// `daily_puzzles` table and no-ops against the current backend (the answer is no
+/// longer client-readable). It is kept as a harmless, self-healing cache prime
+/// and is only ever exercised offline-after-failure; the bundled schedule is the
+/// real offline source.
 ///
 /// Words tokenize through the app's own [WordTokenizer], so validity keys here
 /// are identical to the keys the game engine computes for a player's guess.
@@ -112,6 +120,7 @@ class SupabaseAssetDictionary implements Dictionary {
   final Map<String, String> _definitionByKey = <String, String>{};
 
   DateTime _launchEpoch = DateTime.utc(2024, 1, 1);
+  int _launchNumber = 1; // puzzle_number of _launchEpoch (schedule start_number)
   DateTime? _lastRefreshAttempt;
 
   // --- Dictionary ---------------------------------------------------------
@@ -143,7 +152,10 @@ class SupabaseAssetDictionary implements Dictionary {
 
   @override
   int puzzleNumberForDate(DateTime date) {
-    final n = _dayIndex(date) - _dayIndex(_launchEpoch) + 1;
+    // Schedule is contiguous daily from _launchEpoch (= start_number), so this
+    // equals the stored puzzle_number across the whole window and extends it
+    // linearly beyond — matching daily_puzzles.puzzle_number on the server.
+    final n = _launchNumber + _dayIndex(date);
     return n < 1 ? 1 : n;
   }
 
@@ -199,6 +211,9 @@ class SupabaseAssetDictionary implements Dictionary {
         as Map<String, dynamic>;
     final start = obj['start_date'] as String?;
     if (start != null) _launchEpoch = _dayOnly(DateTime.parse(start));
+    // Anchor puzzle numbering to the schedule's own start_number so the bundled
+    // offline fallback reports the same puzzle_number as the server for a date.
+    _launchNumber = (obj['start_number'] as num?)?.toInt() ?? 1;
     for (final p in (obj['puzzles'] as List).cast<Map<String, dynamic>>()) {
       _ingest(p);
     }

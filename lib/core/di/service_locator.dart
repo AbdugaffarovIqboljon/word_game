@@ -9,6 +9,7 @@ import '../../features/wallet/data/analytics_wallet_bridge.dart';
 import '../../features/bonus/data/bonus_played_repository.dart';
 import '../../features/daily/data/daily_board_repository.dart';
 import '../../features/daily/data/daily_chest_repository.dart';
+import '../../features/daily/data/fallback_daily_puzzle_repository.dart';
 import '../../features/daily/data/supabase_daily_puzzle_repository.dart';
 import '../../features/daily/domain/daily_puzzle_repository.dart';
 import '../../features/daily/presentation/daily_cubit.dart';
@@ -122,13 +123,18 @@ Future<void> configureDependencies({
   sl.registerLazySingleton<PracticeRepository>(() => PracticeRepository(sl()));
 
   // ── Daily / streak / stats ────────────────────────────────────────────────
-  // Guess evaluation and puzzle metadata are server-authoritative (see
-  // SupabaseDailyPuzzleRepository) — the repository fails fast with
-  // DailyPuzzleUnavailableException when supabaseClient is null (Supabase
-  // never initialized), which the cubit surfaces as a retry-able error.
+  // Guess evaluation and puzzle metadata are server-authoritative
+  // (SupabaseDailyPuzzleRepository → evaluate-guess Edge Function), wrapped in
+  // FallbackDailyPuzzleRepository: when the server is offline, times out (>2.5s)
+  // or 5xx's — including when supabaseClient is null (Supabase never
+  // initialized) — it seamlessly scores the day from the bundled schedule asset
+  // (the resident Dictionary), so daily stays fully playable offline.
   sl
     ..registerLazySingleton<DailyPuzzleRepository>(
-      () => SupabaseDailyPuzzleRepository(supabaseClient),
+      () => FallbackDailyPuzzleRepository(
+        primary: SupabaseDailyPuzzleRepository(supabaseClient),
+        bundled: sl<Dictionary>(),
+      ),
     )
     ..registerLazySingleton<DailyBoardRepository>(() => DailyBoardRepository(sl()))
     ..registerLazySingleton<DailyChestRepository>(() => DailyChestRepository(sl()))
@@ -152,6 +158,7 @@ Future<void> configureDependencies({
         historyRepo: sl(),
         statsRepo: sl(),
         wallet: sl(),
+        analytics: sl(),
       ),
     );
 

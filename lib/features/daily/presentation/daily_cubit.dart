@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/config/game_config.dart';
 import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
@@ -24,12 +25,13 @@ import '../domain/daily_reward.dart';
 import 'daily_state.dart';
 
 /// Orchestrates the daily puzzle: loads today's metadata and any restored
-/// board, stages typing, and submits guesses to the server-authoritative
-/// `evaluate-guess` Edge Function (via [DailyPuzzleRepository]) — the client
-/// never knows the answer during play, only what each guess's evaluation
-/// reveals about it, plus a leading letter the backend explicitly reveals
-/// (WS4). On terminal states it records the streak, stats, and coin reward
-/// exactly once.
+/// board, stages typing, and submits guesses through [DailyPuzzleRepository].
+/// Online this is the server-authoritative `evaluate-guess` Edge Function — the
+/// client never sees the answer during play, only what each guess reveals, plus
+/// a leading letter the backend explicitly reveals (WS4). Offline the repository
+/// transparently scores against the bundled schedule instead (same UX). Either
+/// way the cubit only ever commits results it is handed, never re-scoring; on
+/// terminal states it records the streak, stats, and coin reward exactly once.
 ///
 /// The staged typing row is exposed as [input] (a hot path) so keystrokes never
 /// emit a new [DailyState] — only submissions, reveals and phase changes do.
@@ -45,6 +47,7 @@ class DailyCubit extends Cubit<DailyState> {
     required StreakHistoryRepository historyRepo,
     required StatsRepository statsRepo,
     required WalletService wallet,
+    AnalyticsService analytics = const NoopAnalyticsService(),
   }) : _dictionary = dictionary,
        _puzzleRepo = puzzleRepo,
        _clock = clock,
@@ -55,6 +58,7 @@ class DailyCubit extends Cubit<DailyState> {
        _historyRepo = historyRepo,
        _statsRepo = statsRepo,
        _wallet = wallet,
+       _analytics = analytics,
        super(const DailyState());
 
   final Dictionary _dictionary;
@@ -67,6 +71,7 @@ class DailyCubit extends Cubit<DailyState> {
   final StreakHistoryRepository _historyRepo;
   final StatsRepository _statsRepo;
   final WalletService _wallet;
+  final AnalyticsService _analytics;
 
   /// Staged, unsubmitted letters of the current row.
   final ValueNotifier<List<LogicalLetter>> input = ValueNotifier(const []);
@@ -261,6 +266,7 @@ class DailyCubit extends Cubit<DailyState> {
       return;
     }
     if (!_dictionary.contains(word)) {
+      _reportRejected(word);
       _bumpShake(invalid: true);
       return;
     }
@@ -277,6 +283,7 @@ class DailyCubit extends Cubit<DailyState> {
       );
     } on InvalidGuessWordException {
       _isSubmitting = false;
+      _reportRejected(word);
       _bumpShake(invalid: true);
       return;
     } on DailyPuzzleUnavailableException {
@@ -386,6 +393,12 @@ class DailyCubit extends Cubit<DailyState> {
   void _bumpShake({required bool invalid}) {
     emit(state.copyWith(shakeSignal: state.shakeSignal + 1, invalidWord: invalid));
   }
+
+  void _reportRejected(List<LogicalLetter> word) => _analytics.wordRejected(
+    word: word.map((l) => l.value).join(),
+    mode: 'daily',
+    date: _today.toIso8601String(),
+  );
 
   Map<LogicalLetter, LetterResult> _mergedKeyStates() {
     final merged = Map<LogicalLetter, LetterResult>.of(_game.keyboardStates);

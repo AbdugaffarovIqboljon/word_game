@@ -80,4 +80,11 @@ class FirebaseAnalyticsService implements AnalyticsService {
   @override
   void crosspromoClick({String? target}) =>
       _log('crosspromo_click', target == null ? null : {'target': target});
+
+  @override
+  void wordRejected({
+    required String word,
+    required String mode,
+    required String date,
+  }) => _log('word_rejected', {'word': word, 'mode': mode, 'date': date});
 }

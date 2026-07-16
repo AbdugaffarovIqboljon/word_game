@@ -2,23 +2,23 @@
   "hun_all": 69446,
   "hun_5ll": 5143,
   "wiki_types": 1024153,
-  "answers_total": 2346,
+  "answers_total": 1816,
   "answers_min_freq_used": 2,
-  "tier_1_easy": 782,
-  "tier_2_mid": 782,
-  "tier_3_hard": 782,
-  "valid_guesses_total": 16096,
+  "tier_1_easy": 605,
+  "tier_2_mid": 605,
+  "tier_3_hard": 606,
+  "valid_guesses_total": 6766,
   "answers_offensive_removed": 3,
+  "answers_non_answer_removed": 0,
   "vg_sources": {
-    "answer": 3000,
-    "hunspell_stem": 2140,
-    "generated_inflection": 8611,
-    "wiki_inflection": 2345
+    "answer": 2839,
+    "hunspell_stem": 2301,
+    "generated_inflection": 1124,
+    "wiki_inflection": 502
   },
-  "answers_with_compound": 561,
-  "answers_with_ng": 45,
-  "answers_non_answer_removed": 654,
-  "recurated": true,
-  "answers_rare_tail_dropped": 0,
-  "answers_rare_tail_min_freq": 15
+  "answers_with_compound": 418,
+  "answers_with_ng": 28,
+  "answers_rare_tail_dropped": 1023,
+  "answers_rare_tail_min_freq": 15,
+  "recurated": true
 }

@@ -56,6 +56,7 @@ class PracticePlayPage extends StatelessWidget {
         clock: sl<GameClock>(),
         repository: sl(),
         removeAds: sl<PurchasesRepository>().removeAds.value,
+        analytics: sl(),
       )..start(tier),
       child: const PracticePlayView(),
     );

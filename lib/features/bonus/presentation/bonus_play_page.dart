@@ -14,6 +14,7 @@ import '../../../core/game/presentation/widgets/game_board.dart';
 import '../../../core/game/presentation/widgets/game_keyboard.dart';
 import '../../../core/game/presentation/widgets/invalid_word_toast.dart';
 import '../../../core/l10n/locale_keys.dart';
+import '../../../core/time/game_clock.dart';
 import '../../../core/services/app_haptics.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
@@ -49,6 +50,8 @@ class BonusPlayPage extends StatelessWidget {
         wallet: sl(),
         statsRepo: sl(),
         playedRepo: sl(),
+        clock: sl<GameClock>(),
+        analytics: sl(),
       )..start(),
       child: const BonusPlayView(),
     );

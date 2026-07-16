@@ -7,15 +7,15 @@ letters, where **oʻ gʻ sh ch ng** each count as ONE letter._
 
 - Hunspell lexicon stems (well-formed, ≥2 letters): **69446** (of which 5-letter: **5143**)
 - Wikipedia frequency types sampled: **1024153**
-- **answers.txt: 2346** (min wiki freq used: 2)
-  - Tier 1 (easy / most common): **782**
-  - Tier 2 (mid): **782**
-  - Tier 3 (hard / least common): **782**
-- **valid_guesses.txt: 16096** (superset of answers ✓)
-  - provenance: {'answer': 3000, 'hunspell_stem': 2140, 'generated_inflection': 8611, 'wiki_inflection': 2345}
+- **answers.txt: 1816** (min wiki freq used: 2)
+  - Tier 1 (easy / most common): **605**
+  - Tier 2 (mid): **605**
+  - Tier 3 (hard / least common): **606**
+- **valid_guesses.txt: 6766** (superset of answers ✓)
+  - provenance: {'answer': 2839, 'hunspell_stem': 2301, 'generated_inflection': 1124, 'wiki_inflection': 502}
 - Offensive stems removed from answer pool: 3
-- Proper nouns / loanwords / slang removed from answer pool (kept in valid_guesses): 654
-- Answers containing a compound letter: 561 (of which `ng`: 45)
+- Proper nouns / loanwords / slang removed from answer pool (kept in valid_guesses): 0
+- Answers containing a compound letter: 418 (of which `ng`: 28)
 
 ## 2. Letter distribution (answers, position-agnostic)
 
@@ -23,21 +23,21 @@ Sanity check: no logical letter should be absent or wildly dominant.
 
 | letter | count | % | | letter | count | % |
 |---|---:|---:|---|---|---:|---:|
-| `a` | 1701 | 14.5% | | `d` | 277 | 2.4% |
-| `i` | 1141 | 9.7% | | `z` | 248 | 2.1% |
-| `o` | 1022 | 8.7% | | `v` | 194 | 1.7% |
-| `r` | 687 | 5.9% | | `ch` | 185 | 1.6% |
-| `l` | 649 | 5.5% | | `sh` | 173 | 1.5% |
-| `n` | 582 | 5.0% | | `h` | 169 | 1.4% |
-| `t` | 552 | 4.7% | | `p` | 159 | 1.4% |
-| `u` | 487 | 4.2% | | `oʻ` | 154 | 1.3% |
-| `m` | 482 | 4.1% | | `f` | 136 | 1.2% |
-| `k` | 469 | 4.0% | | `g` | 122 | 1.0% |
-| `s` | 433 | 3.7% | | `x` | 113 | 1.0% |
-| `b` | 368 | 3.1% | | `j` | 112 | 1.0% |
-| `q` | 358 | 3.1% | | `gʻ` | 93 | 0.8% |
-| `y` | 325 | 2.8% | | `ng` | 45 | 0.4% |
-| `e` | 294 | 2.5% | | | | |
+| `a` | 1418 | 15.6% | | `d` | 212 | 2.3% |
+| `o` | 810 | 8.9% | | `z` | 185 | 2.0% |
+| `i` | 769 | 8.5% | | `v` | 172 | 1.9% |
+| `r` | 563 | 6.2% | | `ch` | 146 | 1.6% |
+| `n` | 461 | 5.1% | | `p` | 137 | 1.5% |
+| `t` | 442 | 4.9% | | `sh` | 135 | 1.5% |
+| `l` | 427 | 4.7% | | `h` | 132 | 1.5% |
+| `m` | 387 | 4.3% | | `f` | 118 | 1.3% |
+| `u` | 376 | 4.1% | | `oʻ` | 113 | 1.2% |
+| `k` | 375 | 4.1% | | `g` | 100 | 1.1% |
+| `s` | 341 | 3.8% | | `j` | 93 | 1.0% |
+| `b` | 287 | 3.2% | | `x` | 86 | 0.9% |
+| `q` | 248 | 2.7% | | `gʻ` | 64 | 0.7% |
+| `e` | 237 | 2.6% | | `ng` | 28 | 0.3% |
+| `y` | 218 | 2.4% | | | | |
 
 Letters never appearing in answers: none ✓
 
@@ -45,23 +45,23 @@ Letters never appearing in answers: none ✓
 
 | letter | count |  | letter | count |
 |---|---:|---|---|---:|
-| `t` | 184 | `b` | 181 |
-| `s` | 179 | `k` | 158 |
-| `m` | 149 | `a` | 136 |
-| `q` | 125 | `p` | 89 |
-| `y` | 89 | `n` | 88 |
-| `i` | 85 | `o` | 81 |
+| `s` | 141 | `k` | 133 |
+| `t` | 131 | `m` | 125 |
+| `b` | 124 | `a` | 112 |
+| `q` | 92 | `p` | 81 |
+| `n` | 67 | `d` | 63 |
+| `r` | 63 | `i` | 61 |
 
 ## 4. Random samples for human review (30 per tier)
 
-### Tier 1 — easy (most common)  (782 words)
+### Tier 1 — easy (most common)  (605 words)
 
-`akasi [3754]`, `albom [2471]`, `ayvon [711]`, `elita [688]`, `fotih [384]`, `hakim [672]`, `halol [552]`, `kasal [1197]`, `mahal [365]`, `nasos [361]`, `organ [966]`, `ortiq [19566]`, `osmon [1690]`, `ovqat [1836]`, `panoh [340]`, `pilla [251]`, `qovun [306]`, `sahna [2088]`, `shahar [61639]`, `shamol [1733]`, `shuvoq [273]`, `sovun [282]`, `sudya [546]`, `tilda [1350]`, `tomoq [247]`, `tutun [266]`, `ustoz [488]`, `yelka [291]`, `yomon [3102]`, `zarar [3590]`
+`albom [2471]`, `amorf [190]`, `barda [264]`, `donor [234]`, `faqih [887]`, `forum [414]`, `gilos [299]`, `hayit [226]`, `hofiz [906]`, `ifoda [1097]`, `ikona [193]`, `lazer [810]`, `medal [4257]`, `ocherk [194]`, `piyoz [1048]`, `qayin [300]`, `qoshiq [246]`, `qoʻshni [3634]`, `quduq [411]`, `quvur [399]`, `rabot [240]`, `sabab [10214]`, `sambo [234]`, `shanba [510]`, `tavba [272]`, `vahiy [286]`, `valiy [261]`, `yarim [20454]`, `yetim [415]`, `yutuq [402]`
 
-### Tier 2 — mid  (782 words)
+### Tier 2 — mid  (605 words)
 
-`bagaj [98]`, `barra [184]`, `bugʻli [61]`, `buxor [55]`, `chechak [216]`, `chodir [208]`, `derbi [176]`, `dukat [55]`, `getto [82]`, `habash [72]`, `ixlos [91]`, `mullo [159]`, `murda [97]`, `navob [56]`, `nigor [53]`, `oqkoʻl [132]`, `oʻtxoʻr [113]`, `qamar [61]`, `rotor [143]`, `sochli [221]`, `somiy [71]`, `suvoq [68]`, `titul [146]`, `toʻlin [86]`, `tumor [126]`, `varaq [175]`, `xaker [87]`, `yelim [119]`, `yengli [55]`, `yungli [62]`
+`ajriq [55]`, `akram [132]`, `akril [63]`, `angina [95]`, `arsen [120]`, `bayan [173]`, `bitik [135]`, `bogʻot [119]`, `chivin [76]`, `choʻtka [73]`, `dumba [96]`, `finish [60]`, `gazak [119]`, `jersi [101]`, `jihoz [55]`, `kafel [59]`, `munir [52]`, `novak [122]`, `pirit [129]`, `qiyos [82]`, `raman [69]`, `rotor [143]`, `savod [78]`, `semit [73]`, `shashka [163]`, `tanob [161]`, `terim [50]`, `tovoq [54]`, `xunta [61]`, `xutba [116]`
 
-### Tier 3 — hard (least common)  (782 words)
+### Tier 3 — hard (least common)  (606 words)
 
-`ahmar [22]`, `ajiba [15]`, `aksiz [41]`, `ampel [21]`, `arxar [37]`, `barin [17]`, `botin [26]`, `chilim [15]`, `dahan [16]`, `erlik [44]`, `girya [37]`, `gutta [26]`, `hadeb [19]`, `koʻmik [35]`, `liman [48]`, `manti [43]`, `manul [24]`, `milod [42]`, `mufti [46]`, `oktan [26]`, `ozdan [18]`, `panno [39]`, `qiyom [44]`, `rashod [24]`, `sezon [28]`, `shafiq [18]`, `solik [32]`, `ufori [15]`, `xasis [17]`, `zabar [19]`
+`erkan [37]`, `erlik [44]`, `evenk [30]`, `folat [27]`, `fonar [39]`, `gajak [33]`, `girya [37]`, `gutta [26]`, `hakka [46]`, `kadar [38]`, `kapot [27]`, `milod [42]`, `neper [16]`, `nomoz [18]`, `palla [21]`, `pechak [36]`, `pekan [18]`, `penya [41]`, `qirra [43]`, `qoʻshchi [44]`, `qurum [38]`, `saqqo [15]`, `sarpo [15]`, `sekta [45]`, `soqchi [44]`, `sumak [18]`, `suzma [37]`, `xalat [47]`, `xanda [17]`, `zakiy [41]`

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/config/game_config.dart';
 import '../../../core/game/domain/dictionary.dart';
 import '../../../core/game/domain/game_state.dart';
@@ -35,6 +36,7 @@ class PracticeCubit extends Cubit<PracticeState> {
     required PracticeRepository repository,
     bool removeAds = false,
     Random? random,
+    AnalyticsService analytics = const NoopAnalyticsService(),
   }) : _dictionary = dictionary,
        _answersForTier = answersForTier,
        _config = config,
@@ -44,6 +46,7 @@ class PracticeCubit extends Cubit<PracticeState> {
        _repository = repository,
        _removeAds = removeAds,
        _random = random ?? Random(),
+       _analytics = analytics,
        super(PracticeState(tier: tier));
 
   final Dictionary _dictionary;
@@ -55,6 +58,7 @@ class PracticeCubit extends Cubit<PracticeState> {
   final PracticeRepository _repository;
   final bool _removeAds;
   final Random _random;
+  final AnalyticsService _analytics;
 
   static const Duration revealDuration = Duration(milliseconds: 700);
 
@@ -156,6 +160,11 @@ class PracticeCubit extends Cubit<PracticeState> {
       return;
     }
     if (!_dictionary.contains(word)) {
+      _analytics.wordRejected(
+        word: word.map((l) => l.value).join(),
+        mode: 'practice',
+        date: _clock.puzzleDate().toIso8601String(),
+      );
       _bumpShake(invalid: true);
       return;
     }

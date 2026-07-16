@@ -50,6 +50,15 @@ abstract interface class AnalyticsService {
 
   /// A cross-promotion surface was tapped.
   void crosspromoClick({String? target});
+
+  /// A submitted guess was rejected as not a real word. [word] is the
+  /// normalized logical-letter string; [mode] is `daily`, `practice`, or
+  /// `bonus`; [date] is the ISO-8601 puzzle date the rejection happened on.
+  void wordRejected({
+    required String word,
+    required String mode,
+    required String date,
+  });
 }
 
 /// No-op sink: used in tests and whenever Firebase is unavailable. Every method
@@ -93,4 +102,10 @@ class NoopAnalyticsService implements AnalyticsService {
   void funnelHintUsed({required String type}) {}
   @override
   void crosspromoClick({String? target}) {}
+  @override
+  void wordRejected({
+    required String word,
+    required String mode,
+    required String date,
+  }) {}
 }
