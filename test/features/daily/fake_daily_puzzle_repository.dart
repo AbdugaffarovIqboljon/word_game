@@ -24,6 +24,7 @@ class FakeDailyPuzzleRepository implements DailyPuzzleRepository {
       wordLength: answer.length,
       theme: dictionary.themeFor(answer),
       lockedPrefixRaw: raw.length >= 2 ? raw.substring(0, 2) : raw,
+      definition: dictionary.definitionFor(answer),
     );
   }
 

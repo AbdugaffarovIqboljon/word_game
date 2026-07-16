@@ -69,4 +69,27 @@ void main() {
       expect(pool.every((w) => w.length == 5), isTrue);
     }
   });
+
+  test('theme + definition cover the ENTIRE answer pool (WS-B)', () async {
+    final dict = await build();
+    for (final tier in PracticeTier.values) {
+      for (final word in dict.answersForTier(tier)) {
+        final raw = word.map((l) => l.value).join();
+        expect(dict.themeFor(word), isNotNull,
+            reason: '"$raw" must have a theme');
+        expect(dict.definitionFor(word), isNotNull,
+            reason: '"$raw" must have a definition');
+      }
+    }
+  });
+
+  test('offline theme parity: scheduled answers carry their theme', () async {
+    final dict = await build();
+    // 2026-07-17 = havza (Tabiat) in the patched schedule — the bundled asset
+    // must serve the same theme the daily_puzzle_public view does.
+    final answer = dict.answerForDate(DateTime.utc(2026, 7, 17));
+    expect(answer.map((l) => l.value).join(), 'havza');
+    expect(dict.themeFor(answer), 'Tabiat');
+    expect(dict.definitionFor(answer), isNotEmpty);
+  });
 }

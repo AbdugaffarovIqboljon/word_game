@@ -38,11 +38,19 @@ List<LetterResult> serverEvaluate(String answer, String guess) {
 /// Bundled data source (the resident [Dictionary]) with a fixed answer per date
 /// and a closed vocabulary, so offline scoring/validation is deterministic.
 class _FakeBundle implements Dictionary {
-  _FakeBundle({required this.answers, required this.vocab, this.number = 42});
+  _FakeBundle({
+    required this.answers,
+    required this.vocab,
+    this.number = 42,
+    this.themes = const {},
+    this.definitions = const {},
+  });
 
   final Map<String, String> answers; // 'yyyy-mm-dd' -> answer word
   final Set<String> vocab; // valid guess keys
   final int number;
+  final Map<String, String> themes; // word key -> theme
+  final Map<String, String> definitions; // word key -> definition
 
   static String _key(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -58,10 +66,12 @@ class _FakeBundle implements Dictionary {
   }
 
   @override
-  String? definitionFor(List<LogicalLetter> word) => null;
+  String? definitionFor(List<LogicalLetter> word) =>
+      definitions[WordTokenizer.keyOf(word)];
 
   @override
-  String? themeFor(List<LogicalLetter> word) => null;
+  String? themeFor(List<LogicalLetter> word) =>
+      themes[WordTokenizer.keyOf(word)];
 
   @override
   int puzzleNumberForDate(DateTime date) => number;
@@ -281,6 +291,27 @@ void main() {
       expect(meta.puzzleNumber, 6); // bundle, not the server's 900
       expect(meta.wordLength, 5);
       expect(meta.lockedPrefixRaw, 'sa');
+    });
+
+    test('offline theme + definition come from the bundled schedule (parity)',
+        () async {
+      // WS-D: the theme card and Lugʻat hint must work identically offline —
+      // the bundled schedule carries the same theme/definition the
+      // daily_puzzle_public view serves for that date.
+      final answerKey = WordTokenizer.keyOf(WordTokenizer.tokenize('salom'));
+      final bundle = _FakeBundle(
+        answers: {dateKey: 'salom'},
+        vocab: const {},
+        number: 6,
+        themes: {answerKey: 'Til'},
+        definitions: {answerKey: 'Koʻrishuv soʻzi'},
+      );
+      final primary = _TogglePrimary({dateKey: 'salom'})..mode = _Mode.offline;
+      final repo = build(primary, bundle);
+
+      final meta = await repo.fetchMeta(date);
+      expect(meta.theme, 'Til');
+      expect(meta.definition, 'Koʻrishuv soʻzi');
     });
 
     test('fetchMeta online returns the server meta (not the bundle)', () async {

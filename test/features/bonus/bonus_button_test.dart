@@ -29,7 +29,8 @@ void main() {
     expect(upsold, 0);
   });
 
-  testWidgets('free user: locked, tapping opens the upsell (no bonus)', (tester) async {
+  testWidgets('free user: premium CTA, tapping opens the upsell (no bonus)',
+      (tester) async {
     var played = 0, upsold = 0;
     await tester.pumpWidget(
       MaterialApp(
@@ -43,7 +44,10 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(AppIcons.lock), findsOneWidget); // padlock shown
+    // Free users see the gold premium CTA (sparkles), not the play button —
+    // the earlier padlock treatment was redesigned into this upsell variant.
+    expect(find.byIcon(AppIcons.sparkles), findsOneWidget);
+    expect(find.byIcon(AppIcons.refresh), findsNothing);
     await tester.tap(find.byType(BonusButton));
     expect(upsold, 1);
     expect(played, 0); // never starts a bonus for a free user
