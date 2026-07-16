@@ -44,8 +44,24 @@ class GameConfig {
   int get hintCleanPrice => _int('hint_clean_price', 100);
   int get hintDictionaryPrice => _int('hint_dictionary_price', 75);
   int get hintCleanCount => _int('hint_clean_count', 5);
-  // Practice theme-hint banner: free on auto-appear, coin-charged to recall.
-  int get hintThemeRecallPrice => _int('hint_theme_recall_price', 30);
+
+  // ── Mystery theme hint (🔮 Mavzu) ────────────────────────────────────────
+  // Kill-switch for the whole theme-hint surface (card, chip, re-expand).
+  bool get hintThemeEnabled {
+    final v = _overrides['hint_theme_enabled'];
+    if (v is bool) return v;
+    if (v is num) return v != 0; // RemoteConfig may deliver it as 0/1
+    return true;
+  }
+
+  /// How long the free auto-shown card stays expanded before collapsing.
+  int get hintThemeInitialSeconds => _int('hint_initial_seconds', 5);
+
+  /// How long a paid re-expand stays visible.
+  int get hintThemeReexpandSeconds => _int('hint_reexpand_seconds', 5);
+
+  /// Coin cost of re-expanding the collapsed theme chip.
+  int get hintThemeReexpandCost => _int('hint_reexpand_cost', 25);
 
   // ── Rewarded ad ───────────────────────────────────────────────────────────
   int get rewardedAdCoins => _int('rewarded_ad_coins', 150);
@@ -127,7 +143,10 @@ class GameConfig {
     'hint_clean_price': hintCleanPrice,
     'hint_dictionary_price': hintDictionaryPrice,
     'hint_clean_count': hintCleanCount,
-    'hint_theme_recall_price': hintThemeRecallPrice,
+    'hint_theme_enabled': hintThemeEnabled ? 1 : 0,
+    'hint_initial_seconds': hintThemeInitialSeconds,
+    'hint_reexpand_seconds': hintThemeReexpandSeconds,
+    'hint_reexpand_cost': hintThemeReexpandCost,
     'rewarded_ad_coins': rewardedAdCoins,
     'daily_chest_reward': dailyChestReward,
     'daily_chest_double_multiplier': dailyChestDoubleMultiplier,

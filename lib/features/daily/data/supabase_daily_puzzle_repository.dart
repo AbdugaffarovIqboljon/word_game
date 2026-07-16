@@ -29,7 +29,8 @@ class SupabaseDailyPuzzleRepository implements DailyPuzzleRepository {
     try {
       row = await client
           .from('daily_puzzle_public')
-          .select('puzzle_number, puzzle_date, word_length, theme, locked_prefix_raw')
+          .select('puzzle_number, puzzle_date, word_length, theme, '
+              'locked_prefix_raw, definition_uz')
           .eq('puzzle_date', _dateKey(puzzleDate))
           .single();
     } catch (e) {
@@ -41,6 +42,7 @@ class SupabaseDailyPuzzleRepository implements DailyPuzzleRepository {
       wordLength: row['word_length'] as int,
       theme: row['theme'] as String?,
       lockedPrefixRaw: row['locked_prefix_raw'] as String?,
+      definition: row['definition_uz'] as String?,
     );
   }
 

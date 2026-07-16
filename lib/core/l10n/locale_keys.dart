@@ -25,6 +25,7 @@ abstract final class LocaleKeys {
   static const onboardingRulePresent = 'onboarding.rule_present';
   static const onboardingRuleAbsent = 'onboarding.rule_absent';
   static const onboardingFirstLetterHint = 'onboarding.first_letter_hint';
+  static const onboardingThemeHintRule = 'onboarding.theme_hint_rule';
   static const onboardingTryTitle = 'onboarding.try_title';
   static const onboardingTryCoachmark = 'onboarding.try_coachmark';
 

@@ -118,6 +118,7 @@ class SupabaseAssetDictionary implements Dictionary {
   };
   final Map<String, _ScheduledPuzzle> _byDate = <String, _ScheduledPuzzle>{};
   final Map<String, String> _definitionByKey = <String, String>{};
+  final Map<String, String> _themeByKey = <String, String>{};
 
   DateTime _launchEpoch = DateTime.utc(2024, 1, 1);
   int _launchNumber = 1; // puzzle_number of _launchEpoch (schedule start_number)
@@ -145,10 +146,9 @@ class SupabaseAssetDictionary implements Dictionary {
   String? definitionFor(List<LogicalLetter> word) =>
       _definitionByKey[WordTokenizer.keyOf(word)];
 
-  // No theme/category data source is wired up yet (no Supabase column, no
-  // asset field) — always null until that data is added server-side.
   @override
-  String? themeFor(List<LogicalLetter> word) => null;
+  String? themeFor(List<LogicalLetter> word) =>
+      _themeByKey[WordTokenizer.keyOf(word)];
 
   @override
   int puzzleNumberForDate(DateTime date) {
@@ -194,7 +194,9 @@ class SupabaseAssetDictionary implements Dictionary {
   }
 
   Future<void> _loadAnswers() async {
-    // answers_tiered.tsv.gz: word \t tier(1..3) \t freq
+    // answers_tiered.tsv.gz: word \t tier(1..3) \t freq \t theme \t definition
+    // (WS-B: theme + definition cover EVERY answer, so the Mavzu and Lugʻat
+    // hints work for the whole practice/bonus pool, not just scheduled words.)
     final text = await _loadGzText('answers_tiered.tsv.gz');
     for (final line in const LineSplitter().convert(text)) {
       if (line.isEmpty) continue;
@@ -203,6 +205,11 @@ class SupabaseAssetDictionary implements Dictionary {
       final tokens = WordTokenizer.tokenize(parts[0]);
       _answerPool.add(tokens);
       _answersByTier[_tierFrom(int.tryParse(parts[1]) ?? 2)]!.add(tokens);
+      if (parts.length >= 5) {
+        final key = WordTokenizer.keyOf(tokens);
+        if (parts[3].isNotEmpty) _themeByKey[key] = parts[3];
+        if (parts[4].isNotEmpty) _definitionByKey[key] = parts[4];
+      }
     }
   }
 
@@ -306,13 +313,14 @@ class SupabaseAssetDictionary implements Dictionary {
     if (dateStr == null || word == null) return;
     final key = _dateKey(DateTime.parse(dateStr));
     final def = row['definition_uz'] as String?;
+    final theme = row['theme'] as String?;
     final difficulty = (row['difficulty'] as num?)?.toInt() ?? 2;
     final tokens = WordTokenizer.tokenize(word);
     _byDate[key] = _ScheduledPuzzle(
       dateKey: key, tokens: tokens, definition: def, difficulty: difficulty);
-    if (def != null && def.isNotEmpty) {
-      _definitionByKey[WordTokenizer.keyOf(tokens)] = def;
-    }
+    final wordKey = WordTokenizer.keyOf(tokens);
+    if (def != null && def.isNotEmpty) _definitionByKey[wordKey] = def;
+    if (theme != null && theme.isNotEmpty) _themeByKey[wordKey] = theme;
   }
 
   PracticeTier _tierFrom(int t) => switch (t) {

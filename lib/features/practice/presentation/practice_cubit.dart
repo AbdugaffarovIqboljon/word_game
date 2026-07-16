@@ -111,7 +111,8 @@ class PracticeCubit extends Cubit<PracticeState> {
         ? const []
         : pool[_random.nextInt(pool.length)];
     _definition = _dictionary.definitionFor(_answer);
-    _theme = _dictionary.themeFor(_answer);
+    // RC kill-switch: with the theme hint disabled the banner never renders.
+    _theme = _config.hintThemeEnabled ? _dictionary.themeFor(_answer) : null;
     // WS4: reveal + lock the answer's first letter (config-driven).
     _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
         ? [_answer.first]
@@ -267,15 +268,22 @@ class PracticeCubit extends Cubit<PracticeState> {
     return true;
   }
 
-  /// Charges coins to recall the already-known theme-hint banner. Unlike the
-  /// other hints, the effect (showing [theme]) can never fail once bought, so
-  /// this is a plain atomic debit — no pay/refund dance needed.
-  Future<bool> purchaseThemeRecall() async {
+  /// Atomically buys a re-expand of the collapsed theme chip: charge via
+  /// [pay] (coins or a rewarded ad), re-expand via [show], refund via [refund]
+  /// if the card could not be shown — a charge never lands without the effect.
+  Future<bool> purchaseThemeReexpand({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+    required Future<bool> Function() show,
+  }) async {
     if (!hasTheme) return false;
-    return _wallet.debitCoins(
-      _config.hintThemeRecallPrice,
-      reason: 'practice_theme_recall',
-    );
+    if (!await pay()) return false;
+    final shown = await show();
+    if (!shown) {
+      await refund();
+      return false;
+    }
+    return true;
   }
 
   /// Grays up to [GameConfig.hintCleanCount] genuinely-absent letters (however

@@ -44,6 +44,8 @@ abstract final class Env {
       String.fromEnvironment('ADMOB_REWARDED_HINT_LETTER');
   static const String _rewardedHintClean =
       String.fromEnvironment('ADMOB_REWARDED_HINT_CLEAN');
+  static const String _rewardedHintTheme =
+      String.fromEnvironment('ADMOB_REWARDED_HINT_THEME');
   static const String _rewardedChestDouble =
       String.fromEnvironment('ADMOB_REWARDED_CHEST_DOUBLE');
   static const String _rewardedFreezeFree =
@@ -59,6 +61,7 @@ abstract final class Env {
     final id = switch (placementId) {
       'sj_hint_letter' => _rewardedHintLetter,
       'sj_hint_clean' => _rewardedHintClean,
+      'sj_hint_theme' => _rewardedHintTheme,
       'sj_chest_double' => _rewardedChestDouble,
       'sj_freeze_free' => _rewardedFreezeFree,
       _ => '',

@@ -88,6 +88,7 @@ class FallbackDailyPuzzleRepository implements DailyPuzzleRepository {
       wordLength: answer.length,
       theme: _bundled.themeFor(answer),
       lockedPrefixRaw: _lockedPrefixRaw(answer),
+      definition: _bundled.definitionFor(answer),
     );
   }
 

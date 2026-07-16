@@ -213,6 +213,26 @@ class _PracticePlayViewState extends State<PracticePlayView> {
     return true;
   }
 
+  /// Atomic re-expand of the collapsed theme chip: coins when affordable,
+  /// otherwise the existing rewarded-ad fallback surface.
+  Future<bool> _reexpandTheme(Future<bool> Function() show) {
+    final config = sl<GameConfig>();
+    final reward = sl<RewardGateway>();
+    final cost = config.hintThemeReexpandCost;
+    final viaAd = _wallet.coins.value < cost;
+    Future<bool> pay() => viaAd
+        ? reward.showRewardedAd(RewardedPlacement.hintTheme)
+        : _wallet.debitCoins(cost, reason: 'practice_theme_reexpand');
+    return _cubit.purchaseThemeReexpand(
+      pay: pay,
+      refund: viaAd
+          ? () async {}
+          : () => _wallet.creditCoins(cost,
+              reason: 'practice_theme_reexpand_refund'),
+      show: show,
+    );
+  }
+
   @override
   void dispose() {
     _cubit.input.removeListener(_onInput);
@@ -257,8 +277,12 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                         PracticeThemeBanner(
                           theme: _cubit.theme,
                           roundNonce: state.roundNonce,
-                          recallPrice: sl<GameConfig>().hintThemeRecallPrice,
-                          onRecall: _cubit.purchaseThemeRecall,
+                          reexpandCost: sl<GameConfig>().hintThemeReexpandCost,
+                          initialSeconds:
+                              sl<GameConfig>().hintThemeInitialSeconds,
+                          reexpandSeconds:
+                              sl<GameConfig>().hintThemeReexpandSeconds,
+                          onReexpand: _reexpandTheme,
                         ),
                         const SizedBox(height: 8),
                       ],

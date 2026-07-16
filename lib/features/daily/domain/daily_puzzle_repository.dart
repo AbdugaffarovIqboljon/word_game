@@ -9,12 +9,17 @@ class DailyPuzzleMeta {
     required this.wordLength,
     required this.theme,
     required this.lockedPrefixRaw,
+    this.definition,
   });
 
   final int puzzleNumber;
   final DateTime puzzleDate;
   final int wordLength;
   final String? theme;
+
+  /// The answer's Uzbek gloss for the Lugʻat hint (WS-B: authored to never
+  /// contain the answer or its root, so exposing it is safe pre-solve).
+  final String? definition;
 
   /// Raw 1-2 character prefix of the answer (server sends 2 chars so a
   /// compound Uzbek letter, e.g. `oʻ`/`gʻ`, is never truncated); the caller

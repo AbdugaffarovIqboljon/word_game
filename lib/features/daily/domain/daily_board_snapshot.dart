@@ -10,25 +10,30 @@ import '../../../core/game/domain/logical_letter.dart';
 /// server-authoritative (the `evaluate-guess` Edge Function), so results can
 /// no longer be recomputed locally on restore — they are simply redrawn.
 /// [outcomeRecorded] guards against double-counting streak/stats/coins when a
-/// finished board is restored.
+/// finished board is restored. [themeHintShown] guards the theme-hint card's
+/// one free auto-show per puzzle — an app restart must never re-show it free.
 class DailyBoardSnapshot extends Equatable {
   const DailyBoardSnapshot({
     required this.puzzleDate,
     required this.guesses,
     required this.outcomeRecorded,
+    this.themeHintShown = false,
   });
 
   final DateTime puzzleDate;
   final List<Guess> guesses;
   final bool outcomeRecorded;
+  final bool themeHintShown;
 
   DailyBoardSnapshot copyWith({
     List<Guess>? guesses,
     bool? outcomeRecorded,
+    bool? themeHintShown,
   }) => DailyBoardSnapshot(
     puzzleDate: puzzleDate,
     guesses: guesses ?? this.guesses,
     outcomeRecorded: outcomeRecorded ?? this.outcomeRecorded,
+    themeHintShown: themeHintShown ?? this.themeHintShown,
   );
 
   Map<String, dynamic> toJson() => {
@@ -42,6 +47,7 @@ class DailyBoardSnapshot extends Equatable {
         )
         .toList(),
     'recorded': outcomeRecorded,
+    'theme_shown': themeHintShown,
   };
 
   factory DailyBoardSnapshot.fromJson(Map<String, dynamic> json) =>
@@ -60,8 +66,10 @@ class DailyBoardSnapshot extends Equatable {
             })
             .toList(),
         outcomeRecorded: json['recorded'] as bool? ?? false,
+        themeHintShown: json['theme_shown'] as bool? ?? false,
       );
 
   @override
-  List<Object?> get props => [puzzleDate, guesses, outcomeRecorded];
+  List<Object?> get props =>
+      [puzzleDate, guesses, outcomeRecorded, themeHintShown];
 }

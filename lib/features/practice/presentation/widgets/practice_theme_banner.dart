@@ -3,32 +3,53 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/game/presentation/widgets/invalid_word_toast.dart';
 import '../../../../core/l10n/locale_keys.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
-/// Cryptic theme/category clue banner shown above the practice board.
+/// Mystery theme hint ("🔮 Mavzu: {theme}") shown above the board in daily,
+/// practice and bonus games.
 ///
-/// Auto-plays fade-in → hold → fade-out once per round (keyed by
-/// [roundNonce]). Once it fades out, a small sparkle affordance takes its
-/// place; tapping it calls [onRecall] (which should charge coins) and, on
-/// success, replays the same animation.
+/// Enters with a soft scale+fade, holds for [initialSeconds], then collapses
+/// into a small chip docked next to the board context header. Tapping the chip
+/// calls [onReexpand] — the page charges coins (or a rewarded ad) through the
+/// atomic pay→effect→refund pattern and resolves `true` when paid — and the
+/// card re-expands for [reexpandSeconds].
+///
+/// The free auto-show plays only when [autoShow] is true (daily persists this
+/// per puzzle in the board snapshot; practice/bonus re-show per round via
+/// [roundNonce]). [onAutoShown] fires exactly when the free show starts.
 class PracticeThemeBanner extends StatefulWidget {
   const PracticeThemeBanner({
     required this.theme,
     required this.roundNonce,
-    required this.recallPrice,
-    required this.onRecall,
+    required this.reexpandCost,
+    required this.onReexpand,
+    this.initialSeconds = 5,
+    this.reexpandSeconds = 5,
+    this.autoShow = true,
+    this.onAutoShown,
     super.key,
   });
 
   final String? theme;
   final int roundNonce;
-  final int recallPrice;
-  final Future<bool> Function() onRecall;
+  final int reexpandCost;
+
+  /// Runs the atomic re-expand purchase. The banner hands its own re-show
+  /// effect in as `show`, so the page/cubit can do pay → show → refund-on-fail
+  /// without ever charging for a card that could not appear.
+  final Future<bool> Function(Future<bool> Function() show) onReexpand;
+  final int initialSeconds;
+  final int reexpandSeconds;
+
+  /// Whether this round still owes the player the free auto-show. When false
+  /// (e.g. restored daily board after an app restart) the banner starts
+  /// collapsed as the chip.
+  final bool autoShow;
+  final VoidCallback? onAutoShown;
 
   @override
   State<PracticeThemeBanner> createState() => _PracticeThemeBannerState();
@@ -36,66 +57,80 @@ class PracticeThemeBanner extends StatefulWidget {
 
 class _PracticeThemeBannerState extends State<PracticeThemeBanner>
     with SingleTickerProviderStateMixin {
-  static const _fadeDuration = Duration(milliseconds: 400);
-  static const _holdDuration = Duration(seconds: 7);
+  static const _transitionDuration = Duration(milliseconds: 400);
 
-  late final AnimationController _fadeController = AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: _fadeDuration,
+    duration: _transitionDuration,
   );
   late final Animation<double> _opacity = CurvedAnimation(
-    parent: _fadeController,
+    parent: _controller,
     curve: Curves.easeInOut,
   );
-  final ValueNotifier<bool> _showRecallAffordance = ValueNotifier(false);
+  late final Animation<double> _scale = Tween<double>(begin: 0.94, end: 1)
+      .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+  /// True while the expanded card is (or is animating) on screen.
+  final ValueNotifier<bool> _expanded = ValueNotifier(false);
 
   Timer? _holdTimer;
+  bool _reexpandInFlight = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.theme != null) _play();
+    if (widget.theme != null && widget.autoShow) {
+      widget.onAutoShown?.call();
+      _play(holdSeconds: widget.initialSeconds);
+    }
   }
 
   @override
   void didUpdateWidget(covariant PracticeThemeBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.roundNonce != oldWidget.roundNonce && widget.theme != null) {
-      _play();
+    if (widget.roundNonce != oldWidget.roundNonce &&
+        widget.theme != null &&
+        widget.autoShow) {
+      widget.onAutoShown?.call();
+      _play(holdSeconds: widget.initialSeconds);
     }
   }
 
-  void _play() {
+  void _play({required int holdSeconds}) {
     _holdTimer?.cancel();
-    _showRecallAffordance.value = false;
-    _fadeController.forward(from: 0);
-    _holdTimer = Timer(_holdDuration, () {
+    _expanded.value = true;
+    _controller.forward(from: 0);
+    _holdTimer = Timer(Duration(seconds: holdSeconds), () {
       if (!mounted) return;
-      _fadeController.reverse().whenCompleteOrCancel(() {
-        if (mounted) _showRecallAffordance.value = true;
+      _controller.reverse().whenCompleteOrCancel(() {
+        if (mounted) _expanded.value = false;
       });
     });
   }
 
-  Future<void> _onRecallTap() async {
-    final ok = await widget.onRecall();
-    if (!mounted) return;
-    if (!ok) {
-      InvalidWordToast.show(
-        context,
-        message: LocaleKeys.practiceThemeInsufficient.tr(),
-        topOffset: 90,
-      );
-      return;
+  /// Re-expands the card after a successful charge; returned future backs the
+  /// page's atomic pay→effect→refund contract (`false` triggers its refund).
+  Future<bool> _show() async {
+    if (!mounted) return false;
+    _play(holdSeconds: widget.reexpandSeconds);
+    return true;
+  }
+
+  Future<void> _onChipTap() async {
+    if (_reexpandInFlight) return;
+    _reexpandInFlight = true;
+    try {
+      await widget.onReexpand(_show);
+    } finally {
+      _reexpandInFlight = false;
     }
-    _play();
   }
 
   @override
   void dispose() {
     _holdTimer?.cancel();
-    _fadeController.dispose();
-    _showRecallAffordance.dispose();
+    _controller.dispose();
+    _expanded.dispose();
     super.dispose();
   }
 
@@ -106,17 +141,17 @@ class _PracticeThemeBannerState extends State<PracticeThemeBanner>
     return SizedBox(
       height: 40,
       child: ValueListenableBuilder<bool>(
-        valueListenable: _showRecallAffordance,
-        builder: (context, showRecall, _) {
-          if (showRecall) {
-            return ThemeRecallAffordance(
-              price: widget.recallPrice,
-              onTap: _onRecallTap,
+        valueListenable: _expanded,
+        builder: (context, expanded, _) {
+          if (!expanded) {
+            return ThemeHintChip(
+              price: widget.reexpandCost,
+              onTap: _onChipTap,
             );
           }
           return FadeTransition(
             opacity: _opacity,
-            child: ThemeHintCard(theme: theme),
+            child: ScaleTransition(scale: _scale, child: ThemeHintCard(theme: theme)),
           );
         },
       ),
@@ -124,7 +159,7 @@ class _PracticeThemeBannerState extends State<PracticeThemeBanner>
   }
 }
 
-/// The mystical clue card: "Bu soʻz — {theme} mavzusida".
+/// The mystery clue card: "🔮 Mavzu: {theme}".
 class ThemeHintCard extends StatelessWidget {
   const ThemeHintCard({required this.theme, super.key});
 
@@ -157,13 +192,10 @@ class ThemeHintCard extends StatelessWidget {
   }
 }
 
-/// Small tappable sparkle + price pill that recalls the faded theme banner.
-class ThemeRecallAffordance extends StatelessWidget {
-  const ThemeRecallAffordance({
-    required this.price,
-    required this.onTap,
-    super.key,
-  });
+/// Collapsed state: a small docked chip (🔮 + price) that re-expands the card
+/// for coins when tapped.
+class ThemeHintChip extends StatelessWidget {
+  const ThemeHintChip({required this.price, required this.onTap, super.key});
 
   final int price;
   final VoidCallback onTap;
@@ -189,9 +221,12 @@ class ThemeRecallAffordance extends StatelessWidget {
               children: [
                 const Icon(AppIcons.sparkles, size: 14, color: AppColors.gem),
                 const SizedBox(width: 6),
-                Icon(AppIcons.coins, size: 12, color: AppColors.coin),
+                const Icon(AppIcons.coins, size: 12, color: AppColors.coin),
                 const SizedBox(width: 3),
-                Text('$price', style: AppTextStyles.caption.copyWith(color: AppColors.text2)),
+                Text(
+                  '$price',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.text2),
+                ),
               ],
             ),
           ),

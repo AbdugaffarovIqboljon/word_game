@@ -67,6 +67,7 @@ class BonusCubit extends Cubit<BonusState> {
   late List<LogicalLetter> _answer;
   late List<LogicalLetter> _lockedPrefix = const [];
   String? _definition;
+  String? _theme;
 
   int get currentRow => _game.guesses.length;
   int get maxAttempts => _config.maxAttempts;
@@ -74,6 +75,11 @@ class BonusCubit extends Cubit<BonusState> {
   String? get definition => _definition;
   bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
   List<LogicalLetter> get lockedPrefix => _lockedPrefix;
+
+  /// The current bonus word's theme for the mystery hint banner (null when the
+  /// RC kill-switch disables the surface).
+  String? get theme => _theme;
+  bool get hasTheme => _theme != null && _theme!.isNotEmpty;
 
   /// Begins a fresh bonus word: a random answer from the full pool that the user
   /// has not already played. Emits [BonusPhase.empty] when the pool is exhausted.
@@ -100,6 +106,8 @@ class BonusCubit extends Cubit<BonusState> {
 
     _answer = available[_random.nextInt(available.length)];
     _definition = _dictionary.definitionFor(_answer);
+    // RC kill-switch: with the theme hint disabled the banner never renders.
+    _theme = _config.hintThemeEnabled ? _dictionary.themeFor(_answer) : null;
     _lockedPrefix = _config.revealFirstLetter && _answer.isNotEmpty
         ? [_answer.first]
         : const [];
@@ -235,6 +243,24 @@ class BonusCubit extends Cubit<BonusState> {
     if (def == null || def.isEmpty) return false;
     if (!await pay()) return false;
     final shown = await reveal(def);
+    if (!shown) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Atomically buys a re-expand of the collapsed theme chip: charge via
+  /// [pay] (coins or a rewarded ad), re-expand via [show], refund via [refund]
+  /// if the card could not be shown — a charge never lands without the effect.
+  Future<bool> purchaseThemeReexpand({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+    required Future<bool> Function() show,
+  }) async {
+    if (!hasTheme) return false;
+    if (!await pay()) return false;
+    final shown = await show();
     if (!shown) {
       await refund();
       return false;

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 enum RewardedPlacement {
   hintLetter('sj_hint_letter'),
   hintClean('sj_hint_clean'),
+  hintTheme('sj_hint_theme'),
   chestDouble('sj_chest_double'),
   freezeFree('sj_freeze_free');
 

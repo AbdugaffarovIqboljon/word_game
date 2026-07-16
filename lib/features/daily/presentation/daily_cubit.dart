@@ -84,6 +84,7 @@ class DailyCubit extends Cubit<DailyState> {
   late List<LogicalLetter> _lockedPrefix = const [];
   int _puzzleNumber = 0;
   String? _theme;
+  String? _definition;
   late DailyBoardSnapshot _snapshot;
 
   /// Re-entrancy guard: a submission is already in flight against the network.
@@ -112,12 +113,18 @@ class DailyCubit extends Cubit<DailyState> {
   Map<int, LogicalLetter> get lockedPositions => _game.lockedPositions;
   Map<int, LogicalLetter> get prefillPositions => _game.prefillPositions;
 
-  /// The Lugʻat (definition) hint has no server-side source yet — evaluation
-  /// moving server-side means the client no longer holds the plaintext answer
-  /// needed to look one up locally. Temporarily disabled for daily (practice
-  /// is unaffected) pending a dedicated backend endpoint.
-  bool get hasDefinition => false;
-  String? get definition => null;
+  /// The Lugʻat (definition) hint: the gloss now ships with the puzzle
+  /// metadata (WS-B — `daily_puzzle_public.definition_uz` online, the bundled
+  /// schedule offline), so it works without the client ever holding the
+  /// answer. Content covers the whole answer pool, so this is normally always
+  /// available.
+  bool get hasDefinition => _definition != null && _definition!.isNotEmpty;
+  String? get definition => _definition;
+
+  /// Whether the theme card's one free auto-show already happened for this
+  /// puzzle (persisted in the board snapshot — an app restart never re-shows
+  /// it free).
+  bool get themeHintAlreadyShown => _snapshot.themeHintShown;
 
   Future<void> load() async {
     final today = _clock.puzzleDate();
@@ -133,7 +140,10 @@ class DailyCubit extends Cubit<DailyState> {
     }
 
     _puzzleNumber = meta.puzzleNumber;
-    _theme = meta.theme;
+    // RC kill-switch: with the theme hint disabled the theme never reaches
+    // state, so no card, chip or re-expand surface can render anywhere.
+    _theme = _config.hintThemeEnabled ? meta.theme : null;
+    _definition = meta.definition;
     _lockedPrefix = _resolveLockedPrefix(meta);
 
     // Reconcile any missed days (consume freezes / break), idempotently.
@@ -343,23 +353,52 @@ class DailyCubit extends Cubit<DailyState> {
     required Future<void> Function() refund,
   }) async => false;
 
+  /// Atomically buys the Lugʻat (definition) hint: gates on availability,
+  /// charges via [pay] only then, displays via [reveal], refunds via [refund]
+  /// if display fails (WS1 req c). [reveal] returns whether it was displayed.
   Future<bool> purchaseDefinition({
     required Future<bool> Function() pay,
     required Future<void> Function() refund,
     required Future<bool> Function(String definition) reveal,
-  }) async => false;
+  }) async {
+    final def = _definition;
+    if (def == null || def.isEmpty) return false;
+    if (!await pay()) return false;
+    final shown = await reveal(def);
+    if (!shown) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
 
   List<LogicalLetter> cleanKeyboard() => const [];
 
-  /// Charges coins to recall the already-known theme-hint banner. Unlike a
-  /// gated hint, the effect (showing [DailyState.theme]) can never fail once
-  /// bought, so this is a plain atomic debit — no pay/refund dance needed.
-  Future<bool> purchaseThemeRecall() async {
+  /// Atomically buys a re-expand of the collapsed theme chip: charge via
+  /// [pay] (coins or a rewarded ad), re-expand via [show], refund via [refund]
+  /// if the card could not be shown — a charge never lands without the effect.
+  Future<bool> purchaseThemeReexpand({
+    required Future<bool> Function() pay,
+    required Future<void> Function() refund,
+    required Future<bool> Function() show,
+  }) async {
     if (_theme == null || _theme!.isEmpty) return false;
-    return _wallet.debitCoins(
-      _config.hintThemeRecallPrice,
-      reason: 'daily_theme_recall',
-    );
+    if (!await pay()) return false;
+    final shown = await show();
+    if (!shown) {
+      await refund();
+      return false;
+    }
+    return true;
+  }
+
+  /// Records the theme card's one free auto-show into the persisted snapshot
+  /// so an app restart never replays it free (paid re-expands remain the only
+  /// way to see it again).
+  Future<void> markThemeHintShown() async {
+    if (_snapshot.themeHintShown) return;
+    _snapshot = _snapshot.copyWith(themeHintShown: true);
+    await _boardRepo.save(_snapshot);
   }
 
   /// Refreshes the chest "unclaimed" dot after the chest dialog closes (the
@@ -429,7 +468,7 @@ class DailyCubit extends Cubit<DailyState> {
     streak: streak ?? state.streak,
     puzzleNumber: _puzzleNumber,
     answer: _game.answer,
-    answerDefinition: null,
+    answerDefinition: _definition,
     reward: reward ?? (phase == DailyPhase.solved ? state.reward : null),
     chestUnclaimed: chestUnclaimed ?? state.chestUnclaimed,
     shakeSignal: state.shakeSignal,

@@ -29,6 +29,7 @@ import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
 import '../../hints/presentation/definition_hint_dialog.dart';
 import '../../hints/presentation/hint_sheet.dart';
+import '../../practice/presentation/widgets/practice_theme_banner.dart';
 import '../../shop/data/skin_service.dart';
 import '../../wallet/data/wallet_service.dart';
 import 'bonus_cubit.dart';
@@ -208,6 +209,26 @@ class _BonusPlayViewState extends State<BonusPlayView> {
     return true;
   }
 
+  /// Atomic re-expand of the collapsed theme chip: coins when affordable,
+  /// otherwise the existing rewarded-ad fallback surface.
+  Future<bool> _reexpandTheme(Future<bool> Function() show) {
+    final config = sl<GameConfig>();
+    final reward = sl<RewardGateway>();
+    final cost = config.hintThemeReexpandCost;
+    final viaAd = _wallet.coins.value < cost;
+    Future<bool> pay() => viaAd
+        ? reward.showRewardedAd(RewardedPlacement.hintTheme)
+        : _wallet.debitCoins(cost, reason: 'bonus_theme_reexpand');
+    return _cubit.purchaseThemeReexpand(
+      pay: pay,
+      refund: viaAd
+          ? () async {}
+          : () =>
+              _wallet.creditCoins(cost, reason: 'bonus_theme_reexpand_refund'),
+      show: show,
+    );
+  }
+
   @override
   void dispose() {
     _cubit.input.removeListener(_onInput);
@@ -242,6 +263,20 @@ class _BonusPlayViewState extends State<BonusPlayView> {
                             ? _openHint
                             : null,
                       ),
+                      if (state.phase == BonusPhase.playing &&
+                          _cubit.hasTheme) ...[
+                        PracticeThemeBanner(
+                          theme: _cubit.theme,
+                          roundNonce: state.roundNonce,
+                          reexpandCost: sl<GameConfig>().hintThemeReexpandCost,
+                          initialSeconds:
+                              sl<GameConfig>().hintThemeInitialSeconds,
+                          reexpandSeconds:
+                              sl<GameConfig>().hintThemeReexpandSeconds,
+                          onReexpand: _reexpandTheme,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Expanded(
                         child: Center(
                           child: ValueListenableBuilder<String>(

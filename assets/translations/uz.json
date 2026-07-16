@@ -23,7 +23,8 @@
     "rule_absent": "Bu harf soʻzda yoʻq",
     "first_letter_hint": "Birinchi harf yashil rangda ochib beriladi.",
     "try_title": "Endi oʻzingiz urinib koʻring",
-    "try_coachmark": "Harfni tanlang"
+    "try_coachmark": "Harfni tanlang",
+    "theme_hint_rule": "🔮 Mavzu kartasi soʻz mavzusini boshida bir marta bepul koʻrsatadi — keyin uni tangaga qayta ochish mumkin."
   },
   "tutorial": {
     "beat1_coach": "Yashirin 5 harfli soʻzning birinchi harfi ochib berilgan. Uni 5 urinishda toping. Qolgan harflarni tering — masalan: KOBRA",
@@ -31,7 +32,7 @@
     "teach_present": "Soʻzda bor, joyi boshqa",
     "teach_absent": "Soʻzda yoʻq",
     "tap_to_continue": "Davom etish uchun bosing",
-    "beat3_coach": "Endi maslahatlardan foydalanib soʻzni toping!",
+    "beat3_coach": "Endi maslahatlardan foydalanib soʻzni toping! 🔮 Mavzu kartasi esa soʻz mavzusini aytib turadi.",
     "win_title": "Tayyor!",
     "win_body": "Endi har kuni yangi soʻz sizni kutadi",
     "lose_title": "Zarari yoʻq!",

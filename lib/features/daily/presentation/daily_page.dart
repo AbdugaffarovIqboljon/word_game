@@ -539,6 +539,26 @@ class _DailyViewState extends State<DailyView> {
     return true;
   }
 
+  /// Atomic re-expand of the collapsed theme chip: coins when affordable,
+  /// otherwise the existing rewarded-ad fallback surface — either way the
+  /// charge lands only if the card actually re-shows ([show] succeeds).
+  Future<bool> _reexpandTheme(Future<bool> Function() show) {
+    final config = sl<GameConfig>();
+    final reward = sl<RewardGateway>();
+    final cost = config.hintThemeReexpandCost;
+    final viaAd = _wallet.coins.value < cost;
+    Future<bool> pay() => viaAd
+        ? reward.showRewardedAd(RewardedPlacement.hintTheme)
+        : _wallet.debitCoins(cost, reason: 'daily_theme_reexpand');
+    return _cubit.purchaseThemeReexpand(
+      pay: pay,
+      refund: viaAd
+          ? () async {}
+          : () => _wallet.creditCoins(cost, reason: 'daily_theme_reexpand_refund'),
+      show: show,
+    );
+  }
+
   Future<bool> _showDefinitionDialog(String definition) async {
     if (!mounted) return false;
     await showAppDialog<void>(
@@ -604,8 +624,14 @@ class _DailyViewState extends State<DailyView> {
           PracticeThemeBanner(
             theme: state.theme,
             roundNonce: state.puzzleNumber,
-            recallPrice: sl<GameConfig>().hintThemeRecallPrice,
-            onRecall: _cubit.purchaseThemeRecall,
+            reexpandCost: sl<GameConfig>().hintThemeReexpandCost,
+            initialSeconds: sl<GameConfig>().hintThemeInitialSeconds,
+            reexpandSeconds: sl<GameConfig>().hintThemeReexpandSeconds,
+            // One free auto-show per puzzle, persisted with the board snapshot
+            // — a restored board (app restart) starts collapsed as the chip.
+            autoShow: !_cubit.themeHintAlreadyShown,
+            onAutoShown: _cubit.markThemeHintShown,
+            onReexpand: _reexpandTheme,
           ),
         ],
         const SizedBox(height: 12),
