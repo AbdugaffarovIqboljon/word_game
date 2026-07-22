@@ -108,10 +108,9 @@ class DailyCubit extends Cubit<DailyState> {
   /// from a client-known answer.
   List<LogicalLetter> get lockedPrefix => _lockedPrefix;
 
-  /// Board positions carried forward as locked/pre-filled from prior guesses —
-  /// see [GameState.lockedPositions] / [GameState.prefillPositions].
+  /// Board positions carried forward as locked (green) from prior guesses —
+  /// see [GameState.lockedPositions].
   Map<int, LogicalLetter> get lockedPositions => _game.lockedPositions;
-  Map<int, LogicalLetter> get prefillPositions => _game.prefillPositions;
 
   /// The Lugʻat (definition) hint: the gloss now ships with the puzzle
   /// metadata (WS-B — `daily_puzzle_public.definition_uz` online, the bundled
@@ -332,6 +331,10 @@ class DailyCubit extends Cubit<DailyState> {
           phase: _phaseFor(_game.status),
           reward: reward,
           streak: _streakRepo.load().current,
+          // Fresh win only — a fired celebration is a one-shot state event. The
+          // restore path in load() never bumps it, so relaunching a solved day
+          // shows the recap without re-firing confetti (WS5).
+          celebrate: _game.status == GameStatus.won,
         ),
       );
     }
@@ -461,6 +464,7 @@ class DailyCubit extends Cubit<DailyState> {
     DailyReward? reward,
     int? streak,
     bool? chestUnclaimed,
+    bool celebrate = false,
   }) => DailyState(
     phase: phase,
     guesses: _game.guesses,
@@ -473,6 +477,7 @@ class DailyCubit extends Cubit<DailyState> {
     chestUnclaimed: chestUnclaimed ?? state.chestUnclaimed,
     shakeSignal: state.shakeSignal,
     theme: _theme,
+    celebrateSignal: state.celebrateSignal + (celebrate ? 1 : 0),
   );
 
   @override

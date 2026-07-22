@@ -11,6 +11,11 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/secondary_button.dart';
 
+/// How the post-round "Yana" / "Keyingi daraja" CTAs behave (WS1):
+/// [free] plays immediately, [ad] gates behind a rewarded ad, [exhausted] shows
+/// the come-back-tomorrow message because no ad could fill.
+enum PracticeRoundMode { free, ad, exhausted }
+
 /// Track-A solved/failed overlay (decisions §8): a card over the board with the
 /// result, reward and the again / next-tier / back actions.
 class PracticeOverlay extends StatelessWidget {
@@ -20,6 +25,7 @@ class PracticeOverlay extends StatelessWidget {
     required this.reward,
     required this.answer,
     required this.definition,
+    required this.mode,
     required this.onAgain,
     required this.onNextTier,
     required this.onBack,
@@ -31,6 +37,10 @@ class PracticeOverlay extends StatelessWidget {
   final int reward;
   final List<LogicalLetter> answer;
   final String? definition;
+
+  /// Free-round entitlement state for the CTAs (WS1).
+  final PracticeRoundMode mode;
+
   final VoidCallback onAgain;
   final VoidCallback? onNextTier;
   final VoidCallback onBack;
@@ -93,23 +103,42 @@ class PracticeOverlay extends StatelessWidget {
                     ],
                   ],
                   const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: LocaleKeys.practiceAgain.tr(),
-                    icon: AppIcons.refresh,
-                    onPressed: onAgain,
-                  ),
-                  if (solved && onNextTier != null) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SecondaryButton(
-                        label: LocaleKeys.practiceNextTier.tr(),
-                        icon: AppIcons.chevronRight,
-                        onPressed: onNextTier,
+                  if (mode == PracticeRoundMode.exhausted) ...[
+                    // No free rounds left and no ad to fill — invite them back
+                    // tomorrow instead of an actionable "Yana" (WS1).
+                    Text(
+                      LocaleKeys.practiceRoundsExhausted.tr(),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSub,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                  ] else ...[
+                    PrimaryButton(
+                      label: mode == PracticeRoundMode.ad
+                          ? LocaleKeys.practiceWatchExtra.tr()
+                          : LocaleKeys.practiceAgain.tr(),
+                      icon: mode == PracticeRoundMode.ad
+                          ? AppIcons.watchAd
+                          : AppIcons.refresh,
+                      onPressed: onAgain,
+                    ),
+                    if (solved && onNextTier != null) ...[
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SecondaryButton(
+                          label: LocaleKeys.practiceNextTier.tr(),
+                          icon: mode == PracticeRoundMode.ad
+                              ? AppIcons.watchAd
+                              : AppIcons.chevronRight,
+                          onPressed: onNextTier,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
                   ],
-                  const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,
                     child: SecondaryButton(

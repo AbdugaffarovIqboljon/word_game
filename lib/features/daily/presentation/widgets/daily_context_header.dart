@@ -4,68 +4,64 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/locale_keys.dart';
 import '../../../../core/l10n/uzbek_date.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_icons.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_icon_button.dart';
 
 /// Compact context block between the app bar and the board: puzzle number,
-/// localized date, and the "find today's word" subtitle. Hosts the re-openable
-/// rules (circle-help) button and — freed from the crowded app bar — the hint
-/// (lightbulb) action while a puzzle is in progress.
+/// localized date, and the "find today's word" subtitle. The rules (?) and hint
+/// (💡) actions now live in the top app bar (WS3), so this block is content-only
+/// plus the skin-accent chip around the puzzle number.
 class DailyContextHeader extends StatelessWidget {
   const DailyContextHeader({
     required this.puzzleNumber,
     required this.date,
-    required this.onRules,
-    this.onHint,
-    this.rulesButtonKey,
-    this.hintButtonKey,
+    this.accent,
     super.key,
   });
 
   final int puzzleNumber;
   final DateTime date;
-  final VoidCallback onRules;
 
-  /// Present only while a puzzle is playable.
-  final VoidCallback? onHint;
-
-  /// Optional spotlight-tour anchors for the rules/hint icon buttons.
-  final GlobalKey? rulesButtonKey;
-  final GlobalKey? hintButtonKey;
+  /// Active skin accent (WS4): tints the puzzle-number chip. Null / the neutral
+  /// default leaves the header on the base palette (Standart).
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
+    final isNeutral = accent == null || accent == AppColors.textSub;
+    final label = Text(
+      LocaleKeys.dailyPuzzleNumber.tr(namedArgs: {'n': '$puzzleNumber'}),
+      style: AppTextStyles.navTitle.copyWith(
+        color: isNeutral ? null : accent,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Expanded(
-              child: Text(
-                LocaleKeys.dailyPuzzleNumber.tr(
-                  namedArgs: {'n': '$puzzleNumber'},
-                ),
-                style: AppTextStyles.navTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            // Skin-accent chip around the puzzle number (WS4); Standart renders
+            // the bare label with no chip fill.
+            Flexible(
+              child: isNeutral
+                  ? label
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent!.withValues(alpha: 0.14),
+                        borderRadius: AppRadii.chipR,
+                        border: Border.all(
+                          color: accent!.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: label,
+                    ),
             ),
-            AppIconButton(
-              key: rulesButtonKey,
-              icon: AppIcons.help,
-              onPressed: onRules,
-              tooltip: LocaleKeys.commonRules.tr(),
-            ),
-            if (onHint != null) ...[
-              const SizedBox(width: 6),
-              AppIconButton(
-                key: hintButtonKey,
-                icon: AppIcons.hint,
-                iconColor: AppColors.fire,
-                onPressed: onHint!,
-              ),
-            ],
           ],
         ),
         const SizedBox(height: 4),

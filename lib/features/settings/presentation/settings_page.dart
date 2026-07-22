@@ -12,6 +12,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/nav_header.dart';
+import '../../shop/data/purchases_repository.dart';
 import '../../shop/domain/purchase_gateway.dart';
 import '../../streak/data/streak_reminder_scheduler.dart';
 import '../data/settings_service.dart';
@@ -98,10 +99,23 @@ class SettingsPage extends StatelessWidget {
                           ),
                         ),
                         const _RowDivider(),
-                        _ActionRow(
-                          icon: AppIcons.shieldCheck,
-                          label: LocaleKeys.settingsRemoveAds.tr(),
-                          onTap: () => context.push(AppRoutes.shop),
+                        // Reactive entitlement row (WS1): once remove-ads is
+                        // owned it reads as active with a check instead of a
+                        // chevron-into-shop, updating live on fulfillment.
+                        ValueListenableBuilder<bool>(
+                          valueListenable: sl<PurchasesRepository>().removeAds,
+                          builder: (context, owned, _) => _ActionRow(
+                            icon: AppIcons.shieldCheck,
+                            label: LocaleKeys.settingsRemoveAds.tr(),
+                            onTap: owned ? null : () => context.push(AppRoutes.shop),
+                            trailing: owned
+                                ? const Icon(
+                                    AppIcons.check,
+                                    size: 18,
+                                    color: AppColors.successBright,
+                                  )
+                                : null,
+                          ),
                         ),
                         const _RowDivider(),
                         _ActionRow(
@@ -296,11 +310,15 @@ class _ActionRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.trailing,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// Overrides the default chevron affordance (e.g. an owned check, WS1).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +331,8 @@ class _ActionRow extends StatelessWidget {
             Icon(icon, size: 18, color: AppColors.text2),
             const SizedBox(width: 12),
             Expanded(child: Text(label, style: AppTextStyles.body.copyWith(color: AppColors.text))),
-            const Icon(AppIcons.chevronRight, size: 18, color: AppColors.muted),
+            trailing ??
+                const Icon(AppIcons.chevronRight, size: 18, color: AppColors.muted),
           ],
         ),
       ),

@@ -9,15 +9,18 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
 import '../../../core/game/presentation/board_controller.dart';
+import '../../../core/game/presentation/skin_background.dart';
 import '../../../core/game/presentation/tile_skin.dart';
-import '../../../core/game/presentation/widgets/game_board.dart';
 import '../../../core/game/presentation/widgets/game_keyboard.dart';
 import '../../../core/game/presentation/widgets/invalid_word_toast.dart';
+import '../../../core/game/presentation/widgets/known_letters_strip.dart';
+import '../../../core/game/presentation/widgets/responsive_game_board.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/services/app_haptics.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_radii.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/time/game_clock.dart';
 import '../../../core/widgets/app_dialog.dart';
@@ -29,6 +32,7 @@ import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
 import '../../hints/presentation/definition_hint_dialog.dart';
 import '../../hints/presentation/hint_sheet.dart';
+import '../../onboarding/presentation/widgets/rules_legend.dart';
 import '../../shop/data/purchases_repository.dart';
 import '../../shop/data/skin_service.dart';
 import '../../wallet/data/wallet_service.dart';
@@ -233,6 +237,31 @@ class _PracticePlayViewState extends State<PracticePlayView> {
     );
   }
 
+  /// Post-round "Yana" (WS1): free rounds replay immediately; once the daily
+  /// allotment is spent, an [PracticeRoundMode.ad] tap watches a rewarded ad and
+  /// only replays on completion (no interstitial stacked on top).
+  Future<void> _again(PracticeRoundMode mode) async {
+    if (mode == PracticeRoundMode.ad) {
+      final earned = await sl<RewardGateway>()
+          .showRewardedAd(RewardedPlacement.practiceExtra);
+      if (earned) await _cubit.again(skipInterstitial: true);
+    } else {
+      await _cubit.again();
+    }
+  }
+
+  /// "Keyingi daraja" — same free/ad gating as [_again] (WS1): advancing a tier
+  /// also consumes a round, so it can't sidestep the ladder.
+  Future<void> _nextTier(PracticeRoundMode mode) async {
+    if (mode == PracticeRoundMode.ad) {
+      final earned = await sl<RewardGateway>()
+          .showRewardedAd(RewardedPlacement.practiceExtra);
+      if (earned) await _cubit.nextTier(skipInterstitial: true);
+    } else {
+      await _cubit.nextTier();
+    }
+  }
+
   @override
   void dispose() {
     _cubit.input.removeListener(_onInput);
@@ -264,6 +293,7 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                       _Header(
                         coins: _wallet.coins,
                         onBack: () => context.pop(),
+                        onRules: () => showRulesSheet(context),
                         onHint: state.phase == PracticePhase.playing
                             ? _openHint
                             : null,
@@ -274,6 +304,7 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                       ),
                       if (state.phase == PracticePhase.playing &&
                           _cubit.hasTheme) ...[
+                        const SizedBox(height: AppSpacing.s3),
                         PracticeThemeBanner(
                           theme: _cubit.theme,
                           roundNonce: state.roundNonce,
@@ -284,17 +315,30 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                               sl<GameConfig>().hintThemeReexpandSeconds,
                           onReexpand: _reexpandTheme,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.s4),
                       ],
                       Expanded(
-                        child: Center(
-                          child: ValueListenableBuilder<String>(
-                            valueListenable: _skins.activeSkinId,
-                            builder: (context, id, _) => TileSkinScope(
-                              skin: TileSkin.byId(id),
-                              child: GameBoard(controller: _board),
-                            ),
-                          ),
+                        child: ValueListenableBuilder<String>(
+                          valueListenable: _skins.activeSkinId,
+                          builder: (context, id, _) {
+                            final skin = TileSkin.byId(id);
+                            return SkinBackground(
+                              skin: skin,
+                              child: TileSkinScope(
+                                skin: skin,
+                                child: Column(
+                                  children: [
+                                    KnownLettersStrip(keyStates: _keyStates),
+                                    Expanded(
+                                      child: ResponsiveGameBoard(
+                                        controller: _board,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -310,15 +354,28 @@ class _PracticePlayViewState extends State<PracticePlayView> {
                   ),
                 ),
                 if (state.phase != PracticePhase.playing)
-                  PracticeOverlay(
-                    solved: state.phase == PracticePhase.solved,
-                    tier: state.tier,
-                    reward: state.reward,
-                    answer: state.answer,
-                    definition: state.answerDefinition,
-                    onAgain: _cubit.again,
-                    onNextTier: isHardest ? null : _cubit.nextTier,
-                    onBack: () => context.pop(),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: sl<RewardGateway>()
+                        .isReady(RewardedPlacement.practiceExtra),
+                    builder: (context, adReady, _) {
+                      final mode = _cubit.nextRoundIsFree
+                          ? PracticeRoundMode.free
+                          : (adReady
+                              ? PracticeRoundMode.ad
+                              : PracticeRoundMode.exhausted);
+                      return PracticeOverlay(
+                        solved: state.phase == PracticePhase.solved,
+                        tier: state.tier,
+                        reward: state.reward,
+                        answer: state.answer,
+                        definition: state.answerDefinition,
+                        mode: mode,
+                        onAgain: () => _again(mode),
+                        onNextTier:
+                            isHardest ? null : () => _nextTier(mode),
+                        onBack: () => context.pop(),
+                      );
+                    },
                   ),
                 ConfettiOverlay(trigger: _confetti),
               ],
@@ -334,11 +391,13 @@ class _Header extends StatelessWidget {
   const _Header({
     required this.coins,
     required this.onBack,
+    required this.onRules,
     required this.onHint,
   });
 
   final ValueListenable<int> coins;
   final VoidCallback onBack;
+  final VoidCallback onRules;
   final VoidCallback? onHint;
 
   @override
@@ -350,6 +409,13 @@ class _Header extends StatelessWidget {
           AppIconButton(icon: AppIcons.back, onPressed: onBack),
           const Spacer(),
           CoinChip(balance: coins),
+          const SizedBox(width: 8),
+          // Rules (?) consolidated into the top bar alongside the hint (WS3).
+          AppIconButton(
+            icon: AppIcons.help,
+            onPressed: onRules,
+            tooltip: LocaleKeys.commonRules.tr(),
+          ),
           if (onHint != null) ...[
             const SizedBox(width: 8),
             AppIconButton(

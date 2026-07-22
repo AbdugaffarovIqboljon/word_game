@@ -2,8 +2,27 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/app_colors.dart';
 
-/// The skinnable colors of a board tile — only the correct/present states change
-/// with a skin; empty/typing/absent stay on the base palette.
+/// The procedural board-area ambiance a skin paints behind the grid (WS4).
+/// Rendered by `SkinPatternPainter`; kept as a plain enum so [TileSkin] stays a
+/// pure data class with no widget/paint dependencies.
+enum SkinPattern {
+  /// Standart — no ambiance.
+  none,
+
+  /// Milliy — a girih-style interlaced geometric lattice.
+  girih,
+
+  /// Neon — a faint orthogonal grid glow.
+  neonGrid,
+
+  /// Oltin — a soft radial shimmer with corner flourishes.
+  oltinShimmer,
+}
+
+/// The full visual identity of a skin (WS4): the skinnable tile colors (only
+/// correct/present change — empty/typing/absent stay on the base palette), plus
+/// the board-area [pattern] and the [accent] tint used on the context header
+/// chip and the Mashq pill.
 class TileSkin {
   const TileSkin({
     required this.id,
@@ -11,6 +30,8 @@ class TileSkin {
     required this.onCorrect,
     required this.present,
     required this.onPresent,
+    this.pattern = SkinPattern.none,
+    this.accent = AppColors.textSub,
   });
 
   final String id;
@@ -18,6 +39,13 @@ class TileSkin {
   final Color onCorrect;
   final Color present;
   final Color onPresent;
+
+  /// Procedural background painted behind the board for this skin.
+  final SkinPattern pattern;
+
+  /// Ambient accent applied to the context header chip and Mashq pill. Standart
+  /// keeps the neutral default so it reads unchanged.
+  final Color accent;
 
   static const standart = TileSkin(
     id: 'standart',
@@ -35,6 +63,8 @@ class TileSkin {
       onCorrect: AppColors.white,
       present: Color(0xFFC77B4E),
       onPresent: AppColors.bg,
+      pattern: SkinPattern.girih,
+      accent: Color(0xFF3FB0A6),
     ),
     'neon': TileSkin(
       id: 'neon',
@@ -42,6 +72,8 @@ class TileSkin {
       onCorrect: AppColors.bg,
       present: Color(0xFF7BC8FF),
       onPresent: AppColors.bg,
+      pattern: SkinPattern.neonGrid,
+      accent: Color(0xFF2BE38A),
     ),
     'oltin': TileSkin(
       id: 'oltin',
@@ -49,6 +81,8 @@ class TileSkin {
       onCorrect: AppColors.onGold,
       present: Color(0xFFC2952B),
       onPresent: AppColors.bg,
+      pattern: SkinPattern.oltinShimmer,
+      accent: AppColors.goldBright,
     ),
   };
 

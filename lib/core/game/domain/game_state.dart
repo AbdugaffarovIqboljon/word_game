@@ -24,7 +24,6 @@ class GameState extends Equatable {
     required this.maxAttempts,
     this.lockedPrefix = const [],
     this.lockedPositions = const {},
-    this.prefillPositions = const {},
   });
 
   /// Pre-load state: no answer, nothing playable.
@@ -34,8 +33,7 @@ class GameState extends Equatable {
       input = const [],
       status = GameStatus.idle,
       lockedPrefix = const [],
-      lockedPositions = const {},
-      prefillPositions = const {};
+      lockedPositions = const {};
 
   /// A fresh, playable puzzle for [answer].
   ///
@@ -57,13 +55,12 @@ class GameState extends Equatable {
     return GameState(
       answer: answer,
       guesses: const [],
-      input: _seedInput(wordLength, locked, const {}),
+      input: _seedInput(wordLength, locked),
       status: GameStatus.playing,
       wordLength: wordLength,
       maxAttempts: maxAttempts,
       lockedPrefix: lockedPrefix,
       lockedPositions: locked,
-      prefillPositions: const {},
     );
   }
 
@@ -80,13 +77,12 @@ class GameState extends Equatable {
   /// Board positions whose letter is fixed and non-editable: the WS4
   /// [lockedPrefix] plus, for modes that opt into [submitWithCarryForward], any
   /// position found `correct` in a prior guess. Never shrinks once set.
+  ///
+  /// Only `correct` (green) letters ever carry forward into a tile. `present`
+  /// (amber) letters are deliberately NOT pre-filled — placing them at a guessed
+  /// position was semantically wrong; they surface in the "known letters" strip
+  /// above the board instead (derived from [keyboardStates]).
   final Map<int, LogicalLetter> lockedPositions;
-
-  /// Board positions pre-filled with a convenience suggestion (a `present`
-  /// letter from the last guess, carried into the same position) that the user
-  /// may freely overwrite or delete. Only populated by [submitWithCarryForward];
-  /// replaced wholesale on every such submit (never accumulated).
-  final Map<int, LogicalLetter> prefillPositions;
 
   int get currentAttempt => guesses.length;
   int get remainingAttempts => maxAttempts - guesses.length;
@@ -116,8 +112,8 @@ class GameState extends Equatable {
   }
 
   /// Appends a letter to the current row if there is space and play is active.
-  /// Any position immediately following (locked or pre-filled) is auto-included
-  /// too, so [input] always stays a contiguous prefix and its length always
+  /// Any locked position immediately following is auto-included too, so [input]
+  /// always stays a contiguous prefix and its length always
   /// equals the next genuinely-empty column — the invariant [HintEngine] relies
   /// on when picking the next reveal-letter position.
   GameState addLetter(LogicalLetter letter) {
@@ -125,7 +121,7 @@ class GameState extends Equatable {
     final next = [...input, letter];
     var i = next.length;
     while (i < wordLength) {
-      final carried = lockedPositions[i] ?? prefillPositions[i];
+      final carried = lockedPositions[i];
       if (carried == null) break;
       next.add(carried);
       i++;
@@ -148,24 +144,25 @@ class GameState extends Equatable {
   }
 
   /// Evaluates and commits the current row. Caller must ensure the row is full
-  /// and the word is valid; a no-op otherwise. [lockedPositions] and
-  /// [prefillPositions] carry over unchanged — the next row is re-staged with
-  /// them exactly as before. Use [submitWithCarryForward] to also grow them
-  /// from this guess's result (WS-carry-forward).
+  /// and the word is valid; a no-op otherwise. [lockedPositions] carry over
+  /// unchanged — the next row is re-staged with them exactly as before. Use
+  /// [submitWithCarryForward] to also grow them from this guess's `correct`
+  /// letters (WS-carry-forward).
   GameState submit() => _submit(carryForward: false);
 
   /// Same as [submit], but also grows [lockedPositions] with any newly
-  /// `correct` letter from this guess and replaces [prefillPositions] with this
-  /// guess's `present` letters (skipping any position that is now locked), then
-  /// re-stages the next row with both. Domain-only: scoring itself is untouched.
+  /// `correct` (green) letter from this guess, then re-stages the next row with
+  /// them. `present` (amber) letters are never pre-filled — they surface in the
+  /// known-letters strip instead. Domain-only: scoring itself is untouched.
   GameState submitWithCarryForward() => _submit(carryForward: true);
 
   /// Commits externally-evaluated [results] instead of running the local
   /// [GuessEvaluator] — for modes (daily) whose scoring is authoritative
   /// server-side. Otherwise identical to [submitWithCarryForward]: grows
-  /// [lockedPositions]/[prefillPositions] the same way. [revealedAnswer]
-  /// optionally sets the real word once the server has revealed it (win or a
-  /// granted final-attempt reveal); omitted/null leaves [answer] unchanged.
+  /// [lockedPositions] with this guess's `correct` letters (amber letters are
+  /// never pre-filled). [revealedAnswer] optionally sets the real word once the
+  /// server has revealed it (win or a granted final-attempt reveal);
+  /// omitted/null leaves [answer] unchanged.
   GameState submitWithServerResults(
     List<LetterResult> results, {
     List<LogicalLetter>? revealedAnswer,
@@ -176,26 +173,20 @@ class GameState extends Equatable {
     final lost = !won && nextGuesses.length >= maxAttempts;
 
     final locked = Map<int, LogicalLetter>.of(lockedPositions);
-    final prefill = <int, LogicalLetter>{};
     for (var i = 0; i < results.length; i++) {
-      if (results[i] == LetterResult.correct) {
-        locked[i] = input[i];
-      } else if (results[i] == LetterResult.present && !locked.containsKey(i)) {
-        prefill[i] = input[i];
-      }
+      if (results[i] == LetterResult.correct) locked[i] = input[i];
     }
 
     return copyWith(
       answer: revealedAnswer ?? answer,
       guesses: nextGuesses,
-      input: _seedInput(wordLength, locked, prefill),
+      input: _seedInput(wordLength, locked),
       status: won
           ? GameStatus.won
           : lost
               ? GameStatus.lost
               : GameStatus.playing,
       lockedPositions: locked,
-      prefillPositions: prefill,
     );
   }
 
@@ -210,47 +201,36 @@ class GameState extends Equatable {
     final lost = !won && nextGuesses.length >= maxAttempts;
 
     var nextLocked = lockedPositions;
-    var nextPrefill = prefillPositions;
     if (carryForward) {
       final locked = Map<int, LogicalLetter>.of(lockedPositions);
-      final prefill = <int, LogicalLetter>{};
       for (var i = 0; i < results.length; i++) {
-        if (results[i] == LetterResult.correct) {
-          locked[i] = input[i];
-        } else if (results[i] == LetterResult.present &&
-            !locked.containsKey(i)) {
-          prefill[i] = input[i];
-        }
+        if (results[i] == LetterResult.correct) locked[i] = input[i];
       }
       nextLocked = locked;
-      nextPrefill = prefill;
     }
 
     return copyWith(
       guesses: nextGuesses,
-      input: _seedInput(wordLength, nextLocked, nextPrefill),
+      input: _seedInput(wordLength, nextLocked),
       status: won
           ? GameStatus.won
           : lost
           ? GameStatus.lost
           : GameStatus.playing,
       lockedPositions: nextLocked,
-      prefillPositions: nextPrefill,
     );
   }
 
-  /// Builds the leading contiguous run of a fresh row: locked and pre-filled
-  /// letters starting at column 0, stopping at the first genuinely-empty
-  /// editable column (see [addLetter]/[removeLetter] for why this must stay
-  /// contiguous).
+  /// Builds the leading contiguous run of a fresh row: locked letters starting
+  /// at column 0, stopping at the first genuinely-empty editable column (see
+  /// [addLetter]/[removeLetter] for why this must stay contiguous).
   static List<LogicalLetter> _seedInput(
     int wordLength,
     Map<int, LogicalLetter> locked,
-    Map<int, LogicalLetter> prefill,
   ) {
     final seeded = <LogicalLetter>[];
     for (var i = 0; i < wordLength; i++) {
-      final letter = locked[i] ?? prefill[i];
+      final letter = locked[i];
       if (letter == null) break;
       seeded.add(letter);
     }
@@ -266,7 +246,6 @@ class GameState extends Equatable {
     int? maxAttempts,
     List<LogicalLetter>? lockedPrefix,
     Map<int, LogicalLetter>? lockedPositions,
-    Map<int, LogicalLetter>? prefillPositions,
   }) => GameState(
     answer: answer ?? this.answer,
     guesses: guesses ?? this.guesses,
@@ -276,7 +255,6 @@ class GameState extends Equatable {
     maxAttempts: maxAttempts ?? this.maxAttempts,
     lockedPrefix: lockedPrefix ?? this.lockedPrefix,
     lockedPositions: lockedPositions ?? this.lockedPositions,
-    prefillPositions: prefillPositions ?? this.prefillPositions,
   );
 
   @override
@@ -289,6 +267,5 @@ class GameState extends Equatable {
     maxAttempts,
     lockedPrefix,
     lockedPositions,
-    prefillPositions,
   ];
 }

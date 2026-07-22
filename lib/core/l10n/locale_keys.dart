@@ -19,6 +19,8 @@ abstract final class LocaleKeys {
   static const commonRules = 'common.rules';
   static const commonRetry = 'common.retry';
 
+  static const gameKnownLettersLabel = 'game.known_letters_label';
+
   static const onboardingWelcomeTagline = 'onboarding.welcome_tagline';
   static const onboardingRulesTitle = 'onboarding.rules_title';
   static const onboardingRuleCorrect = 'onboarding.rule_correct';
@@ -26,6 +28,7 @@ abstract final class LocaleKeys {
   static const onboardingRuleAbsent = 'onboarding.rule_absent';
   static const onboardingFirstLetterHint = 'onboarding.first_letter_hint';
   static const onboardingThemeHintRule = 'onboarding.theme_hint_rule';
+  static const onboardingKnownLettersRule = 'onboarding.known_letters_rule';
   static const onboardingTryTitle = 'onboarding.try_title';
   static const onboardingTryCoachmark = 'onboarding.try_coachmark';
 
@@ -100,6 +103,10 @@ abstract final class LocaleKeys {
   static const practiceFailedOverlay = 'practice.failed_overlay';
   static const practiceThemeHint = 'practice.theme_hint';
   static const practiceThemeInsufficient = 'practice.theme_insufficient';
+  static const practiceFreeRemaining = 'practice.free_remaining';
+  static const practiceUnlimited = 'practice.unlimited';
+  static const practiceWatchExtra = 'practice.watch_extra';
+  static const practiceRoundsExhausted = 'practice.rounds_exhausted';
 
   static const hintTitle = 'hint.title';
   static const hintRevealName = 'hint.reveal_name';

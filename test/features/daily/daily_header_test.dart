@@ -7,8 +7,8 @@ import 'package:word_game/features/daily/presentation/widgets/daily_header.dart'
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-  testWidgets('DailyHeader packs 3 chips + 3 icon buttons at 360px with no '
-      'overflow, even with large values (mandate B10)', (tester) async {
+  testWidgets('DailyHeader packs 3 chips + 5 icon buttons at 360px with no '
+      'overflow, even with large values (WS3, mandate B10)', (tester) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -34,6 +34,8 @@ void main() {
                 onShop: () {},
                 onStats: () {},
                 onChest: () {},
+                onRules: () {},
+                onHint: () {},
                 onSettings: () {},
               ),
             ),
@@ -43,12 +45,13 @@ void main() {
     );
     await tester.pump();
 
-    // No RenderFlex overflow, and the three nav icon buttons are all present
-    // (hint moved off the app bar into the board context header).
+    // No RenderFlex overflow, and all five nav icon buttons are present —
+    // rules (?) and hint (💡) consolidated into the app bar (WS3).
     expect(tester.takeException(), isNull);
     expect(find.byIcon(AppIcons.stats), findsOneWidget);
     expect(find.byIcon(AppIcons.gift), findsOneWidget);
+    expect(find.byIcon(AppIcons.help), findsOneWidget);
+    expect(find.byIcon(AppIcons.hint), findsOneWidget);
     expect(find.byIcon(AppIcons.settings), findsOneWidget);
-    expect(find.byIcon(AppIcons.hint), findsNothing);
   });
 }

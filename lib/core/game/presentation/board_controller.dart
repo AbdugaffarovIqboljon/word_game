@@ -98,33 +98,24 @@ class BoardController {
   /// row is past the board — after the final guess `currentRow` equals [rows].
   /// Locked-prefix columns always render as their green letter (WS4).
   ///
-  /// [lockedPositions] (carry-forward greens, WS-carry-forward) and
-  /// [prefillPositions] (carry-forward yellows) render independently of
-  /// [letters]' length — so a lock/pre-fill ahead of the typing cursor is still
-  /// visible before the user has typed up to it. A resolved column (already in
-  /// [letters]) that still matches its original pre-fill suggestion keeps the
-  /// pre-fill look; once the user overwrites it with something else it renders
-  /// as a normal typed tile.
+  /// [lockedPositions] (carry-forward greens) render independently of [letters]'
+  /// length — so a lock ahead of the typing cursor is still visible before the
+  /// user has typed up to it. `present` (amber) letters are never pre-filled
+  /// into tiles; they surface in the known-letters strip above the board.
   void setInput(
     int row,
     List<LogicalLetter> letters, {
     Map<int, LogicalLetter> lockedPositions = const {},
-    Map<int, LogicalLetter> prefillPositions = const {},
   }) {
     if (row < 0 || row >= rows) return;
     for (var c = 0; c < columns; c++) {
       final locked = lockedPositions[c];
-      final prefill = prefillPositions[c];
       if (c < _prefixLen) {
         tiles[row][c].value = _lockedTile(c);
       } else if (locked != null) {
         tiles[row][c].value = TileData(letter: locked.glyph, state: TileState.correct);
-      } else if (c < letters.length && prefill != null && letters[c] == prefill) {
-        tiles[row][c].value = TileData(letter: prefill.glyph, state: TileState.prefill);
       } else if (c < letters.length) {
         tiles[row][c].value = TileData(letter: letters[c].glyph, state: TileState.typing);
-      } else if (prefill != null) {
-        tiles[row][c].value = TileData(letter: prefill.glyph, state: TileState.prefill);
       } else {
         tiles[row][c].value = const TileData.empty();
       }

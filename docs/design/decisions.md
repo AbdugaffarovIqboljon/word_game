@@ -123,3 +123,46 @@ tokens, navigation, and disputed values.
 - Compound keys render identically to regular letter keys in every state
   (`default` = `#3A4A6B` fill, no border). They are distinguished by their
   two-character labels alone.
+
+## 11. UX refinement pass (WS1–WS6)
+
+New RC tunables (defaults in `game_config.dart`, keyed in `tunables`):
+`practice_free_rounds_per_day` = 3, `reward_dialog_auto_close_ms` = 1600.
+New rewarded placement `sj_practice_extra` (`RewardedPlacement.practiceExtra`).
+
+- **WS1 — Practice monetization ladder.** Non-pro users get
+  `practice_free_rounds_per_day` free rounds per **Tashkent day** (counted by
+  `PracticeSession.started`, which resets with the date key). Once spent, the
+  hub tier buttons and the post-round "Yana"/"Keyingi daraja" CTAs become a
+  rewarded-ad offer (`sj_practice_extra`) granting exactly one extra round per
+  view; on no-fill they show a come-back-tomorrow message instead. An
+  ad-granted round never also fires the every-Nth interstitial. Pro
+  (`remove_ads`) = unlimited rounds, no interstitials, "Cheksiz" hub badge. The
+  hub shows remaining free rounds ("Bugun: N/3").
+- **WS2 — Carry-forward rule.** The next row is pre-filled with **only locked
+  green letters at their confirmed positions** (plus the revealed first
+  letter). `present` (amber) letters are **never** placed in tiles; they surface
+  in a compact "known letters" strip above the board ("Soʻzda bor:" + amber
+  chips, deduped, alphabet order), shown only while unplaced ambers exist and
+  updating after each guess (a letter leaves the strip once it turns green).
+  Derived from `keyboardStates`; identical in daily/practice/bonus. The
+  `prefillPositions`/`TileState.prefill` machinery is removed.
+- **WS3 — Header consolidation.** The rules (?) and hint (💡) icon buttons live
+  in the top app bar (daily order: stats · gift · ? · 💡 · settings), not the
+  context header. The daily context header is content-only (title/date/subtitle
+  + skin-accent chip). Practice/bonus carry ? and 💡 in their top bars too.
+- **WS4 — Board width.** The board fills the available width with a side padding
+  of `space-4` (16) at 360px and `space-6` (24) at ≥390px, tiles scaling up to
+  fill (square, 6px gaps, capped at 64px) and additionally capped by available
+  height so the keyboard always fits (`ResponsiveGameBoard`).
+- **WS5 — Skin pattern.** Shop previews are a fixed-aspect two-row mini-board
+  clipped to the card's rounded rect. In game, the skin pattern layer is a
+  bounded, `RepaintBoundary`-wrapped box behind the board region (known-letters
+  strip + board), clipped, resizing with the WS4 board — never bleeding under
+  header/keyboard.
+- **WS6 — Reward dialogs.** The reward-granted and chest-opened dialogs have no
+  "Oldim" button: reward is credited immediately, the dialog plays the
+  coin count-up, then auto-dismisses after `reward_dialog_auto_close_ms`; a tap
+  anywhere dismisses early. The chest ×2 offer keeps its ×2 button and
+  auto-closes after 4s if untouched (tap-outside also dismisses); after a ×2 ad
+  completes it credits and auto-closes with no extra confirmation.

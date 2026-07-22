@@ -8,13 +8,16 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
 import '../../../core/game/presentation/board_controller.dart';
+import '../../../core/game/presentation/skin_background.dart';
 import '../../../core/game/presentation/tile_skin.dart';
-import '../../../core/game/presentation/widgets/game_board.dart';
 import '../../../core/game/presentation/widgets/game_keyboard.dart';
 import '../../../core/game/presentation/widgets/invalid_word_toast.dart';
+import '../../../core/game/presentation/widgets/known_letters_strip.dart';
+import '../../../core/game/presentation/widgets/responsive_game_board.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/app_haptics.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/time/game_clock.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/confetti_overlay.dart';
@@ -41,6 +44,7 @@ import '../data/daily_chest_repository.dart';
 import '../domain/daily_share_data.dart';
 import 'daily_cubit.dart';
 import 'daily_state.dart';
+import 'first_run_overlay_coordinator.dart';
 import 'widgets/chest_dialog.dart';
 import 'widgets/daily_context_header.dart';
 import 'widgets/daily_header.dart';
@@ -73,12 +77,6 @@ class DailyView extends StatefulWidget {
 }
 
 class _DailyViewState extends State<DailyView> {
-  // Single source of truth for the board's tile geometry, shared by
-  // [GameBoard] and the spotlight tour so its board step targets the exact
-  // rendered board rect.
-  static const double _tileSize = 56;
-  static const double _gap = 6;
-
   late final DailyCubit _cubit = context.read<DailyCubit>();
   late final BoardController _board = BoardController(
     rows: _cubit.maxAttempts,
@@ -107,11 +105,22 @@ class _DailyViewState extends State<DailyView> {
   late final SpotlightTourController _tourController =
       SpotlightTourController(stepCount: DailyTourStep.values.length);
 
+  // Sequences first-run surfaces (WS3): the rules/coach flow runs first, then
+  // and only then does the theme-hint free auto-show become eligible.
+  final FirstRunOverlayCoordinator _overlay = FirstRunOverlayCoordinator();
+  static const Object _rulesSurface = 'rules';
+  static const Object _tourSurface = 'tour';
+  bool _sealedOverlays = false;
+
   bool _resultAdShown = false;
   bool _showNotifPrompt = false;
   DailyPhase? _reminderPhase;
   DailyPhase? _prevPhase;
   bool _celebrating = false;
+  // Last observed one-shot celebration signal (WS5). Seeded from the current
+  // state so a widget rebuild after the win never re-fires, and a restored
+  // solved board (signal unchanged) fires nothing.
+  int _lastCelebrate = 0;
 
   int _rendered = 0;
   bool _restored = false;
@@ -135,6 +144,7 @@ class _DailyViewState extends State<DailyView> {
     // current state now (frame 1), and run the full sync (dialogs, reminders,
     // interstitial) after the first frame is built.
     final s = _cubit.state;
+    _lastCelebrate = s.celebrateSignal;
     _restoreBoard(s);
     _keyStates.value = s.keyStates;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -157,8 +167,15 @@ class _DailyViewState extends State<DailyView> {
     final onboarding = sl<OnboardingRepository>();
     if (onboarding.hasSeenRules || onboarding.hasAutoShownRules) return;
     onboarding.markRulesAutoShown();
+    // Registered synchronously so seal() sees the blocker; the theme hint waits
+    // for the sheet to close (WS3).
+    _overlay.begin(_rulesSurface);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) showRulesSheet(context);
+      if (!mounted) {
+        _overlay.end(_rulesSurface);
+        return;
+      }
+      showRulesSheet(context).whenComplete(() => _overlay.end(_rulesSurface));
     });
   }
 
@@ -167,7 +184,6 @@ class _DailyViewState extends State<DailyView> {
       _cubit.currentRow,
       _cubit.input.value,
       lockedPositions: _cubit.lockedPositions,
-      prefillPositions: _cubit.prefillPositions,
     );
     _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
   }
@@ -181,14 +197,22 @@ class _DailyViewState extends State<DailyView> {
   /// shown — and persists so it never runs again.
   void _maybeStartTour(DailyState s) {
     if (s.phase != DailyPhase.playing || _onboarding.hasSeenDailyTour) return;
+    // Registered synchronously so the theme hint stays gated for the whole tour
+    // (WS3); ended when the tour finishes in [_onTourStep].
+    _overlay.begin(_tourSurface);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _tourController.start();
+      if (mounted) {
+        _tourController.start();
+      } else {
+        _overlay.end(_tourSurface);
+      }
     });
   }
 
   void _onTourStep() {
     if (_tourController.isActive) return;
     _onboarding.markDailyTourSeen();
+    _overlay.end(_tourSurface);
   }
 
   List<SpotlightStep> _buildTourSteps() {
@@ -234,7 +258,6 @@ class _DailyViewState extends State<DailyView> {
         _cubit.currentRow,
         _cubit.input.value,
         lockedPositions: _cubit.lockedPositions,
-        prefillPositions: _cubit.prefillPositions,
       );
       _board.setCursor(_cubit.currentRow, _cubit.input.value.length);
     }
@@ -252,6 +275,13 @@ class _DailyViewState extends State<DailyView> {
     if (!_checkedTour && s.phase != DailyPhase.loading) {
       _checkedTour = true;
       _maybeStartTour(s);
+    }
+    // The first-run queue is now fully populated (rules + tour decided): sealing
+    // releases the theme hint immediately when nothing was enqueued, or defers
+    // it until every registered surface has been dismissed (WS3).
+    if (!_sealedOverlays && s.phase != DailyPhase.loading) {
+      _sealedOverlays = true;
+      _overlay.seal();
     }
     _restoreBoard(s);
     if (_restored && s.guesses.length > _rendered) {
@@ -290,11 +320,13 @@ class _DailyViewState extends State<DailyView> {
       sl<RewardGateway>().showInterstitial(InterstitialPlacement.result);
     }
 
-    // Win/loss choreography: only on a fresh transition from playing (never on a
-    // restored, already-resolved board).
+    // Win/loss choreography. The win burst is driven by the cubit's one-shot
+    // celebration signal (WS5) — never inferred from the phase — so it fires
+    // exactly once on a fresh win and never on a restored, already-solved board.
     final freshResolution = _prevPhase == DailyPhase.playing &&
         (s.phase == DailyPhase.solved || s.phase == DailyPhase.failed);
-    if (_prevPhase == DailyPhase.playing && s.phase == DailyPhase.solved) {
+    if (s.celebrateSignal != _lastCelebrate) {
+      _lastCelebrate = s.celebrateSignal;
       _runWinChoreography(s);
     } else if (_prevPhase == DailyPhase.playing &&
         s.phase == DailyPhase.failed) {
@@ -363,10 +395,17 @@ class _DailyViewState extends State<DailyView> {
 
   /// "Yana yechish" bonus action (WS3): pro users start a bonus word; free users
   /// see it locked and tapping opens the shop's remove-ads hero (natural upsell).
-  Widget _bonusButton() => BonusButton(
-        isPro: sl<PurchasesRepository>().removeAds.value,
-        onPlay: () => context.pushNamed(AppRoutes.bonusName),
-        onUpsell: () => context.push(AppRoutes.shop),
+  ///
+  /// Bound to the entitlement listenable (WS1) so the moment a purchase is
+  /// fulfilled on the store's stream, the gold upsell swaps to "Yana yechish"
+  /// in place — no reload, no route re-entry.
+  Widget _bonusButton() => ValueListenableBuilder<bool>(
+        valueListenable: sl<PurchasesRepository>().removeAds,
+        builder: (context, isPro, _) => BonusButton(
+          isPro: isPro,
+          onPlay: () => context.pushNamed(AppRoutes.bonusName),
+          onUpsell: () => context.push(AppRoutes.shop),
+        ),
       );
 
   /// Daily rollover: rebuild for the new puzzle date without an app restart.
@@ -380,6 +419,9 @@ class _DailyViewState extends State<DailyView> {
       _reminderPhase = null;
       _prevPhase = null;
       _celebrating = false;
+      // load() re-emits a fresh state whose celebrateSignal restarts at 0, so
+      // realign the baseline or the new day's win would be missed / mis-fired.
+      _lastCelebrate = 0;
     });
     _cubit.load();
   }
@@ -406,6 +448,7 @@ class _DailyViewState extends State<DailyView> {
     _cubit.input.removeListener(_onInput);
     _tourController.removeListener(_onTourStep);
     _tourController.dispose();
+    _overlay.dispose();
     _board.dispose();
     _keyStates.dispose();
     _confetti.dispose();
@@ -443,6 +486,12 @@ class _DailyViewState extends State<DailyView> {
                         onShop: () => context.push(AppRoutes.shop),
                         onStats: () => context.push(AppRoutes.stats),
                         onChest: _openChest,
+                        onRules: () => showRulesSheet(context),
+                        onHint: state.phase == DailyPhase.playing
+                            ? _openHint
+                            : null,
+                        rulesButtonKey: _helpKey,
+                        hintButtonKey: _hintKey,
                         onSettings: () => context.push(AppRoutes.settings),
                       ),
                       Expanded(child: _body(state)),
@@ -577,7 +626,7 @@ class _DailyViewState extends State<DailyView> {
         return const Center(child: CircularProgressIndicator());
       case DailyPhase.solved:
         // Hold the board during the win choreography, then reveal the recap.
-        if (_celebrating) return _playingBoard(state, interactive: false);
+        if (_celebrating) return _playingBoard(state);
         return SolvedRecap(
           guesses: state.guesses,
           attemptsUsed: state.attemptsUsed,
@@ -601,26 +650,24 @@ class _DailyViewState extends State<DailyView> {
           bonusAction: _bonusButton(),
         );
       case DailyPhase.playing:
-        return _playingBoard(state, interactive: true);
+        return _playingBoard(state);
     }
   }
 
-  Widget _playingBoard(DailyState state, {required bool interactive}) {
+  Widget _playingBoard(DailyState state) {
     return Column(
       children: [
         const SizedBox(height: 8),
-        DailyContextHeader(
-          puzzleNumber: state.puzzleNumber,
-          date: _cubit.today,
-          onRules: () => showRulesSheet(context),
-          onHint: interactive && state.phase == DailyPhase.playing
-              ? _openHint
-              : null,
-          rulesButtonKey: _helpKey,
-          hintButtonKey: _hintKey,
+        ValueListenableBuilder<String>(
+          valueListenable: _skins.activeSkinId,
+          builder: (context, id, _) => DailyContextHeader(
+            puzzleNumber: state.puzzleNumber,
+            date: _cubit.today,
+            accent: TileSkin.byId(id).accent,
+          ),
         ),
         if (state.theme != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s3),
           PracticeThemeBanner(
             theme: state.theme,
             roundNonce: state.puzzleNumber,
@@ -631,29 +678,47 @@ class _DailyViewState extends State<DailyView> {
             // — a restored board (app restart) starts collapsed as the chip.
             autoShow: !_cubit.themeHintAlreadyShown,
             onAutoShown: _cubit.markThemeHintShown,
+            // Deferred behind the first-run rules/coach flow (WS3).
+            autoShowGate: _overlay.themeHintReady,
             onReexpand: _reexpandTheme,
           ),
         ],
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s4),
         Expanded(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ValueListenableBuilder<String>(
-              valueListenable: _skins.activeSkinId,
-              builder: (context, id, _) => TileSkinScope(
-                skin: TileSkin.byId(id),
-                child: GameBoard(
-                  key: _boardKey,
-                  controller: _board,
-                  tileSize: _tileSize,
-                  gap: _gap,
+          child: ValueListenableBuilder<String>(
+            valueListenable: _skins.activeSkinId,
+            builder: (context, id, _) {
+              final skin = TileSkin.byId(id);
+              // The skin pattern covers the whole board region — the known-
+              // letters strip and the board — clipped to this box (WS5).
+              return SkinBackground(
+                skin: skin,
+                child: TileSkinScope(
+                  skin: skin,
+                  child: Column(
+                    children: [
+                      KnownLettersStrip(keyStates: _keyStates),
+                      Expanded(
+                        child: ResponsiveGameBoard(
+                          controller: _board,
+                          boardKey: _boardKey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
-        MashqPill(
-            key: _mashqPillKey, onTap: () => context.push(AppRoutes.practice)),
+        ValueListenableBuilder<String>(
+          valueListenable: _skins.activeSkinId,
+          builder: (context, id, _) => MashqPill(
+            key: _mashqPillKey,
+            accent: TileSkin.byId(id).accent,
+            onTap: () => context.push(AppRoutes.practice),
+          ),
+        ),
         const SizedBox(height: 12),
         GameKeyboard(
           keyStates: _keyStates,

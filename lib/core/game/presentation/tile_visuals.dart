@@ -39,5 +39,4 @@ TileVisuals tileVisualsFor(TileState state, {TileSkin skin = TileSkin.standart})
       ),
       TileState.present => TileVisuals(skin.present, null, skin.onPresent),
       TileState.correct => TileVisuals(skin.correct, null, skin.onCorrect),
-      TileState.prefill => TileVisuals(skin.present, null, skin.onPresent),
     };

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -66,33 +68,69 @@ class _ChestDialog extends StatefulWidget {
 }
 
 class _ChestDialogState extends State<_ChestDialog> {
+  /// The chest ×2 offer window before the opened dialog auto-closes (WS6).
+  static const Duration _offerWindow = Duration(seconds: 4);
+
   /// Already claimed today when the dialog opened → straight to the locked state.
   late final bool _claimedBefore = widget.chestRepo.isClaimed(widget.today);
   bool _opened = false;
   bool _doubled = false;
 
+  /// Auto-dismiss timer for the opened state (WS6): 4s while the ×2 offer is
+  /// live, then the short reward-dialog window once doubled. Cancelled whenever
+  /// the user engages the ×2 flow so the dialog can't vanish mid-decision.
+  Timer? _autoClose;
+
   int get _reward => widget.config.dailyChestReward;
+
+  @override
+  void dispose() {
+    _autoClose?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleAutoClose(Duration after) {
+    _autoClose?.cancel();
+    _autoClose = Timer(after, () {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
 
   Future<void> _open() async {
     // Guard: never credit twice for the same day, even on a double-tap.
     if (widget.chestRepo.isClaimed(widget.today)) return;
     await widget.wallet.creditCoins(_reward, reason: 'daily_chest');
     await widget.chestRepo.markClaimed(widget.today);
-    if (mounted) setState(() => _opened = true);
+    if (!mounted) return;
+    setState(() => _opened = true);
+    // Give the player the ×2 offer window before auto-dismissing.
+    _scheduleAutoClose(_offerWindow);
   }
 
   Future<void> _double() async {
+    // The player engaged the ×2 flow — hold the dialog open through the ad.
+    _autoClose?.cancel();
     final watch = await showRewardedAdOffer(context, coins: _reward);
-    if (watch != true || !mounted) return;
+    if (watch != true) {
+      // Declined the offer: resume the auto-close window.
+      if (mounted && !_doubled) _scheduleAutoClose(_offerWindow);
+      return;
+    }
     final earned =
         await widget.rewardGateway.showRewardedAd(RewardedPlacement.chestDouble);
-    if (!earned || !mounted) return;
-    // Credit the extra reward to make it ×2.
-    await widget.wallet.creditCoins(_reward, reason: 'daily_chest_double');
-    if (mounted) {
-      setState(() => _doubled = true);
-      await showRewardGranted(context, amount: _reward);
+    if (!mounted) return;
+    if (!earned) {
+      if (!_doubled) _scheduleAutoClose(_offerWindow);
+      return;
     }
+    // Credit the extra reward to make it ×2, show the doubled amount, then
+    // auto-close — no extra confirmation dialog (WS6).
+    await widget.wallet.creditCoins(_reward, reason: 'daily_chest_double');
+    if (!mounted) return;
+    setState(() => _doubled = true);
+    _scheduleAutoClose(
+      Duration(milliseconds: widget.config.rewardDialogAutoCloseMs),
+    );
   }
 
   @override
@@ -172,34 +210,23 @@ class _ChestDialogState extends State<_ChestDialog> {
         Text(LocaleKeys.dialogChestOpened.tr(), style: AppTextStyles.body),
         const SizedBox(height: 20),
         // The ×2 offer hides itself when no rewarded ad is loaded (no fill).
+        // No "Oldim" button — the dialog auto-closes (WS6); tap outside to
+        // dismiss early.
         if (!_doubled)
           ValueListenableBuilder<bool>(
             valueListenable:
                 widget.rewardGateway.isReady(RewardedPlacement.chestDouble),
             builder: (context, ready, _) {
               if (!ready) return const SizedBox.shrink();
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PrimaryButton(
-                    label:
-                        '${LocaleKeys.dialogChestDoubleCta.tr()}  ${LocaleKeys.dialogChestDoubleTitle.tr()}',
-                    icon: AppIcons.watchAd,
-                    height: 52,
-                    onPressed: _double,
-                  ),
-                  const SizedBox(height: 10),
-                ],
+              return PrimaryButton(
+                label:
+                    '${LocaleKeys.dialogChestDoubleCta.tr()}  ${LocaleKeys.dialogChestDoubleTitle.tr()}',
+                icon: AppIcons.watchAd,
+                height: 52,
+                onPressed: _double,
               );
             },
           ),
-        SizedBox(
-          width: double.infinity,
-          child: SecondaryButton(
-            label: LocaleKeys.dialogChestClaimed.tr(),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
       ],
     );
   }

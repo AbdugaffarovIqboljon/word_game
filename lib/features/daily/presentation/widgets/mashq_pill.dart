@@ -7,14 +7,22 @@ import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
-/// Compact "Mashq" pill below the board → practice (decisions §2).
+/// Compact "Mashq" pill below the board → practice (decisions §2). Carries the
+/// active skin's [accent] tint on its icon and border (WS4); Standart passes the
+/// neutral default so it reads unchanged.
 class MashqPill extends StatelessWidget {
-  const MashqPill({required this.onTap, super.key});
+  const MashqPill({required this.onTap, this.accent, super.key});
 
   final VoidCallback onTap;
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
+    final tint = accent ?? AppColors.successBright;
+    final isNeutral = accent == null || accent == AppColors.textSub;
+    final iconColor = isNeutral ? AppColors.successBright : tint;
+    final borderColor =
+        isNeutral ? AppColors.border : tint.withValues(alpha: 0.5);
     return Material(
       color: AppColors.surface2,
       borderRadius: AppRadii.pillR,
@@ -25,12 +33,12 @@ class MashqPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: AppRadii.pillR,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(AppIcons.practice, size: 15, color: AppColors.successBright),
+              Icon(AppIcons.practice, size: 15, color: iconColor),
               const SizedBox(width: 7),
               Text(
                 LocaleKeys.dailyPracticePill.tr(),

@@ -30,18 +30,34 @@ class NextWordBox extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(AppIcons.clock, size: 15, color: AppColors.text3),
               const SizedBox(width: 6),
-              Text(LocaleKeys.dailyNextWordIn.tr(), style: AppTextStyles.caption),
+              // Flexible + ellipsis so the label can shrink instead of pushing
+              // the row past the card at large text scales (WS2).
+              Flexible(
+                child: Text(
+                  LocaleKeys.dailyNextWordIn.tr(),
+                  style: AppTextStyles.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 6),
-          CountdownText(
-            remaining: remaining,
-            onElapsed: onElapsed,
-            style: AppTextStyles.headline.copyWith(
-              fontSize: compact ? 24 : 32,
+          // The HH:MM:SS numerals are the widest element in the compact (half
+          // width) fail-view slot; scale them down to fit rather than overflow
+          // the card at 360px / fontScale 1.3 (WS2).
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: CountdownText(
+              remaining: remaining,
+              onElapsed: onElapsed,
+              style: AppTextStyles.headline.copyWith(
+                fontSize: compact ? 24 : 32,
+              ),
             ),
           ),
         ],

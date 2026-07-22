@@ -27,6 +27,7 @@ class DailyState extends Equatable {
     this.loadError = false,
     this.networkErrorSignal = 0,
     this.theme,
+    this.celebrateSignal = 0,
   });
 
   final DailyPhase phase;
@@ -57,6 +58,13 @@ class DailyState extends Equatable {
   /// Today's puzzle theme/category clue, or null when the puzzle has none.
   final String? theme;
 
+  /// One-shot celebration signal (WS5): bumped exactly once by the cubit when a
+  /// *fresh* win is committed, and never on a restored/already-solved board. The
+  /// UI fires the confetti/bounce choreography on each change, so the trigger is
+  /// an explicit state-machine event rather than something the widget infers
+  /// from a phase transition (which a rebuild could swallow).
+  final int celebrateSignal;
+
   int get attemptsUsed => guesses.length;
   bool get isTerminal =>
       phase == DailyPhase.solved || phase == DailyPhase.failed;
@@ -76,6 +84,7 @@ class DailyState extends Equatable {
     bool? loadError,
     int? networkErrorSignal,
     Object? theme = _keep,
+    int? celebrateSignal,
   }) => DailyState(
     phase: phase ?? this.phase,
     guesses: guesses ?? this.guesses,
@@ -93,6 +102,7 @@ class DailyState extends Equatable {
     loadError: loadError ?? this.loadError,
     networkErrorSignal: networkErrorSignal ?? this.networkErrorSignal,
     theme: theme == _keep ? this.theme : theme as String?,
+    celebrateSignal: celebrateSignal ?? this.celebrateSignal,
   );
 
   static const Object _keep = Object();
@@ -113,5 +123,6 @@ class DailyState extends Equatable {
     loadError,
     networkErrorSignal,
     theme,
+    celebrateSignal,
   ];
 }

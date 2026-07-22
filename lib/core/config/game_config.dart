@@ -78,6 +78,12 @@ class GameConfig {
   int get dailyChestReward => _int('daily_chest_reward', 80);
   int get dailyChestDoubleMultiplier => _int('daily_chest_double_multiplier', 2);
 
+  // ── Reward dialogs (WS6) ─────────────────────────────────────────────────
+  /// How long a reward-granted / chest-opened dialog stays up before it
+  /// auto-dismisses (a tap anywhere closes it early). The chest ×2 offer dialog
+  /// uses its own longer untouched-timeout, handled at the call site.
+  int get rewardDialogAutoCloseMs => _int('reward_dialog_auto_close_ms', 1600);
+
   // ── Bonus words (WS3: pro "Yana yechish" after the daily is finished) ───────
   int get bonusWordReward => _int('bonus_word_reward', 40);
 
@@ -88,6 +94,11 @@ class GameConfig {
     PracticeTier.hard => _int('practice_reward_hard', 35),
   };
   int get practiceInterstitialEvery => _int('practice_interstitial_every', 3);
+
+  /// Free practice rounds a non-pro user may start per Tashkent day (WS1). Once
+  /// exhausted, each further round is gated behind a rewarded ad
+  /// ([RewardedPlacement.practiceExtra]); pro (remove_ads) owners are unlimited.
+  int get practiceFreeRoundsPerDay => _int('practice_free_rounds_per_day', 3);
 
   // ── Streak & freeze ───────────────────────────────────────────────────────
   int get freezeSlots => _int('freeze_slots', 2);
@@ -150,11 +161,13 @@ class GameConfig {
     'rewarded_ad_coins': rewardedAdCoins,
     'daily_chest_reward': dailyChestReward,
     'daily_chest_double_multiplier': dailyChestDoubleMultiplier,
+    'reward_dialog_auto_close_ms': rewardDialogAutoCloseMs,
     'bonus_word_reward': bonusWordReward,
     'practice_reward_easy': practiceReward(PracticeTier.easy),
     'practice_reward_medium': practiceReward(PracticeTier.medium),
     'practice_reward_hard': practiceReward(PracticeTier.hard),
     'practice_interstitial_every': practiceInterstitialEvery,
+    'practice_free_rounds_per_day': practiceFreeRoundsPerDay,
     'freeze_slots': freezeSlots,
     'freeze_buy_price_coins': freezeBuyPriceCoins,
     'streak_repair_gem_price': streakRepairGemPrice,

@@ -89,11 +89,19 @@ class PrimaryButton extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  Text(
-                    label,
-                    style: AppTextStyles.bodyStrong.copyWith(
-                      fontSize: 16,
-                      color: enabled ? _onBrand : AppColors.disabledFg,
+                  // Ellipsis-clamped so a long label under a large text scale
+                  // shrinks within a constrained (e.g. half-width, in a Row)
+                  // button instead of overflowing it (WS2).
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyStrong.copyWith(
+                        fontSize: 16,
+                        color: enabled ? _onBrand : AppColors.disabledFg,
+                      ),
                     ),
                   ),
                 ],

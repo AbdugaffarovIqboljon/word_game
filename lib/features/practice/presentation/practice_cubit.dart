@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -99,10 +100,27 @@ class PracticeCubit extends Cubit<PracticeState> {
   /// 1-based round number within today's session (context header).
   int get sessionRound => _session.played + 1;
 
-  /// Begins a new round for [tier].
+  /// WS1: free practice rounds still available today. Pro (remove_ads) is
+  /// unlimited, reported as the full daily allotment.
+  int get freeRoundsRemaining => _removeAds
+      ? _config.practiceFreeRoundsPerDay
+      : (_config.practiceFreeRoundsPerDay - _session.started)
+          .clamp(0, _config.practiceFreeRoundsPerDay);
+
+  /// Whether the *next* round can begin without a rewarded ad (WS1).
+  bool get nextRoundIsFree =>
+      _removeAds || _session.started < _config.practiceFreeRoundsPerDay;
+
+  /// Pro entitlement (remove_ads) — unlimited rounds, no interstitials.
+  bool get isPro => _removeAds;
+
+  /// Begins a new round for [tier]. Counts a round start against today's
+  /// free-round allotment (WS1), persisting it immediately so the hub and the
+  /// post-round gate both see the up-to-date count.
   void start(PracticeTier tier) {
     _tier = tier;
-    _session = _repository.loadFor(_clock.puzzleDate());
+    _session = _repository.loadFor(_clock.puzzleDate()).recordStarted();
+    unawaited(_repository.save(_session));
     _hintOverrides.clear();
     input.value = const [];
 
@@ -195,15 +213,17 @@ class PracticeCubit extends Cubit<PracticeState> {
     }
   }
 
-  /// Play again at the same tier.
-  Future<void> again() async {
-    await _maybeInterstitial();
+  /// Play again at the same tier. [skipInterstitial] suppresses the every-Nth
+  /// interstitial for a round the player already paid for with a rewarded ad
+  /// (WS1) — never two ads back to back.
+  Future<void> again({bool skipInterstitial = false}) async {
+    if (!skipInterstitial) await _maybeInterstitial();
     start(_tier);
   }
 
   /// Advance to the next harder tier (capped at the hardest).
-  Future<void> nextTier() async {
-    await _maybeInterstitial();
+  Future<void> nextTier({bool skipInterstitial = false}) async {
+    if (!skipInterstitial) await _maybeInterstitial();
     final tiers = PracticeTier.values;
     final next = tiers[(_tier.index + 1).clamp(0, tiers.length - 1)];
     start(next);

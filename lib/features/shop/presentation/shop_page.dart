@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/env.dart';
 import '../../../core/config/game_config.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/game/presentation/skin_background.dart';
 import '../../../core/game/presentation/tile_skin.dart';
 import '../../../core/game/presentation/tile_state.dart';
 import '../../../core/game/presentation/tile_visuals.dart';
@@ -45,11 +46,9 @@ class _ShopPageState extends State<ShopPage> {
   // Purchases only INITIATE here — the gateway fulfills (credits wallet / sets
   // remove-ads) centrally on the store's purchase stream, so a pending purchase
   // that approves later still lands. Balances update reactively via the wallet
-  // notifiers; setState refreshes the entitlement-gated cards.
-  Future<void> _buyRemoveAds() async {
-    await _iap.buy(SkuIds.removeAds);
-    if (mounted) setState(() {});
-  }
+  // notifiers; the hero card binds to the entitlement listenable (WS1) so it
+  // flips to "owned" the instant fulfillment lands, even asynchronously.
+  Future<void> _buyRemoveAds() => _iap.buy(SkuIds.removeAds);
 
   Future<void> _buyGems(GemSku sku) => _iap.buy(sku.sku);
 
@@ -104,10 +103,13 @@ class _ShopPageState extends State<ShopPage> {
                   AppSpacing.s6,
                 ),
                 children: [
-                  HeroOfferCard(
-                    price: _config.removeAdsBundleUsd,
-                    owned: _purchases.removeAds.value,
-                    onBuy: _buyRemoveAds,
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _purchases.removeAds,
+                    builder: (context, owned, _) => HeroOfferCard(
+                      price: _config.removeAdsBundleUsd,
+                      owned: owned,
+                      onBuy: _buyRemoveAds,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.s6),
                   // One-time offer: hidden once owned (gated locally). Promoted
@@ -568,38 +570,103 @@ class SkinCard extends StatelessWidget {
   }
 }
 
-/// Live 5-tile preview of a skin's correct-state color, spelling "QALAM" (a
-/// real Uzbek word — pen) to match the board's tile width.
+/// Live ambiance preview of a skin (WS4): a mini two-row board — top row all
+/// `correct`, bottom row a present/absent mix — rendered over the skin's
+/// procedural board pattern, so buyers see the tiles, the pattern and the accent
+/// exactly as they appear in play. Top word spells "QALAM" (an Uzbek word — pen).
 class SkinPreviewRow extends StatelessWidget {
   const SkinPreviewRow({required this.skin, super.key});
 
   final TileSkin skin;
 
-  static const _letters = ['Q', 'A', 'L', 'A', 'M'];
+  static const _correctRow = ['Q', 'A', 'L', 'A', 'M'];
+  static const _mixedRow = [
+    ('S', TileState.present),
+    ('O', TileState.absent),
+    ('', TileState.empty),
+    ('Z', TileState.correct),
+    ('', TileState.empty),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final visuals = tileVisualsFor(TileState.correct, skin: skin);
-    return Row(
-      children: [
-        for (var i = 0; i < _letters.length; i++) ...[
-          if (i > 0) const SizedBox(width: AppSpacing.gap5),
-          Expanded(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: visuals.background,
-                  borderRadius: AppRadii.tileR,
+    return ClipRRect(
+      borderRadius: AppRadii.cardR,
+      child: Container(
+        height: 118,
+        color: AppColors.bg,
+        child: SkinBackground(
+          skin: skin,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.s3),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    for (var i = 0; i < _correctRow.length; i++) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.gap5),
+                      _MiniTile(
+                        letter: _correctRow[i],
+                        state: TileState.correct,
+                        skin: skin,
+                      ),
+                    ],
+                  ],
                 ),
-                child: Center(
-                  child: Text(_letters[i], style: AppTextStyles.tile(15, color: visuals.foreground)),
+                const SizedBox(height: AppSpacing.gap5),
+                Row(
+                  children: [
+                    for (var i = 0; i < _mixedRow.length; i++) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.gap5),
+                      _MiniTile(
+                        letter: _mixedRow[i].$1,
+                        state: _mixedRow[i].$2,
+                        skin: skin,
+                      ),
+                    ],
+                  ],
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniTile extends StatelessWidget {
+  const _MiniTile({
+    required this.letter,
+    required this.state,
+    required this.skin,
+  });
+
+  final String letter;
+  final TileState state;
+  final TileSkin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    final visuals = tileVisualsFor(state, skin: skin);
+    return Expanded(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: visuals.background,
+            border: visuals.border,
+            borderRadius: AppRadii.tileR,
+          ),
+          child: Center(
+            child: Text(
+              letter,
+              style: AppTextStyles.tile(14, color: visuals.foreground),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

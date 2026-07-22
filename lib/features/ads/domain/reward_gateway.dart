@@ -6,7 +6,8 @@ enum RewardedPlacement {
   hintClean('sj_hint_clean'),
   hintTheme('sj_hint_theme'),
   chestDouble('sj_chest_double'),
-  freezeFree('sj_freeze_free');
+  freezeFree('sj_freeze_free'),
+  practiceExtra('sj_practice_extra');
 
   const RewardedPlacement(this.id);
   final String id;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/locale_keys.dart';
@@ -31,12 +32,20 @@ class PracticeThemeBanner extends StatefulWidget {
     this.reexpandSeconds = 5,
     this.autoShow = true,
     this.onAutoShown,
+    this.autoShowGate,
     super.key,
   });
 
   final String? theme;
   final int roundNonce;
   final int reexpandCost;
+
+  /// Optional gate (WS3): when supplied, the free auto-show waits until this
+  /// listenable reads `true` before starting its timer — so it never runs (nor
+  /// consumes the free-show flag via [onAutoShown]) while a first-run rules/
+  /// coach surface is covering the board. Null on practice/bonus, which have no
+  /// competing first-run overlays and auto-show immediately.
+  final ValueListenable<bool>? autoShowGate;
 
   /// Runs the atomic re-expand purchase. The banner hands its own re-show
   /// effect in as `show`, so the page/cubit can do pay → show → refund-on-fail
@@ -59,10 +68,10 @@ class _PracticeThemeBannerState extends State<PracticeThemeBanner>
     with SingleTickerProviderStateMixin {
   static const _transitionDuration = Duration(milliseconds: 400);
 
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: _transitionDuration,
-  );
+  // Constructed eagerly in initState (not lazily) so the ticker is always
+  // created while the element is active — a gated-shut banner that is disposed
+  // before it ever animates must never build its ticker inside dispose().
+  late final AnimationController _controller;
   late final Animation<double> _opacity = CurvedAnimation(
     parent: _controller,
     curve: Curves.easeInOut,
@@ -75,25 +84,51 @@ class _PracticeThemeBannerState extends State<PracticeThemeBanner>
 
   Timer? _holdTimer;
   bool _reexpandInFlight = false;
+  bool _autoShown = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.theme != null && widget.autoShow) {
-      widget.onAutoShown?.call();
-      _play(holdSeconds: widget.initialSeconds);
-    }
+    _controller = AnimationController(vsync: this, duration: _transitionDuration);
+    _maybeAutoShow();
   }
 
   @override
   void didUpdateWidget(covariant PracticeThemeBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.roundNonce != oldWidget.roundNonce &&
-        widget.theme != null &&
-        widget.autoShow) {
-      widget.onAutoShown?.call();
-      _play(holdSeconds: widget.initialSeconds);
+    if (widget.roundNonce != oldWidget.roundNonce) {
+      // New practice/bonus round — allow a fresh auto-show.
+      _autoShown = false;
+      _maybeAutoShow();
     }
+  }
+
+  /// Starts the free auto-show once — immediately when ungated, or when the
+  /// gate opens (WS3). The gate is consulted live so a first-run rules/coach
+  /// surface defers both the timer and the [onAutoShown] flag consumption.
+  void _maybeAutoShow() {
+    if (_autoShown || widget.theme == null || !widget.autoShow) return;
+    final gate = widget.autoShowGate;
+    if (gate == null || gate.value) {
+      _startAutoShow();
+    } else {
+      gate.addListener(_onGateChanged);
+    }
+  }
+
+  void _onGateChanged() {
+    if (!mounted) return;
+    if (widget.autoShowGate?.value ?? true) {
+      widget.autoShowGate?.removeListener(_onGateChanged);
+      _startAutoShow();
+    }
+  }
+
+  void _startAutoShow() {
+    if (_autoShown) return;
+    _autoShown = true;
+    widget.onAutoShown?.call();
+    _play(holdSeconds: widget.initialSeconds);
   }
 
   void _play({required int holdSeconds}) {
@@ -128,6 +163,7 @@ class _PracticeThemeBannerState extends State<PracticeThemeBanner>
 
   @override
   void dispose() {
+    widget.autoShowGate?.removeListener(_onGateChanged);
     _holdTimer?.cancel();
     _controller.dispose();
     _expanded.dispose();

@@ -9,15 +9,18 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/game/domain/letter_result.dart';
 import '../../../core/game/domain/logical_letter.dart';
 import '../../../core/game/presentation/board_controller.dart';
+import '../../../core/game/presentation/skin_background.dart';
 import '../../../core/game/presentation/tile_skin.dart';
-import '../../../core/game/presentation/widgets/game_board.dart';
 import '../../../core/game/presentation/widgets/game_keyboard.dart';
 import '../../../core/game/presentation/widgets/invalid_word_toast.dart';
+import '../../../core/game/presentation/widgets/known_letters_strip.dart';
+import '../../../core/game/presentation/widgets/responsive_game_board.dart';
 import '../../../core/l10n/locale_keys.dart';
 import '../../../core/time/game_clock.dart';
 import '../../../core/services/app_haptics.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_icon_button.dart';
@@ -29,6 +32,7 @@ import '../../ads/domain/reward_gateway.dart';
 import '../../hints/domain/hint_type.dart';
 import '../../hints/presentation/definition_hint_dialog.dart';
 import '../../hints/presentation/hint_sheet.dart';
+import '../../onboarding/presentation/widgets/rules_legend.dart';
 import '../../practice/presentation/widgets/practice_theme_banner.dart';
 import '../../shop/data/skin_service.dart';
 import '../../wallet/data/wallet_service.dart';
@@ -259,12 +263,14 @@ class _BonusPlayViewState extends State<BonusPlayView> {
                       _BonusHeader(
                         coins: _wallet.coins,
                         onBack: () => context.pop(),
+                        onRules: () => showRulesSheet(context),
                         onHint: state.phase == BonusPhase.playing
                             ? _openHint
                             : null,
                       ),
                       if (state.phase == BonusPhase.playing &&
                           _cubit.hasTheme) ...[
+                        const SizedBox(height: AppSpacing.s3),
                         PracticeThemeBanner(
                           theme: _cubit.theme,
                           roundNonce: state.roundNonce,
@@ -275,17 +281,30 @@ class _BonusPlayViewState extends State<BonusPlayView> {
                               sl<GameConfig>().hintThemeReexpandSeconds,
                           onReexpand: _reexpandTheme,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.s4),
                       ],
                       Expanded(
-                        child: Center(
-                          child: ValueListenableBuilder<String>(
-                            valueListenable: _skins.activeSkinId,
-                            builder: (context, id, _) => TileSkinScope(
-                              skin: TileSkin.byId(id),
-                              child: GameBoard(controller: _board),
-                            ),
-                          ),
+                        child: ValueListenableBuilder<String>(
+                          valueListenable: _skins.activeSkinId,
+                          builder: (context, id, _) {
+                            final skin = TileSkin.byId(id);
+                            return SkinBackground(
+                              skin: skin,
+                              child: TileSkinScope(
+                                skin: skin,
+                                child: Column(
+                                  children: [
+                                    KnownLettersStrip(keyStates: _keyStates),
+                                    Expanded(
+                                      child: ResponsiveGameBoard(
+                                        controller: _board,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -324,11 +343,13 @@ class _BonusHeader extends StatelessWidget {
   const _BonusHeader({
     required this.coins,
     required this.onBack,
+    required this.onRules,
     required this.onHint,
   });
 
   final ValueListenable<int> coins;
   final VoidCallback onBack;
+  final VoidCallback onRules;
   final VoidCallback? onHint;
 
   @override
@@ -342,6 +363,13 @@ class _BonusHeader extends StatelessWidget {
           Text(LocaleKeys.bonusTitle.tr(), style: AppTextStyles.navTitle),
           const Spacer(),
           CoinChip(balance: coins),
+          const SizedBox(width: 8),
+          // Rules (?) consolidated into the top bar alongside the hint (WS3).
+          AppIconButton(
+            icon: AppIcons.help,
+            onPressed: onRules,
+            tooltip: LocaleKeys.commonRules.tr(),
+          ),
           if (onHint != null) ...[
             const SizedBox(width: 8),
             AppIconButton(

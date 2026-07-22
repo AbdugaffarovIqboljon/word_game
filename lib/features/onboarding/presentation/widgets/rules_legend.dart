@@ -133,6 +133,11 @@ class _RulesSheet extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
+                LocaleKeys.onboardingKnownLettersRule.tr(),
+                style: AppTextStyles.caption.copyWith(color: AppColors.textSub),
+              ),
+              const SizedBox(height: 6),
+              Text(
                 LocaleKeys.onboardingThemeHintRule.tr(),
                 style: AppTextStyles.caption.copyWith(color: AppColors.textSub),
               ),
